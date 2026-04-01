@@ -24,7 +24,7 @@ export default function Sidebar() {
       <div>
         {/* Logo/Header */}
         <div
-          className={`group flex h-24 items-center border-b border-[#D9D9D9] bg-[#FAFAFA] ${
+          className={`group flex h-24 items-center border-b border-[#D9D9D9] bg-[#FAFAFA] duration-500 ${
             collapsed ? "justify-center px-4" : "justify-between px-8"
           }`}
         >
@@ -50,8 +50,8 @@ export default function Sidebar() {
             <button
               onClick={() => setCollapsed(!collapsed)}
               className={`absolute ${
-                collapsed ? "-right-14 opacity-100" : "-right-11 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 duration-500"
-              } rounded-md border border-gray-300 bg-white p-1 shadow-sm transition-all duration-500`}
+                collapsed ? "-right-14 opacity-100" : "-right-11 opacity-0 group-hover:opacity-100 group-hover:translate-x-1"
+              } rounded-md border border-gray-500 bg-white p-1 shadow-sm transition-all duration-500`}
             >
               <ArrowsRightLeftIcon className="h-5 w-5 text-gray-500" />
             </button>
@@ -59,42 +59,56 @@ export default function Sidebar() {
         </div>
 
         {/* Nav */}
-        <nav className={`${collapsed ? "px-3 py-6" : "px-8 py-6"}`}>
+        <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"}`}>
           <p
-            className={`mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400 ${
+            className={`mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-500 ${
               collapsed ? "text-center text-xs" : ""
             }`}
           >
             Main
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Link
               href="/dashboard"
-              className={`flex items-center h-12 rounded-xl text-gray-700 transition-colors duration-200 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
-                collapsed
-                  ? "justify-center"
-                  : "gap-3 px-3 text-xl"
+              className={`flex h-12 text-xl items-center rounded-lg text-gray-700 transition-all duration-500 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
+                collapsed ? "justify-center" : "px-3"
               }`}
             >
-              <HomeIcon className="w-5 h-5 shrink-0" />
-              {!collapsed && <span>Dashboard</span>}
+              <HomeIcon className="h-5 w-5 shrink-0" />
+
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-all duration-800 ease-in-out ${
+                  collapsed
+                    ? "ml-0 w-0 opacity-0 translate-x-[-10px]"
+                    : "ml-3 w-auto opacity-100 translate-x-0"
+                }`}
+              >
+                Dashboard
+              </span>
             </Link>
 
             <Link
               href="/posts"
-              className={`flex items-center rounded-xl text-gray-700 transition-colors duration-200 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
-                collapsed
-                  ? "justify-center px-3 py-3"
-                  : "gap-3 px-3 py-3 text-xl"
+              className={`flex h-12 text-xl items-center rounded-lg text-gray-700 transition-all duration-700 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
+                collapsed ? "justify-center" : "px-3"
               }`}
             >
               <NewspaperIcon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>Posts</span>}
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-all duration-800 ease-in-out ${
+                  collapsed
+                    ? "ml-0 w-0 opacity-0 translate-x-[-10px]"
+                    : "ml-3 w-auto opacity-100 translate-x-0"
+                }`}
+              >
+                Posts
+              </span>
             </Link>
           </div>
 
-          <p className={`mb-4 text-xs font-semibold uppercase tracking-wide text-gray-400 ${
+          <p
+            className={`mb-3 mt-8 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-500 ${
               collapsed ? "text-center text-xs" : ""
             }`}
           >
@@ -103,23 +117,30 @@ export default function Sidebar() {
 
           <Link
             href="/settings"
-            className={`mt-2 flex rounded-xl text-gray-700 transition-colors duration-200 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
+            className={`flex h-12 text-xl items-center rounded-lg text-gray-700 transition-all duration-700 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
               collapsed
-                ? "justify-center px-3 py-3"
-                : "items-center justify-between px-3 py-3 text-xl"
+                ? "justify-center"
+                : "justify-between px-3 text-base"
             }`}
           >
             {collapsed ? (
-              <Cog8ToothIcon className="h-5 w-5" />
+              <Cog8ToothIcon className="h-5 w-5 shrink-0" />
             ) : (
               <>
                 <div className="flex items-center gap-3">
-                  <Cog8ToothIcon className="h-5 w-5" />
-                  <span>Settings</span>
+                  <Cog8ToothIcon className="h-5 w-5 shrink-0" />
+                  <span
+                    className={`overflow-hidden whitespace-nowrap transition-all duration-800 ease-in-out text-xl${
+                      collapsed
+                        ? "ml-0 w-0 opacity-0 translate-x-[-10px]"
+                        : "ml-3 w-auto opacity-100 translate-x-0"
+                    }`}
+                  >
+                    Settings</span>
                 </div>
 
                 <div className="group/icon p-1">
-                  <ChevronRightIcon className="h-5 w-5 text-gray-500 transition-transform duration-300 group-hover/icon:rotate-90" />
+                  <ChevronRightIcon className="h-5 w-5 text-gray-500 transition-transform duration-600 group-hover/icon:rotate-90" />
                 </div>
               </>
             )}
@@ -129,7 +150,7 @@ export default function Sidebar() {
 
       {/* User Footer */}
       <div
-        className={`h-[200px] bg-[#29A177] text-white transition-all duration-300 ${
+        className={`h-[200px] bg-[#29A177] text-white transition-all duration-500 ${
           collapsed ? "px-3 py-5" : "px-6 py-6"
         }`}
       >
@@ -143,7 +164,7 @@ export default function Sidebar() {
 
           {/* Text (animated instead of removed) */}
           <div
-            className={`min-w-0 overflow-hidden transition-all duration-300 ${
+            className={`min-w-0 overflow-hidden transition-all duration-600 ${
               collapsed
                 ? "w-0 opacity-0 translate-x-[-10px]"
                 : "w-auto opacity-100 translate-x-0"
