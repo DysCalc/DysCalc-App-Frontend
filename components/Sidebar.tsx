@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowsRightLeftIcon,
   ChevronRightIcon,
@@ -28,17 +29,26 @@ export default function Sidebar() {
             collapsed ? "justify-center px-4" : "justify-between px-8"
           }`}
         >
-          {!collapsed && (
-            <h1 className="text-2xl font-extrabold tracking-wide text-[#29A177]">
+          <div className="flex items-center">
+            {/* Icon (always visible) */}
+            <Image
+              src="/icons/dyscalc-icon.svg"
+              alt="DysCalc Icon"
+              width={28}
+              height={28}
+              className="shrink-0"
+            />
+
+            <h1
+              className={`font-extrabold tracking-wide text-[#29A177] text-2xl transition-all duration-300 ${
+                collapsed
+                  ? "ml-0 opacity-0 w-0 overflow-hidden"
+                  : "ml-4 opacity-100"
+              }`}
+            >
               DYSCALC
             </h1>
-          )}
-
-          {collapsed && (
-            <h1 className="text-2xl font-extrabold tracking-wide text-[#29A177]">
-              D
-            </h1>
-          )}
+          </div>
 
           <div className="relative flex items-center">
             {!collapsed && (
@@ -51,9 +61,9 @@ export default function Sidebar() {
               onClick={() => setCollapsed(!collapsed)}
               className={`absolute ${
                 collapsed ? "-right-14 opacity-100" : "-right-11 opacity-0 group-hover:opacity-100 group-hover:translate-x-1"
-              } rounded-md border border-gray-500 bg-white p-1 shadow-sm transition-all duration-500`}
+              } rounded-md border border-white bg-[#29A177] p-1 shadow-sm transition-all duration-500`}
             >
-              <ArrowsRightLeftIcon className="h-5 w-5 text-gray-500" />
+              <ArrowsRightLeftIcon className="h-5 w-5 text-gray-500 text-white" />
             </button>
           </div>
         </div>
@@ -117,33 +127,34 @@ export default function Sidebar() {
 
           <Link
             href="/settings"
-            className={`flex h-12 text-xl items-center rounded-lg text-gray-700 transition-all duration-700 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
-              collapsed
-                ? "justify-center"
-                : "justify-between px-3 text-base"
+            className={`group flex h-12 items-center rounded-lg text-gray-700 transition-all duration-700 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
+              collapsed 
+                ? "justify-center px-0" : "justify-between px-3"
             }`}
           >
-            {collapsed ? (
+            <div className="flex items-center min-w-0">
               <Cog8ToothIcon className="h-5 w-5 shrink-0" />
-            ) : (
-              <>
-                <div className="flex items-center gap-3">
-                  <Cog8ToothIcon className="h-5 w-5 shrink-0" />
-                  <span
-                    className={`overflow-hidden whitespace-nowrap transition-all duration-800 ease-in-out text-xl${
-                      collapsed
-                        ? "ml-0 w-0 opacity-0 translate-x-[-10px]"
-                        : "ml-3 w-auto opacity-100 translate-x-0"
-                    }`}
-                  >
-                    Settings</span>
-                </div>
 
-                <div className="group/icon p-1">
-                  <ChevronRightIcon className="h-5 w-5 text-gray-500 transition-transform duration-600 group-hover/icon:rotate-90" />
-                </div>
-              </>
-            )}
+              <span
+                className={`overflow-hidden whitespace-nowrap text-xl transition-all duration-800 ease-in-out ${
+                  collapsed
+                    ? "ml-0 max-w-0 opacity-0 -translate-x-2"
+                    : "ml-3 opacity-100 translate-x-0"
+                }`}
+              >
+                Settings
+              </span>
+            </div>
+
+            <div
+              className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                collapsed
+                  ? "ml-0 max-w-0 opacity-0 translate-x-2"
+                  : "ml-2 max-w-[24px] opacity-100 translate-x-0"
+              }`}
+            >
+              <ChevronRightIcon className="h-5 w-5 text-gray-500 transition-transform duration-500 group-hover:rotate-90" />
+            </div>
           </Link>
         </nav>
       </div>
@@ -160,9 +171,7 @@ export default function Sidebar() {
           }`}
         >
           {/* Avatar */}
-          <div className="h-11 w-11 shrink-0 rounded-full bg-white" />
-
-          {/* Text (animated instead of removed) */}
+          <div className="h-11 w-11 shrink-0 rounded-full bg-white transition-all duration-300 hover:ring-4 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-[#29A177] hover:scale-105" />
           <div
             className={`min-w-0 overflow-hidden transition-all duration-600 ${
               collapsed
