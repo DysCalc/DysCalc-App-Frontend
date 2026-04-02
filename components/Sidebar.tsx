@@ -60,7 +60,7 @@ export default function Sidebar() {
             <button
               onClick={() => setCollapsed(!collapsed)}
               className={`absolute ${
-                collapsed ? "-right-14 opacity-100" : "-right-11 opacity-0 group-hover:opacity-100 group-hover:translate-x-1"
+                collapsed ? "-right-12 opacity-100" : "-right-11 opacity-0 group-hover:opacity-100 group-hover:translate-x-1"
               } rounded-md border border-white bg-[#29A177] p-1 shadow-sm transition-all duration-500`}
             >
               <ArrowsRightLeftIcon className="h-5 w-5 text-gray-500 text-white" />
