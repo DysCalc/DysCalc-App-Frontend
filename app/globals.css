@@ -13,6 +13,9 @@
 
   /* IMPORTANT: connect Tailwind to Next font */
   --font-sans: var(--font-beiruti);
+  --font-display: var(--font-manrope);
+  --font-alt: var(--font-inter);
+  
 }
 
 @media (prefers-color-scheme: dark) {

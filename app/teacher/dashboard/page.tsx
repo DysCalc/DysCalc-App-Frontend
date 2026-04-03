@@ -1,8 +1,8 @@
 import Image from "next/image";
-import Sidebar from "@/components/Sidebar";
-import Footer from "@/components/Footer";
+import Sidebar from "@/components/shared/Sidebar";
+import Footer from "@/components/shared/Footer";
 
-export default function DashboardPage() {
+export default function TeacherDashboard() {
   return (
     <main className="flex min-h-screen bg-[#f5f5f0]">
       <Sidebar />
@@ -45,12 +45,7 @@ export default function DashboardPage() {
 
         </div>
         <Footer />
-
-        
       </div>
-
-
-
     </main>
   );
 }

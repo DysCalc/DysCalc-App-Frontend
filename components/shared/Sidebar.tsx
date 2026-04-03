@@ -40,7 +40,7 @@ export default function Sidebar() {
             />
 
             <h1
-              className={`font-extrabold tracking-wide text-[#29A177] text-2xl transition-all duration-300 ${
+              className={`font-sans font-extrabold tracking-wide text-[#29A177] text-2xl transition-all duration-300 ${
                 collapsed
                   ? "ml-0 opacity-0 w-0 overflow-hidden"
                   : "ml-4 opacity-100"
@@ -71,7 +71,7 @@ export default function Sidebar() {
         {/* Nav */}
         <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"}`}>
           <p
-            className={`mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-500 ${
+            className={`font-display mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-500 ${
               collapsed ? "text-center text-xs" : ""
             }`}
           >
