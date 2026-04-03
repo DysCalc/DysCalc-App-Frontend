@@ -161,7 +161,7 @@ export default function Sidebar() {
 
       {/* User Footer */}
       <div
-        className={`h-[200px] bg-[#29A177] text-white transition-all duration-500 ${
+        className={`h-[147px] bg-[#29A177] text-white transition-all duration-500 ${
           collapsed ? "px-3 py-5" : "px-6 py-6"
         }`}
       >
