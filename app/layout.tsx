@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Beiruti, Inter, Manrope } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/auth-provider";
 
 const beiruti = Beiruti({
   subsets: ["latin"],
@@ -38,7 +39,9 @@ export default function RootLayout({
           font-sans
         `}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
