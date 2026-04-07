@@ -19,21 +19,145 @@ export type Database = {
           created_at: string
           educator: string | null
           id: number
+          name: string
         }
         Insert: {
           created_at?: string
           educator?: string | null
           id?: number
+          name: string
         }
         Update: {
           created_at?: string
           educator?: string | null
           id?: number
+          name?: string
         }
         Relationships: [
           {
             foreignKeyName: "classrooms_educator_fkey"
             columns: ["educator"]
+            isOneToOne: false
+            referencedRelation: "educator"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      educator: {
+        Row: {
+          doctorate: Json[] | null
+          id: string
+          license_id: number
+          masters: Json[] | null
+          undergrad: Json[]
+          workplace_address: string
+          worksplace_name: string | null
+        }
+        Insert: {
+          doctorate?: Json[] | null
+          id?: string
+          license_id: number
+          masters?: Json[] | null
+          undergrad: Json[]
+          workplace_address: string
+          worksplace_name?: string | null
+        }
+        Update: {
+          doctorate?: Json[] | null
+          id?: string
+          license_id?: number
+          masters?: Json[] | null
+          undergrad?: Json[]
+          workplace_address?: string
+          worksplace_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "educator_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      initial_test_classification: {
+        Row: {
+          classification: Database["public"]["Enums"]["CLASSIFICATION"]
+          created_at: string
+          prompt: string
+          test_id: number
+        }
+        Insert: {
+          classification: Database["public"]["Enums"]["CLASSIFICATION"]
+          created_at?: string
+          prompt: string
+          test_id?: number
+        }
+        Update: {
+          classification?: Database["public"]["Enums"]["CLASSIFICATION"]
+          created_at?: string
+          prompt?: string
+          test_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "initial_test_classification_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: true
+            referencedRelation: "initial_test_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      initial_test_results: {
+        Row: {
+          classroom_id: number | null
+          complex_arithmetic: Json
+          created_at: string
+          dot_matching: Json
+          id: number
+          number_comparison: Json
+          number_series: Json
+          single_addition: Json
+          single_subtraction: Json
+          student_id: string | null
+        }
+        Insert: {
+          classroom_id?: number | null
+          complex_arithmetic: Json
+          created_at?: string
+          dot_matching: Json
+          id?: number
+          number_comparison: Json
+          number_series: Json
+          single_addition: Json
+          single_subtraction: Json
+          student_id?: string | null
+        }
+        Update: {
+          classroom_id?: number | null
+          complex_arithmetic?: Json
+          created_at?: string
+          dot_matching?: Json
+          id?: number
+          number_comparison?: Json
+          number_series?: Json
+          single_addition?: Json
+          single_subtraction?: Json
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "initial_test_results_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "initial_test_results_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -43,42 +167,80 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          date_of_birth: string
           id: string
-          role: Database["public"]["Enums"]["ROLE"] | null
+          nickname: string | null
+          role: Database["public"]["Enums"]["ROLE"]
+          sex: Database["public"]["Enums"]["SEX"]
         }
         Insert: {
           created_at?: string
+          date_of_birth: string
           id?: string
-          role?: Database["public"]["Enums"]["ROLE"] | null
+          nickname?: string | null
+          role: Database["public"]["Enums"]["ROLE"]
+          sex: Database["public"]["Enums"]["SEX"]
         }
         Update: {
           created_at?: string
+          date_of_birth?: string
           id?: string
-          role?: Database["public"]["Enums"]["ROLE"] | null
+          nickname?: string | null
+          role?: Database["public"]["Enums"]["ROLE"]
+          sex?: Database["public"]["Enums"]["SEX"]
         }
         Relationships: []
+      }
+      student_invites: {
+        Row: {
+          classroom_id: number | null
+          email: string
+          id: number
+          invited_at: string
+        }
+        Insert: {
+          classroom_id?: number | null
+          email: string
+          id?: number
+          invited_at?: string
+        }
+        Update: {
+          classroom_id?: number | null
+          email?: string
+          id?: number
+          invited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_invites_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {
           accepted: boolean | null
           classroom_id: number
+          id: string
           invited_at: string | null
           joined_at: string
-          student_id: string
         }
         Insert: {
           accepted?: boolean | null
           classroom_id: number
+          id?: string
           invited_at?: string | null
           joined_at?: string
-          student_id?: string
         }
         Update: {
           accepted?: boolean | null
           classroom_id?: number
+          id?: string
           invited_at?: string | null
           joined_at?: string
-          student_id?: string
         }
         Relationships: [
           {
@@ -86,6 +248,13 @@ export type Database = {
             columns: ["classroom_id"]
             isOneToOne: false
             referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_id_fkey"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -98,7 +267,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      CLASSIFICATION: "TYPICAL" | "AT-RISK"
       ROLE: "ADMIN" | "EDUCATOR" | "STUDENT"
+      SEX: "MALE" | "FEMALE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -226,7 +397,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      CLASSIFICATION: ["TYPICAL", "AT-RISK"],
       ROLE: ["ADMIN", "EDUCATOR", "STUDENT"],
+      SEX: ["MALE", "FEMALE"],
     },
   },
 } as const

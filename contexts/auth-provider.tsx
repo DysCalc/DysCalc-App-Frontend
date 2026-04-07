@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-client";
 export interface AuthContextType {
-    session: Session | null,
     user: User | null,
     loading: boolean,
     loginWithGoogle: () => Promise<void>,
@@ -22,16 +21,14 @@ export const useAuth = (): AuthContextType => {
 }
 
 export function AuthProvider({ children } : { children: React.ReactNode }) {
-    const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
     
     useEffect(() => {
         const getSession = async () => {
-            const { data } = await supabase.auth.getSession();
-            setSession(data.session);
-            setUser(data.session?.user ?? null);
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
             setLoading(false);
         }
 
@@ -39,7 +36,6 @@ export function AuthProvider({ children } : { children: React.ReactNode }) {
 
         const { data: listener } = supabase.auth.onAuthStateChange(
             (_event, session) => {
-                setSession(session)
                 setUser(session?.user ?? null)
             }
         );
@@ -68,7 +64,6 @@ export function AuthProvider({ children } : { children: React.ReactNode }) {
     };
 
     const value: AuthContextType = {
-        session,
         user,
         loading,
         loginWithGoogle,

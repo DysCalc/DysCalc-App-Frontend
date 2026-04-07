@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const supabaseServer = await createServer()
 
     const { error } = await supabaseServer.auth.exchangeCodeForSession(code)
-    
+
     if (error) {
       console.error('Exchange Code Error:', error.message)
     }
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     if (!error) {
       // Get the user after exchanging the code
       const { data: { user }, error: userError } = await supabaseServer.auth.getUser()
-      
+
       console.log('User fetched after exchange:', user?.id)
       if (userError) {
         console.error('getUser Error:', userError.message)
@@ -33,24 +33,10 @@ export async function GET(request: Request) {
           : origin
 
       if (user) {
-        // Check if the user has a profile set up
-        const { data: profile, error: profileError } = await supabaseServer
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-
-        if (profileError) {
-          console.log(profileError.message);
-        }
-
-        // No profile or no role → send to setup
-        if (!profile || !profile.role) {
-          return NextResponse.redirect(`${baseUrl}/setup`)
-        }
+        const role = user.user_metadata?.role.toLowerCase();
 
         // Has profile with role → send to role dashboard
-        return NextResponse.redirect(`${baseUrl}/${profile.role}/dashboard`)
+        return NextResponse.redirect(`${baseUrl}/${role}/dashboard`)
       }
     }
   }
