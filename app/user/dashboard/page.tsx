@@ -1,12 +1,8 @@
 import Image from "next/image";
-import UserSidebar from "@/components/user/UserSidebar";
-import Footer from "@/components/shared/Footer";
 
 export default function UserDashboard() {
   return (
     <main className="flex bg-[#f5f5f0]">
-      <UserSidebar />
-
       <div className="flex flex-col min-h-screen w-full justify-between">
         
         {/* HERO SECTION (fixed height) */}
@@ -47,10 +43,7 @@ export default function UserDashboard() {
 
             </div>
           </div>
-
         </div>
-
-        <Footer />
       </div>
     </main>
   );
