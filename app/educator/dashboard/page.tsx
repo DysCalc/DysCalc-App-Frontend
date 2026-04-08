@@ -5,8 +5,6 @@ import Footer from "@/components/shared/Footer";
 export default function TeacherDashboard() {
   return (
     <main className="flex bg-[#f5f5f0]">
-      <TeacherSidebar />
-
       <div className="flex flex-col min-h-screen w-full justify-between">
         
         {/* HERO SECTION (fixed height) */}
@@ -47,10 +45,7 @@ export default function TeacherDashboard() {
 
             </div>
           </div>
-
         </div>
-
-        <Footer />
       </div>
     </main>
   );
