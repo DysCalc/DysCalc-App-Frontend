@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase-client";
 import {
   ArrowsRightLeftIcon,
   ChevronRightIcon,
@@ -16,6 +17,46 @@ import {
 
 export default function TeacherSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [userName, setUserName] = useState("Loading...");
+  const supabase = createClient();
+
+  function toProperCase(name: string) {
+    return name
+      .toLowerCase()
+      .split(" ")
+      .map(word =>
+        word.split("-").map(part =>
+          part.charAt(0).toUpperCase() + part.slice(1)
+        ).join("-")
+      )
+      .join(" ");
+  }
+
+  useEffect(() => {
+    const getUserName = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error("Error fetching user:", error.message);
+        setUserName("User");
+        return;
+      }
+
+      const rawName =
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.email ||
+        "User";
+
+      setUserName(toProperCase(rawName));
+    };
+
+    getUserName();
+  }, [supabase]);
+
 
   return (
     <aside
@@ -24,7 +65,6 @@ export default function TeacherSidebar() {
       }`}
     >
       <div>
-        {/* Header */}
         <div
           className={`group flex h-24 items-center border-b border-[#D9D9D9] bg-[#FAFAFA] ${
             collapsed ? "justify-center px-4" : "justify-between px-8"
@@ -41,7 +81,9 @@ export default function TeacherSidebar() {
 
             <h1
               className={`text-2xl font-extrabold tracking-wide text-[#29A177] transition-all duration-300 ${
-                collapsed ? "ml-0 w-0 overflow-hidden opacity-0" : "ml-4 opacity-100"
+                collapsed
+                  ? "ml-0 w-0 overflow-hidden opacity-0"
+                  : "ml-4 opacity-100"
               }`}
             >
               DYSCALC
@@ -61,12 +103,11 @@ export default function TeacherSidebar() {
                 absolute top-1/2 -translate-y-1/2
                 ${collapsed ? "-right-12" : "-right-11"}
                 rounded-md border border-white bg-[#29A177] p-1 shadow-sm
-
                 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
-
-                ${collapsed 
-                  ? "opacity-100 scale-100 translate-x-0"
-                  : "opacity-0 scale-90 translate-x-2 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0"
+                ${
+                  collapsed
+                    ? "opacity-100 scale-100 translate-x-0"
+                    : "opacity-0 scale-90 translate-x-2 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0"
                 }
               `}
             >
@@ -75,7 +116,6 @@ export default function TeacherSidebar() {
           </div>
         </div>
 
-        {/* Nav */}
         <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"}`}>
           <p
             className={`mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-300 ${
@@ -204,7 +244,6 @@ export default function TeacherSidebar() {
         </nav>
       </div>
 
-      {/* Footer */}
       <div
         className={`min-h-[140px] bg-[#29A177] text-white transition-all duration-500 ${
           collapsed ? "px-3 py-5" : "px-6 py-6"
@@ -218,7 +257,9 @@ export default function TeacherSidebar() {
             }`}
           >
             <p className="text-base leading-tight opacity-90">Teacher Account</p>
-            <h2 className="truncate text-xl font-semibold leading-tight">Kristoffer Neo Senyahan</h2>
+            <h2 className="truncate text-xl font-semibold leading-tight">
+              {userName}
+            </h2>
           </div>
         </div>
       </div>

@@ -33,7 +33,7 @@ export async function GET(request: Request) {
           : origin
 
       if (user) {
-        const role = user.user_metadata?.role.toLowerCase();
+        const role = user.user_metadata?.role?.toLowerCase();
 
         // Has profile with role → send to role dashboard
         return NextResponse.redirect(`${baseUrl}/${role}/dashboard`)
