@@ -127,7 +127,7 @@ export default function TeacherSidebar() {
 
           <div className="space-y-2">
             <Link
-              href="/teacher/dashboard"
+              href="/educator/dashboard"
               className={`flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
                 collapsed ? "justify-center" : "px-3"
               }`}
@@ -146,7 +146,7 @@ export default function TeacherSidebar() {
             </Link>
 
             <Link
-              href="/teacher/students"
+              href="/educator/students"
               className={`flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
                 collapsed ? "justify-center" : "px-3"
               }`}
@@ -165,7 +165,7 @@ export default function TeacherSidebar() {
             </Link>
 
             <Link
-              href="/teacher/assessments"
+              href="/educator/assessments"
               className={`flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
                 collapsed ? "justify-center" : "px-3"
               }`}
@@ -184,7 +184,7 @@ export default function TeacherSidebar() {
             </Link>
 
             <Link
-              href="/teacher/reports"
+              href="/educator/reports"
               className={`flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
                 collapsed ? "justify-center" : "px-3"
               }`}
@@ -212,7 +212,7 @@ export default function TeacherSidebar() {
           </p>
 
           <Link
-            href="/teacher/profile"
+            href="/educator/profile"
             className={`group flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
               collapsed ? "justify-center" : "justify-between px-3"
             }`}
@@ -256,7 +256,7 @@ export default function TeacherSidebar() {
               collapsed ? "w-0 -translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
             }`}
           >
-            <p className="text-base leading-tight opacity-90">Teacher Account</p>
+            <p className="text-base leading-tight opacity-90">Educator Account</p>
             <h2 className="truncate text-xl font-semibold leading-tight">
               {userName}
             </h2>
