@@ -1,4 +1,4 @@
-import TeacherSidebar from "@/components/teacher/TeacherSidebar";
+import TeacherSidebar from "@/components/educator/TeacherSidebar";
 
 export default function TeacherLayout({
   children,

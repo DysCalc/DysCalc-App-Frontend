@@ -1,5 +1,5 @@
 import Image from "next/image";
-import TeacherSidebar from "@/components/teacher/TeacherSidebar";
+import TeacherSidebar from "@/components/educator/TeacherSidebar";
 import Footer from "@/components/shared/Footer";
 
 export default function TeacherDashboard() {
