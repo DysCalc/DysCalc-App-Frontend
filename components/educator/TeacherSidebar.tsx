@@ -18,7 +18,8 @@ import {
 export default function TeacherSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [userName, setUserName] = useState("Loading...");
-  const supabase = createClient();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [supabase] = useState(() => createClient());
 
   function toProperCase(name: string) {
     return name
@@ -52,6 +53,7 @@ export default function TeacherSidebar() {
         "User";
 
       setUserName(toProperCase(rawName));
+      setAvatarUrl(user?.user_metadata?.avatar_url || null);
     };
 
     getUserName();
@@ -250,7 +252,21 @@ export default function TeacherSidebar() {
         }`}
       >
         <div className={`flex items-center ${collapsed ? "justify-center" : "gap-4"}`}>
-          <div className="h-11 w-11 shrink-0 rounded-full bg-white transition-all duration-300 hover:scale-105 hover:ring-4 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-[#29A177]" />
+        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-white transition-all duration-300 hover:scale-105 hover:ring-4 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-[#29A177]">
+          {avatarUrl ? (
+            <Image
+              src={avatarUrl}
+              alt="User Avatar"
+              width={44}
+              height={44}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-[#29A177]">
+              {userName.charAt(0)}
+            </div>
+          )}
+        </div>
           <div
             className={`min-w-0 overflow-hidden transition-all duration-500 ${
               collapsed ? "w-0 -translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
