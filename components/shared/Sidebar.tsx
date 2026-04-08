@@ -18,11 +18,12 @@ export default function Sidebar() {
   const { logout } = useAuth();
 
   return (
-    <aside
-      className={`flex h-screen flex-col justify-between bg-white transition-[width] duration-500 ease-in-out ${collapsed ? "w-24" : "w-72"
-        }`}
-    >
-
+  <aside
+    className={`relative flex h-screen flex-col justify-between bg-white transition-[width] duration-500 ease-in-out ${
+      collapsed ? "w-24" : "w-72"
+    }`}
+  >
+      
       <div>
         {/* Logo/Header */}
         <div
@@ -40,16 +41,17 @@ export default function Sidebar() {
             />
 
             <h1
-              className={`font-sans font-extrabold tracking-wide text-[#29A177] text-2xl transition-all duration-300 ${collapsed
-                ? "ml-0 opacity-0 w-0 overflow-hidden"
-                : "ml-4 opacity-100"
-                }`}
+              className={`font-sans font-extrabold tracking-wide text-[#29A177] text-2xl transition-all duration-500 ${
+                collapsed
+                  ? "ml-0 opacity-0 w-0 overflow-hidden"
+                  : "ml-4 opacity-100"
+              }`}
             >
               DYSCALC
             </h1>
           </div>
 
-          <div className="relative flex items-center">
+          <div className="relative flex items-center transition-all duration-500">
             {!collapsed && (
               <button className="text-gray-500 transition-colors hover:text-[#29A177]">
                 <EllipsisVerticalIcon className="h-5 w-5" />
@@ -58,10 +60,20 @@ export default function Sidebar() {
 
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className={`absolute ${collapsed ? "-right-12 opacity-100" : "-right-11 opacity-0 group-hover:opacity-100 group-hover:translate-x-1"
-                } rounded-md border border-white bg-[#29A177] p-1 shadow-sm transition-all duration-500`}
+              className={`
+                absolute top-1/2 -translate-y-1/2
+                ${collapsed ? "-right-12" : "-right-11"}
+                rounded-md border border-white bg-[#29A177] p-1 shadow-sm
+
+                transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
+
+                ${collapsed 
+                  ? "opacity-100 scale-100 translate-x-0"
+                  : "opacity-0 scale-90 translate-x-2 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0"
+                }
+              `}
             >
-              <ArrowsRightLeftIcon className="h-5 w-5 text-gray-500 text-white" />
+              <ArrowsRightLeftIcon className="h-5 w-5 text-white transition-transform duration-500 group-hover:rotate-180" />
             </button>
           </div>
         </div>
@@ -69,8 +81,9 @@ export default function Sidebar() {
         {/* Nav */}
         <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"}`}>
           <p
-            className={`font-display mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-500 ${collapsed ? "text-center text-xs" : ""
-              }`}
+            className={`font-display mb-3 text-xs font-medium uppercase tracking-wider text-gray-400 transition-all duration-500 ${
+              collapsed ? "text-center text-xs" : ""
+            }`}
           >
             Main
           </p>
@@ -111,8 +124,9 @@ export default function Sidebar() {
           </div>
 
           <p
-            className={`mb-3 mt-8 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-500 ${collapsed ? "text-center text-xs" : ""
-              }`}
+            className={`font-display mb-3 mt-8 text-xs font-medium uppercase tracking-wider text-gray-400 transition-all duration-500 ${
+              collapsed ? "text-center text-xs" : ""
+            }`}
           >
             Settings
           </p>
@@ -162,7 +176,7 @@ export default function Sidebar() {
             }`}
         >
           {/* Avatar */}
-          <div className="h-11 w-11 shrink-0 rounded-full bg-white transition-all duration-300 hover:ring-4 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-[#29A177] hover:scale-105" />
+          <div className="h-11 w-11 shrink-0 rounded-full bg-white transition-all duration-500 hover:ring-4 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-[#29A177] hover:scale-105" />
           <div
             className={`min-w-0 overflow-hidden transition-all duration-600 ${collapsed
               ? "w-0 opacity-0 translate-x-[-10px]"
