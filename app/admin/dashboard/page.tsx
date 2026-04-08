@@ -1,12 +1,8 @@
 import Image from "next/image";
-import AdminSidebar from "@/components/admin/AdminSidebar";
-import Footer from "@/components/shared/Footer";
 
 export default function AdminDashboard() {
   return (
     <main className="flex bg-[#f5f5f0]">
-      <AdminSidebar />
-
       <div className="flex flex-col min-h-screen w-full justify-between">
         
         {/* HERO SECTION (fixed height) */}
@@ -41,8 +37,6 @@ export default function AdminDashboard() {
           </div>
 
         </div>
-
-        <Footer />
       </div>
     </main>
   );
