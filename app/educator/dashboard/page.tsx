@@ -1,13 +1,11 @@
 import Image from "next/image";
-import TeacherSidebar from "@/components/educator/TeacherSidebar";
-import Footer from "@/components/shared/Footer";
 
 export default function TeacherDashboard() {
   return (
     <div className="flex h-full w-full flex-col">
 
       {/* HERO = 80% (matches sidebar 2 + 6) */}
-      <div className="flex flex-[85%] w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#CCE6FF_0%,_#E6F8FF_42%,_#D1D6FF_100%)]">
+      <div className="flex flex-[90%] w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#CCE6FF_0%,_#E6F8FF_42%,_#D1D6FF_100%)]">
         
         {/* LEFT */}
         <div className="flex w-1/2 items-center justify-end">
@@ -47,7 +45,7 @@ export default function TeacherDashboard() {
       </div>
 
       {/* BOTTOM SPACE = 20% (matches sidebar avatar section) */}
-      <div className="flex-[15%]" />
+      <div className="flex-[10%]" />
 
     </div>
   );
