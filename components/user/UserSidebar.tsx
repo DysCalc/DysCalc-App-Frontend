@@ -127,7 +127,7 @@ export default function UserSidebar() {
 
         <div className="space-y-2">
           <Link
-            href="/educator/dashboard"
+            href="/user/dashboard"
             className={`flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
               collapsed ? "justify-center" : "px-3"
             }`}

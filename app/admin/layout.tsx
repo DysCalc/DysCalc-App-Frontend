@@ -1,7 +1,7 @@
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Footer from "@/components/shared/Footer";
 
-export default function UserLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
