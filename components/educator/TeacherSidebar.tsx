@@ -248,7 +248,7 @@ export default function TeacherSidebar() {
 
       <div
         className={`flex flex-[15%] bg-[#29A177] text-white transition-all duration-500 ${
-          collapsed ? "px-3 py-5" : "px-6 py-6"
+          collapsed ? "justify-center px-3 py-5" : "px-6 py-6"
         }`}
       >
         <div className={`flex mt-4 ${collapsed ? "justify-start" : "gap-4"}`}>
