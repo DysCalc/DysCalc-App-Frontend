@@ -155,7 +155,7 @@ export default function UserSidebar() {
         </p>
 
         <Link
-          href="/educator/profile"
+          href="/user/profile"
           className={`group flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
             collapsed ? "justify-center" : "justify-between px-3"
           }`}
@@ -213,7 +213,7 @@ export default function UserSidebar() {
               collapsed ? "w-0 -translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
             }`}
           >
-            <p className="text-base leading-tight opacity-90">Educator Account</p>
+            <p className="text-base leading-tight opacity-90">User Account</p>
             <h2 className="truncate text-xl font-semibold leading-tight">
               {userName}
             </h2>
