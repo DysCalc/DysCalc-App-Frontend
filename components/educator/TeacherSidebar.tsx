@@ -68,7 +68,7 @@ export default function TeacherSidebar() {
     >
       {/* Header = 20% */}
       <div
-        className={`group flex flex-[2] items-center border-b border-[#D9D9D9] bg-[#FAFAFA] ${
+        className={`group flex flex-[2] items-center border-b border-r border-[#D9D9D9] bg-[#FAFAFA] ${
           collapsed ? "justify-center px-4" : "justify-between px-8"
         }`}
       >
@@ -119,7 +119,7 @@ export default function TeacherSidebar() {
       </div>
 
       {/* Nav = 60% */}
-      <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"} flex-[70%] overflow-y-auto`}>
+      <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"} flex-[70%] overflow-y-auto border-r border-[#D9D9D9]`}>
         <p
           className={`mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-300 ${
             collapsed ? "text-center text-[10px]" : ""
@@ -149,7 +149,7 @@ export default function TeacherSidebar() {
           </Link>
 
           <Link
-            href="/educator/students"
+            href="/educator/classroom"
             className={`flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
               collapsed ? "justify-center" : "px-3"
             }`}
@@ -163,7 +163,7 @@ export default function TeacherSidebar() {
                   : "ml-3 w-auto translate-x-0 opacity-100"
               }`}
             >
-              Students
+              Classroom
             </span>
           </Link>
 
