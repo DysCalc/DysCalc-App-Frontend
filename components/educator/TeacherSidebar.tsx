@@ -119,7 +119,7 @@ export default function TeacherSidebar() {
       </div>
 
       {/* Nav = 60% */}
-      <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"} flex-[65%] overflow-y-auto`}>
+      <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"} flex-[70%] overflow-y-auto`}>
         <p
           className={`mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-300 ${
             collapsed ? "text-center text-[10px]" : ""
@@ -247,11 +247,11 @@ export default function TeacherSidebar() {
       </nav>
 
       <div
-        className={`flex flex-[15%] bg-[#29A177] text-white transition-all duration-500 ${
+        className={`flex flex-[10%] bg-[#29A177] text-white transition-all duration-500 ${
           collapsed ? "justify-center px-3 py-5" : "px-6 py-6"
         }`}
       >
-        <div className={`flex mt-4 ${collapsed ? "justify-start" : "gap-4"}`}>
+        <div className={`flex mt-2 ${collapsed ? "justify-start" : "gap-4"}`}>
           <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-white transition-all duration-300 hover:scale-105 hover:ring-4 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-[#29A177]">
             {avatarUrl ? (
               <Image
