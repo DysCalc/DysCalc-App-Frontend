@@ -2,14 +2,13 @@ import Image from "next/image";
 
 export default function UserDashboard() {
   return (
-    <main className="flex bg-[#f5f5f0]">
-      <div className="flex flex-col min-h-screen w-full justify-between">
+    <div className="flex h-full w-full flex-col">
         
         {/* HERO SECTION (fixed height) */}
-        <div className="flex h-23/27 w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#FFF4C2_0%,_#FFE030_34%,_#EAB300_100%)]">
+        <div className="flex flex-[85%] w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#FFF4C2_0%,_#FFE030_34%,_#EAB300_100%)]">
           
           {/* LEFT */}
-          <div className="w-1/2 flex items-center justify-end">
+          <div className="flex w-1/2 items-center justify-end">
             <div className="ml-30">
               <Image
                 src="/icons/main-icon.svg"
@@ -22,7 +21,7 @@ export default function UserDashboard() {
           </div>
 
           {/* RIGHT */}
-          <div className="w-1/2 flex items-center justify-center">
+          <div className="flex w-1/2 items-center justify-center">
             <div className="flex flex-col pr-10 text-white items-center text-center space-y-1">
               
               <h1 className="text-4xl font-bold">
@@ -44,7 +43,8 @@ export default function UserDashboard() {
             </div>
           </div>
         </div>
+
+        <div className="flex-[15%]" />
       </div>
-    </main>
   );
 }
