@@ -116,7 +116,7 @@ export default function UserSidebar() {
       </div>
 
       {/* Nav = 60% */}
-      <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"} flex-[65%] overflow-y-auto`}>
+      <nav className={`${collapsed ? "px-3 py-6" : "px-6 py-6"} flex-[70%] overflow-y-auto`}>
         <p
           className={`mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-all duration-300 ${
             collapsed ? "text-center text-[10px]" : ""
@@ -155,7 +155,7 @@ export default function UserSidebar() {
         </p>
 
         <Link
-          href="/educator/profile"
+          href="/user/profile"
           className={`group flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${
             collapsed ? "justify-center" : "justify-between px-3"
           }`}
@@ -187,11 +187,11 @@ export default function UserSidebar() {
       </nav>
 
       <div
-        className={`flex flex-[15%] bg-[#29A177] text-white transition-all duration-500 ${
-          collapsed ? "px-3 py-5" : "px-6 py-6"
+        className={`flex flex-[10%] bg-[#29A177] text-white transition-all duration-500 ${
+          collapsed ? "justify-center px-3 py-5" : "px-6 py-6"
         }`}
       >
-        <div className={`flex mt-4 ${collapsed ? "justify-start" : "gap-4"}`}>
+        <div className={`flex mt-2 ${collapsed ? "justify-start" : "gap-4"}`}>
           <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-white transition-all duration-300 hover:scale-105 hover:ring-4 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-[#29A177]">
             {avatarUrl ? (
               <Image
@@ -213,7 +213,7 @@ export default function UserSidebar() {
               collapsed ? "w-0 -translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
             }`}
           >
-            <p className="text-base leading-tight opacity-90">Educator Account</p>
+            <p className="text-base leading-tight opacity-90">User Account</p>
             <h2 className="truncate text-xl font-semibold leading-tight">
               {userName}
             </h2>

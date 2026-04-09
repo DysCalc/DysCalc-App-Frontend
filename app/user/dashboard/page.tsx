@@ -5,7 +5,7 @@ export default function UserDashboard() {
     <div className="flex h-full w-full flex-col">
         
         {/* HERO SECTION (fixed height) */}
-        <div className="flex flex-[85%] w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#FFF4C2_0%,_#FFE030_34%,_#EAB300_100%)]">
+        <div className="flex flex-[90%] w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#FFF4C2_0%,_#FFE030_34%,_#EAB300_100%)]">
           
           {/* LEFT */}
           <div className="flex w-1/2 items-center justify-end">
@@ -44,7 +44,7 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        <div className="flex-[15%]" />
+        <div className="flex-[10%]" />
       </div>
   );
 }
