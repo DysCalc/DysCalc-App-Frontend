@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import ClassCard from "@/components/educator/ClassCard";
 
 type ClassItem = {
@@ -12,6 +13,7 @@ type ClassItem = {
 const MAX_CLASSES = 6;
 
 export default function EducatorClassroom() {
+  const router = useRouter();
   const [classes, setClasses] = useState<ClassItem[]>([
     { title: "2023 SpEd Iligan City", students: 8, variant: "yellow" },
     { title: "2025 SpEd Lanao del Norte", students: 21, variant: "green" },
@@ -83,7 +85,7 @@ export default function EducatorClassroom() {
               title={cls.title}
               students={cls.students}
               variant={cls.variant}
-              onClick={() => console.log(`${cls.title} clicked`)}
+              onClick={() => router.push(`/educator/classroom/${cls.title}`)}
               onMenuClick={() => console.log(`${cls.title} menu clicked`)}
             />
           ))}
