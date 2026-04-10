@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ClassCard from "@/components/educator/ClassCard";
+import { classroomMap } from "./data";
 
 type ClassItem = {
+  id: string;
   title: string;
   students: number;
   variant: "yellow" | "green" | "blue" | "gray";
@@ -14,13 +16,8 @@ const MAX_CLASSES = 6;
 
 export default function EducatorClassroom() {
   const router = useRouter();
-  const [classes, setClasses] = useState<ClassItem[]>([
-    { title: "2023 SpEd Iligan City", students: 8, variant: "yellow" },
-    { title: "2025 SpEd Lanao del Norte", students: 21, variant: "green" },
-    { title: "Class 3", students: 10, variant: "blue" },
-    { title: "Class 4", students: 15, variant: "green" },
-    { title: "Class 5", students: 24, variant: "yellow" },
-  ]);
+  const initialClasses: ClassItem[] = Object.values(classroomMap);
+  const [classes, setClasses] = useState<ClassItem[]>(initialClasses);
 
   const [showModal, setShowModal] = useState(false);
   const [classroomName, setClassroomName] = useState("");
@@ -44,6 +41,7 @@ export default function EducatorClassroom() {
     const nextVariant = colorCycle[classes.length % colorCycle.length];
 
     const newClass: ClassItem = {
+      id: `cls_${Date.now()}`,
       title: trimmedName,
       students: 0,
       variant: nextVariant,
@@ -85,7 +83,7 @@ export default function EducatorClassroom() {
               title={cls.title}
               students={cls.students}
               variant={cls.variant}
-              onClick={() => router.push(`/educator/classroom/${cls.title}`)}
+              onClick={() => router.push(`/educator/classroom/${cls.id}`)}
               onMenuClick={() => console.log(`${cls.title} menu clicked`)}
             />
           ))}
