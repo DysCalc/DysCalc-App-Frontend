@@ -18,6 +18,8 @@ type Props = {
   isOpen: boolean;
   onToggle: (id: string) => void;
   onClose: () => void;
+  onClick: (id: string) => void;
+
 };
 
 export default function StudentCard({
@@ -25,9 +27,11 @@ export default function StudentCard({
   isOpen,
   onToggle,
   onClose,
+  onClick,
 }: Props) {
   return (
     <div
+      onClick={() => onClick(student.id)}
       onMouseLeave={onClose}
       className="group relative flex items-center rounded border border-[#D9D9D9] bg-white px-3 py-2 transition hover:bg-[#F8F8F8]"
     >
