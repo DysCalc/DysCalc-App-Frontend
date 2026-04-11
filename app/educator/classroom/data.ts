@@ -57,20 +57,23 @@ export const headerStyles = {
   },
 };
 
-export const students = [
-  { id: "s1", name: "Juan Dela Cruz" },
-  { id: "s2", name: "Maria Santos" },
-  { id: "s3", name: "Pedro Reyes" },
-  { id: "s4", name: "Ana Lopez" },
-  { id: "s5", name: "Carlos Mendoza" },
-  { id: "s6", name: "Liza Ramos" },
-  { id: "s7", name: "Mark Bautista" },
-  { id: "s8", name: "Ella Cruz" },
-  { id: "s9", name: "John Lim" },
-  { id: "s10", name: "Paolo Garcia" },
-  { id: "s11", name: "Kim Torres" },
-  { id: "s12", name: "Nina Flores" },
-];
-
-
-
+export const studentsMap = {
+  cls_001: [
+    { id: "s1", name: "Juan Dela Cruz" },
+    { id: "s2", name: "Maria Santos" },
+    { id: "s3", name: "Pedro Reyes" },
+    { id: "s4", name: "Ana Lopez" },
+    { id: "s5", name: "Carlos Mendoza" },
+  ],
+  cls_002: [
+    { id: "s6", name: "Liza Ramos" },
+    { id: "s7", name: "Mark Bautista" },
+    { id: "s8", name: "Ella Cruz" },
+    { id: "s9", name: "John Lim" },
+    { id: "s10", name: "Paolo Garcia" },
+  ],
+  cls_003: [
+    { id: "s11", name: "Kim Torres" },
+    { id: "s12", name: "Nina Flores" },
+  ],
+} as const;
