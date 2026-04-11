@@ -4,15 +4,18 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import StudentCard from "@/components/educator/StudentCard";
 import { headerStyles } from "../data";
-import { students } from "../data";
+import { studentsMap } from "../data";
 import { classroomMap } from "../data";
+import { useRouter } from "next/navigation";
 
 export default function ClassroomPage() {
   const params = useParams();
   const classId = params.classId as string;
   const classroom = classroomMap[classId as keyof typeof classroomMap];
+  const studentList = studentsMap[classId as keyof typeof studentsMap] || [];
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const styles = headerStyles[classroom.variant];
+  const router = useRouter();
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -48,7 +51,7 @@ export default function ClassroomPage() {
       {/* STUDENT GRID */}
       <div className="flex flex-1 w-full">
         <div className="grid w-full grid-cols-3 grid-rows-4 gap-2 p-15 pb-55">
-            {students.map((student) => {
+            {studentList.map((student) => {
             const isOpen = openMenuId === student.id;
 
             return (
@@ -60,6 +63,10 @@ export default function ClassroomPage() {
                     setOpenMenuId((prev) => (prev === id ? null : id))
                 }
                 onClose={() => setOpenMenuId(null)}
+                onClick={(id) => {
+                    // Handle student click event
+                    router.push(`/educator/classroom/${classId}/student/${id}`)
+                }}
                 />
             );
             })}
