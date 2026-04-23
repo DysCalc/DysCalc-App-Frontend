@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareClient } from "@/lib/supabase-server";
 
-const protectedPaths = ["/dashboard", "/educator", "/student", "/setup"];
+const protectedPaths = ["/educator", "/student", "/setup"];
 
 function isProtectedPath(pathname: string) {
   return protectedPaths.some((path) => pathname.startsWith(path));
@@ -16,6 +16,7 @@ function copyCookies(from: NextResponse, to: NextResponse) {
 export async function proxy(request: NextRequest) {
   let { supabase, supabaseResponse } = createMiddlewareClient(request);
   const pathname = request.nextUrl.pathname;
+  const loginPath = '/';
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -24,7 +25,7 @@ export async function proxy(request: NextRequest) {
   // 1. Not logged in → block protected routes
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = loginPath;
     const redirect = NextResponse.redirect(url);
     copyCookies(supabaseResponse, redirect);
     return redirect;
@@ -79,7 +80,7 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = userRole
       ? `/${userRole.toLowerCase()}/dashboard`
-      : "/setup";
+      : loginPath;
 
     const redirect = NextResponse.redirect(url);
     copyCookies(supabaseResponse, redirect);

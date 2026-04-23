@@ -1,10 +1,14 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-client";
+import { Profiles } from '@/types';
+import { getUserProfile } from "@/hooks/use-profile";
+
 export interface AuthContextType {
     user: User | null,
+    profile: Profiles | null,
     loading: boolean,
     loginWithGoogle: () => Promise<void>,
     logout: () => Promise<void>
@@ -13,30 +17,41 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+    const context = useContext(AuthContext)
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider')
+    }
+    return context
 }
 
-export function AuthProvider({ children } : { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [profile, setProfile] = useState<Profiles | null>(null);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
-    
+
     useEffect(() => {
         const getSession = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
+            if (user?.id) {
+                const profile = await getUserProfile(user.id);
+                setProfile(profile);
+            }
             setLoading(false);
         }
 
         getSession();
 
         const { data: listener } = supabase.auth.onAuthStateChange(
-            (_event, session) => {
+            async (_event, session) => {
                 setUser(session?.user ?? null)
+                if (session?.user?.id) {
+                    const profile = await getUserProfile(session.user.id);
+                    setProfile(profile);
+                } else {
+                    setProfile(null);
+                }
             }
         );
 
@@ -60,11 +75,12 @@ export function AuthProvider({ children } : { children: React.ReactNode }) {
 
     const logout = async (): Promise<void> => {
         await supabase.auth.signOut({ scope: 'local' })
-        window.location.href = "/login";
+        window.location.href = "/";
     };
 
     const value: AuthContextType = {
         user,
+        profile,
         loading,
         loginWithGoogle,
         logout,

@@ -1,4 +1,4 @@
-import UserSidebar from "@/components/user/UserSidebar";
+import UserSidebar from "@/components/student/UserSidebar";
 import Footer from "@/components/shared/Footer";
 
 export default function UserLayout({
@@ -11,9 +11,12 @@ export default function UserLayout({
       <UserSidebar />
 
       <div className="flex flex-1 flex-col">
+        {/* Content */}
         <div className="flex-1">
           {children}
         </div>
+
+        {/* Footer */}
         <Footer />
       </div>
     </main>

@@ -87,6 +87,7 @@ export default function Setup() {
             >
               <option value={RoleEnum.STUDENT}>Student</option>
               <option value={RoleEnum.EDUCATOR}>Educator</option>
+              <option value={RoleEnum.ADMIN}>Admin</option>
             </select>
           </div>
 

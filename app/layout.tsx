@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Beiruti, Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-provider";
+import Footer from "@/components/shared/Footer";
+import Sidebar from "@/components/shared/Sidebar";
 
 const beiruti = Beiruti({
   subsets: ["latin"],
@@ -40,7 +42,15 @@ export default function RootLayout({
         `}
       >
         <AuthProvider>
-          {children}
+          <div className="flex min-h-screen bg-[#f5f5f0]">
+            <Sidebar />
+            <div className="flex flex-1 flex-col">
+              <div className="flex-1">
+                {children}
+              </div>
+              <Footer />
+            </div>
+          </div>
         </AuthProvider>
       </body>
     </html>
