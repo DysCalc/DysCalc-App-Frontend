@@ -1,7 +1,10 @@
 import {
     Cog8ToothIcon,
     HomeIcon,
-    UserIcon
+    UserIcon,
+    UserGroupIcon,
+    ClipboardDocumentListIcon,
+    ChartBarIcon
 } from "@heroicons/react/24/outline";
 
 export interface NavLinks {
@@ -40,15 +43,30 @@ export const STUDENT_NAVIGATIONS: NavGroup[] = [
     },
 ];
 
-export const TEACHER_NAVIGATIONS: NavGroup[] = [
+export const EDUCATOR_NAVIGATIONS: NavGroup[] = [
     {
         title: "Main",
         links: [
             {
                 label: "Dashboard",
-                href: "/teacher/dashboard",
+                href: "/educator/dashboard",
                 icon: HomeIcon,
             },
+            {
+                label: "Classroom",
+                href: "/educator/classroom",
+                icon: UserGroupIcon,
+            },
+            {
+                label: "Assessments",
+                href: "/educator/assessments",
+                icon: ClipboardDocumentListIcon,
+            },
+            {
+                label: "Reports",
+                href: "/educator/reports",
+                icon: ChartBarIcon,
+            }
         ],
     },
     {
@@ -56,7 +74,7 @@ export const TEACHER_NAVIGATIONS: NavGroup[] = [
         links: [
             {
                 label: "Settings",
-                href: "/teacher/settings",
+                href: "/educator/settings",
                 icon: Cog8ToothIcon,
             },
             ...SHARED_NAVIGATIONS,

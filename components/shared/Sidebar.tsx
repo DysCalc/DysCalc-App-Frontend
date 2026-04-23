@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/auth-provider";
 import { formatProfile } from "@/hooks/use-profile";
 import {
   STUDENT_NAVIGATIONS,
-  TEACHER_NAVIGATIONS,
+  EDUCATOR_NAVIGATIONS,
   ADMIN_NAVIGATIONS,
   NavGroup,
 } from "@/types/navigation";
@@ -23,6 +23,7 @@ import LogoutModal from "./LogoutModal";
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [userName, setUserName] = useState("");
+  const [userNickname, setUserNickname] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userRole, setUserRole] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -33,11 +34,12 @@ export default function Sidebar() {
     if (!user) return;
     if (loading) return;
 
-    const { name, avatar_url, role } = formatProfile(user, profile);
+    const { name, avatar_url, role, nickname } = formatProfile(user, profile);
 
     setUserName(name);
     setAvatarUrl(avatar_url || null);
     setUserRole(role);
+    setUserNickname(nickname);
   }, [user, loading, profile]);
 
   if (!user) return null;
@@ -61,7 +63,7 @@ export default function Sidebar() {
         baseNavigations = STUDENT_NAVIGATIONS;
         break;
       case "educator":
-        baseNavigations = TEACHER_NAVIGATIONS;
+        baseNavigations = EDUCATOR_NAVIGATIONS;
         break;
       case "admin":
         baseNavigations = ADMIN_NAVIGATIONS;
@@ -92,12 +94,12 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`flex h-screen flex-col bg-white transition-[width] duration-500 ease-in-out ${collapsed ? "w-24" : "w-72"
+      className={`flex h-full flex-col bg-white transition-[width] duration-500 ease-in-out ${collapsed ? "w-24" : "w-72"
         }`}
     >
-      {/* Header = 20% */}
+      {/* Header */}
       <div
-        className={`group flex flex-[2] items-center border-b border-[#D9D9D9] bg-[#FAFAFA] ${collapsed ? "justify-center px-4" : "justify-between px-8"
+        className={`group flex h-24 shrink-0 items-center border-b border-[#D9D9D9] bg-[#FAFAFA] ${collapsed ? "justify-center px-4" : "justify-between px-8"
           }`}
       >
         <div className="flex items-center">
@@ -144,10 +146,10 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Nav = 60% */}
+      {/* Nav */}
       <nav
         className={`${collapsed ? "px-3 py-6" : "px-6 py-6"
-          } flex-[70%] overflow-y-auto flex flex-col justify-between`}
+          } flex-1 overflow-y-auto flex flex-col justify-between`}
       >
         <div className="flex-1">
           {navigations.map((group, index) => (
@@ -208,7 +210,7 @@ export default function Sidebar() {
       </nav>
 
       <div
-        className={`flex flex-[10%] bg-[#29A177] text-white transition-all duration-500 ${collapsed ? "justify-center px-3 py-5" : "px-6 py-6"
+        className={`shrink-0 flex bg-[#29A177] text-white transition-all duration-500 ${collapsed ? "justify-center px-3 py-5" : "px-6 py-6"
           }`}
       >
         <div className={`flex mt-2 ${collapsed ? "justify-start" : "gap-4"}`}>
@@ -237,8 +239,8 @@ export default function Sidebar() {
             <p className="text-base leading-tight opacity-90">
               {userRole} Account
             </p>
-            <h2 className="truncate text-xl font-semibold leading-tight">
-              {userName || "Loading..."}
+            <h2 className="truncate text-xl font-semibold leading-tight" title={userName}>
+              {userName} {userNickname && <span className="text-sm text-gray-200">({userNickname})</span>}
             </h2>
           </div>
         </div>

@@ -42,12 +42,12 @@ export default function RootLayout({
         `}
       >
         <AuthProvider>
-          <div className="flex min-h-screen bg-[#f5f5f0]">
+          <div className="flex h-screen overflow-hidden bg-[#f5f5f0]">
             <Sidebar />
-            <div className="flex flex-1 flex-col">
-              <div className="flex-1">
+            <div className="flex flex-1 flex-col overflow-y-auto">
+              <main className="flex-1">
                 {children}
-              </div>
+              </main>
               <Footer />
             </div>
           </div>
