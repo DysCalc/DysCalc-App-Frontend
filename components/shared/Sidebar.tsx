@@ -13,9 +13,9 @@ import {
 import { useAuth } from "@/contexts/auth-provider";
 import { formatProfile } from "@/hooks/use-profile";
 import {
-  STUDENT_NAVIGATIONS,
-  EDUCATOR_NAVIGATIONS,
-  ADMIN_NAVIGATIONS,
+  getStudentNavigations,
+  getEducatorNavigations,
+  getAdminNavigations,
   type NavGroup,
 } from "@/types/navigation";
 import LogoutModal from "./LogoutModal";
@@ -60,13 +60,13 @@ export default function Sidebar() {
     let baseNavigations: NavGroup[] = [];
     switch (currentContext) {
       case "student":
-        baseNavigations = STUDENT_NAVIGATIONS;
+        baseNavigations = getStudentNavigations(user.id);
         break;
       case "educator":
-        baseNavigations = EDUCATOR_NAVIGATIONS;
+        baseNavigations = getEducatorNavigations(user.id);
         break;
       case "admin":
-        baseNavigations = ADMIN_NAVIGATIONS;
+        baseNavigations = getAdminNavigations(user.id);
         break;
       default:
         baseNavigations = [];
@@ -79,7 +79,7 @@ export default function Sidebar() {
         links: [
           {
             label: "Back to Admin",
-            href: "/admin/dashboard",
+            href: `/admin/${user.id}/dashboard`,
             icon: ArrowUturnLeftIcon,
           },
         ],
@@ -164,11 +164,15 @@ export default function Sidebar() {
               <div className="space-y-2">
                 {group.links.map((link, linkIndex) => {
                   const Icon = link.icon;
+                  const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
                   return (
                     <Link
                       key={linkIndex}
                       href={link.href}
-                      className={`flex h-12 items-center rounded-lg text-gray-700 transition-all duration-300 hover:bg-[#F3FBF7] hover:text-[#29A177] ${collapsed ? "justify-center" : "px-3"
+                      className={`flex h-12 items-center rounded-lg transition-all duration-300 ${collapsed ? "justify-center" : "px-3"
+                        } ${isActive
+                          ? "bg-[#F3FBF7] text-[#29A177] font-semibold"
+                          : "text-gray-700 hover:bg-[#F3FBF7] hover:text-[#29A177]"
                         }`}
                       title={link.label}
                     >

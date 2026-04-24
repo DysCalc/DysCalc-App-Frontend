@@ -20,13 +20,13 @@ export type NavGroup = {
 
 const SHARED_NAVIGATIONS: NavLink[] = []
 
-export const STUDENT_NAVIGATIONS: NavGroup[] = [
+export const getStudentNavigations = (userId: string): NavGroup[] => [
     {
         title: "Main",
         links: [
             {
                 label: "Dashboard",
-                href: "/student/dashboard",
+                href: `/student/${userId}/dashboard`,
                 icon: HomeIcon,
             },
         ],
@@ -36,7 +36,7 @@ export const STUDENT_NAVIGATIONS: NavGroup[] = [
         links: [
             {
                 label: "Settings",
-                href: "/student/settings",
+                href: `/student/${userId}/settings`,
                 icon: Cog8ToothIcon,
             },
             ...SHARED_NAVIGATIONS,
@@ -44,28 +44,28 @@ export const STUDENT_NAVIGATIONS: NavGroup[] = [
     },
 ];
 
-export const EDUCATOR_NAVIGATIONS: NavGroup[] = [
+export const getEducatorNavigations = (userId: string): NavGroup[] => [
     {
         title: "Main",
         links: [
             {
                 label: "Dashboard",
-                href: "/educator/dashboard",
+                href: `/educator/${userId}/dashboard`,
                 icon: HomeIcon,
             },
             {
                 label: "Classroom",
-                href: "/educator/classroom",
+                href: `/educator/${userId}/classroom`,
                 icon: UserGroupIcon,
             },
             {
                 label: "Assessments",
-                href: "/educator/assessments",
+                href: `/educator/${userId}/assessments`,
                 icon: ClipboardDocumentListIcon,
             },
             {
                 label: "Reports",
-                href: "/educator/reports",
+                href: `/educator/${userId}/reports`,
                 icon: ChartBarIcon,
             }
         ],
@@ -75,7 +75,7 @@ export const EDUCATOR_NAVIGATIONS: NavGroup[] = [
         links: [
             {
                 label: "Settings",
-                href: "/educator/settings",
+                href: `/educator/${userId}/settings`,
                 icon: Cog8ToothIcon,
             },
             ...SHARED_NAVIGATIONS,
@@ -83,13 +83,13 @@ export const EDUCATOR_NAVIGATIONS: NavGroup[] = [
     },
 ];
 
-export const ADMIN_NAVIGATIONS: NavGroup[] = [
+export const getAdminNavigations = (userId: string): NavGroup[] => [
     {
         title: "Main",
         links: [
             {
                 label: "Dashboard",
-                href: "/admin/dashboard",
+                href: `/admin/${userId}/dashboard`,
                 icon: HomeIcon,
             },
         ],
@@ -99,12 +99,12 @@ export const ADMIN_NAVIGATIONS: NavGroup[] = [
         links: [
             {
                 label: "Educator View",
-                href: "/educator/dashboard",
+                href: `/educator/${userId}/dashboard`,
                 icon: AcademicCapIcon,
             },
             {
                 label: "Student View",
-                href: "/student/dashboard",
+                href: `/student/${userId}/dashboard`,
                 icon: PencilIcon,
             },
         ]
@@ -114,7 +114,7 @@ export const ADMIN_NAVIGATIONS: NavGroup[] = [
         links: [
             {
                 label: "Settings",
-                href: "/admin/settings",
+                href: `/admin/${userId}/settings`,
                 icon: Cog8ToothIcon,
             },
             ...SHARED_NAVIGATIONS,

@@ -1,6 +1,13 @@
+"use client";
+
 import Image from "next/image";
+import { useAuth } from "@/contexts/auth-provider";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const { user } = useAuth();
+
   return (
     <main className="flex bg-[#f5f5f0]">
       <div className="flex flex-col min-h-screen w-full justify-between">

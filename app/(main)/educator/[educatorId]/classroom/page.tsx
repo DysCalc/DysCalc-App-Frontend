@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import ClassCard from "@/components/educator/ClassCard";
 import CreateClassModal from "@/components/educator/CreateClassModal";
-import { type Classroom, type ClassroomWithStudentCount } from "@/types";
+import { type ClassroomWithStudentCount } from "@/types";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createClient } from "@/lib/supabase-client";
 import { useAuth } from "@/contexts/auth-provider";

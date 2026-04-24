@@ -65,8 +65,8 @@ export default function StudentDetailPage() {
             <button
               onClick={() => setActiveTab("screening")}
               className={`h-full px-20 text-lg font-semibold transition ${activeTab === "screening"
-                  ? "bg-[#F3F3F3] text-[#706F6F]"
-                  : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+                ? "bg-[#F3F3F3] text-[#706F6F]"
+                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
                 }`}
             >
               Screening Information
@@ -75,8 +75,8 @@ export default function StudentDetailPage() {
             <button
               onClick={() => setActiveTab("learning")}
               className={`h-full px-20 text-lg font-semibold transition ${activeTab === "learning"
-                  ? "bg-[#F3F3F3] text-[#706F6F]"
-                  : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+                ? "bg-[#F3F3F3] text-[#706F6F]"
+                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
                 }`}
             >
               Learning Path
@@ -85,8 +85,8 @@ export default function StudentDetailPage() {
             <button
               onClick={() => setActiveTab("performance")}
               className={`h-full px-20 text-lg font-semibold transition ${activeTab === "performance"
-                  ? "bg-[#F3F3F3] text-[#706F6F]"
-                  : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+                ? "bg-[#F3F3F3] text-[#706F6F]"
+                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
                 }`}
             >
               Performance

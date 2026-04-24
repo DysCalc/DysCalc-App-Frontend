@@ -70,7 +70,7 @@ function getRemark(score: number) {
 export default function Performance({ student }: Props) {
   return (
     <div className="flex h-full w-full flex-col gap-4 px-15 py-4 min-h-0">
-      
+
       {/* HEADER / SUMMARY */}
       <div className="rounded border border-[#EDEDED] bg-white px-10 py-4 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
@@ -98,7 +98,7 @@ export default function Performance({ student }: Props) {
               className="rounded border border-[#EDEDED] bg-white p-6 shadow-sm transition hover:shadow-md"
             >
               <div className="flex items-center justify-between">
-                
+
                 {/* TEXT */}
                 <div>
                   <p className="text-xs font-medium text-[#9A9A9A] uppercase tracking-wide">
@@ -124,7 +124,7 @@ export default function Performance({ student }: Props) {
 
       {/* TABLE */}
       <div className="flex flex-1 min-h-0 flex-col rounded border border-[#EDEDED] bg-white shadow-sm">
-        
+
         {/* HEADER */}
         <div className="px-6 py-5 border-b border-[#EEEEEE]">
           <p className="text-sm font-semibold uppercase text-zinc-500">
@@ -134,7 +134,7 @@ export default function Performance({ student }: Props) {
 
         {/* TABLE BODY (SCROLLABLE) */}
         <div className="flex-1 overflow-y-auto">
-          
+
           {/* TABLE HEADER */}
           <div className="grid grid-cols-3 px-6 py-3 text-xs font-semibold uppercase text-[#9A9A9A] bg-[#FAFAFA]">
             <div>Skill Area</div>

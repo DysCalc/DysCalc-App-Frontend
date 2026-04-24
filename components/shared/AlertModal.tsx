@@ -58,7 +58,7 @@ export default function AlertModal({
   }[maxWidth];
 
   const getPrimaryButtonClasses = (
-    variant: AlertModalProps["primaryAction"]["variant"]
+    variant?: "primary" | "danger"
   ) => {
     if (variant === "danger") {
       return "bg-red-600 hover:bg-red-700 text-white";

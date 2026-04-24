@@ -77,25 +77,25 @@ export default function LearningPath({ student }: Props) {
 
   return (
     <div className="mt-2 mb-2 mr-2 flex h-[600px] w-full min-h-0 flex-col gap-4 px-15 py-4">
-        {/* Top summary */}
-        <div className="shrink-0 rounded border border-[#EDEDED] bg-white px-10 py-4 shadow-sm">
+      {/* Top summary */}
+      <div className="shrink-0 rounded border border-[#EDEDED] bg-white px-10 py-4 shadow-sm">
         <div className="flex items-start justify-between gap-6">
-            <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                    Personalized Learning Path
-                </p>
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              Personalized Learning Path
+            </p>
 
-                <h2 className="text-2xl font-semibold text-[#5C5E64] leading-tight">
-                    Recommended interventions for {student.name}
-                </h2>
-            </div>
+            <h2 className="text-2xl font-semibold text-[#5C5E64] leading-tight">
+              Recommended interventions for {student.name}
+            </h2>
+          </div>
 
-            <button className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#29A177] px-6 text-white shadow-sm transition hover:bg-[#17815C] active:scale-[0.98]">
+          <button className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#29A177] px-6 text-white shadow-sm transition hover:bg-[#17815C] active:scale-[0.98]">
             <ArrowPathRoundedSquareIcon className="h-5 w-5" />
             <span className="text-sm font-semibold">Refresh Path</span>
-            </button>
+          </button>
         </div>
-        </div>
+      </div>
 
 
 
@@ -119,17 +119,15 @@ export default function LearningPath({ student }: Props) {
                   key={module.id}
                   type="button"
                   onClick={() => setActiveModuleId(module.id)}
-                  className={`w-full border-b border-[#F0F0F0] px-5 py-4 text-left transition ${
-                    isActive ? "bg-[#F3F8F5]" : "bg-white hover:bg-[#F8F8F8]"
-                  }`}
+                  className={`w-full border-b border-[#F0F0F0] px-5 py-4 text-left transition ${isActive ? "bg-[#F3F8F5]" : "bg-white hover:bg-[#F8F8F8]"
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div
-                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${
-                        isActive
+                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${isActive
                           ? "bg-[#29A177] text-white"
                           : "bg-[#EAF6F1] text-[#29A177]"
-                      }`}
+                        }`}
                     >
                       {index + 1}
                     </div>
@@ -137,9 +135,8 @@ export default function LearningPath({ student }: Props) {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <p
-                          className={`truncate text-sm font-semibold ${
-                            isActive ? "text-[#29A177]" : "text-[#5C5E64]"
-                          }`}
+                          className={`truncate text-sm font-semibold ${isActive ? "text-[#29A177]" : "text-[#5C5E64]"
+                            }`}
                         >
                           {module.title}
                         </p>

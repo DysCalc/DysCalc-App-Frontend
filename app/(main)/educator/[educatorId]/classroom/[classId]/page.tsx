@@ -51,25 +51,25 @@ export default function ClassroomPage() {
       {/* STUDENT GRID */}
       <div className="flex flex-1 w-full">
         <div className="grid w-full grid-cols-3 grid-rows-4 gap-2 p-15 pb-55">
-            {studentList.map((student) => {
+          {studentList.map((student) => {
             const isOpen = openMenuId === student.id;
 
             return (
-                <StudentCard
+              <StudentCard
                 key={student.id}
                 student={student}
                 isOpen={isOpen}
                 onToggle={(id) =>
-                    setOpenMenuId((prev) => (prev === id ? null : id))
+                  setOpenMenuId((prev) => (prev === id ? null : id))
                 }
                 onClose={() => setOpenMenuId(null)}
                 onClick={(id) => {
-                    // Handle student click event
-                    router.push(`/educator/classroom/${classId}/student/${id}`)
+                  // Handle student click event
+                  router.push(`/educator/classroom/${classId}/student/${id}`)
                 }}
-                />
+              />
             );
-            })}
+          })}
         </div>
       </div>
     </div>

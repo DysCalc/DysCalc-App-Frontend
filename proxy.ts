@@ -82,7 +82,7 @@ export async function proxy(request: NextRequest) {
     // Prevent going back to setup after completion
     if (pathname.startsWith("/setup")) {
       const url = request.nextUrl.clone();
-      url.pathname = `/${userRole.toLowerCase()}/dashboard`;
+      url.pathname = `/${userRole.toLowerCase()}/${user.id}/dashboard`;
 
       const redirect = NextResponse.redirect(url);
       copyCookies(supabaseResponse, redirect);
@@ -98,14 +98,17 @@ export async function proxy(request: NextRequest) {
     pathname === "/dashboard" ||
     pathname === "/educator" ||
     pathname === "/student" ||
-    pathname === "/admin"
+    pathname === "/admin" ||
+    pathname === "/educator/dashboard" ||
+    pathname === "/student/dashboard" ||
+    pathname === "/admin/dashboard"
   ) {
     const url = request.nextUrl.clone();
 
     if (userRole === "ADMIN") {
-      url.pathname = pathname === "/dashboard" ? "/admin/dashboard" : `${pathname}/dashboard`;
+      url.pathname = `/admin/${user.id}/dashboard`;
     } else {
-      url.pathname = `/${userRole.toLowerCase()}/dashboard`;
+      url.pathname = `/${userRole.toLowerCase()}/${user.id}/dashboard`;
     }
 
     const redirect = NextResponse.redirect(url);
