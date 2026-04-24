@@ -6,7 +6,6 @@ import {
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { toast } from "sonner";
 
 type ClassCardProps = {
   id: number;
@@ -14,8 +13,9 @@ type ClassCardProps = {
   student_count: number;
   variant?: "green" | "blue" | "gray" | "yellow" | "empty";
   className?: string;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onCardClick: (classroomId: number) => void;
 };
 
 const variantStyles = {
@@ -89,25 +89,23 @@ export default function ClassCard({
   className = "",
   onEdit,
   onDelete,
+  onCardClick
 }: ClassCardProps) {
   const styles = variantStyles[variant];
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const onCardClick = () => {
-    toast.success(`Navigating to ${name} (${id})`);
-  };
 
   return (
     <>
       <div
         role="button"
         tabIndex={0}
-        onClick={onCardClick}
+        onClick={() => onCardClick(id)}
         onMouseLeave={() => setMenuOpen(false)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onCardClick();
+            onCardClick(id);
           }
           if (e.key === "Escape") {
             setMenuOpen(false);
@@ -144,7 +142,7 @@ export default function ClassCard({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onEdit?.();
+                  onEdit();
                   setMenuOpen(false);
                 }}
                 className={`flex h-9 items-center px-3 text-xs font-medium border-l-0 ${styles.menuText} ${styles.menuHover}`}
@@ -156,7 +154,7 @@ export default function ClassCard({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete?.();
+                  onDelete();
                   setMenuOpen(false);
                 }}
                 className={`flex h-9 items-center px-3 text-xs font-medium border-l border-white/10 ${styles.menuText} ${styles.menuHover}`}

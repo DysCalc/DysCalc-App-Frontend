@@ -6,7 +6,7 @@ import {
   EllipsisVerticalIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
-import { classroomMap, studentsMap } from "../../../data";
+import { classroomMap, studentsMap } from "../../../classroom/data";
 import ScreeningInformation from "./ScreeningInformation";
 import LearningPath from "./LearningPath";
 import Performance from "./Performance";

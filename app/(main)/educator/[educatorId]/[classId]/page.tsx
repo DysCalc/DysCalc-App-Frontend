@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import StudentCard from "@/components/educator/StudentCard";
-import { headerStyles } from "../data";
-import { studentsMap } from "../data";
-import { classroomMap } from "../data";
-import { useRouter } from "next/navigation";
+import { headerStyles } from "../classroom/data";
+import { studentsMap } from "../classroom/data";
+import { classroomMap } from "../classroom/data";
 
 export default function ClassroomPage() {
   const params = useParams();
+  const router = useRouter();
   const classId = params.classId as string;
   const classroom = classroomMap[classId as keyof typeof classroomMap];
   const studentList = studentsMap[classId as keyof typeof studentsMap] || [];
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const styles = headerStyles[classroom.variant];
-  const router = useRouter();
 
   return (
     <div className="flex h-full w-full flex-col">

@@ -10,10 +10,12 @@ import { useAuth } from "@/contexts/auth-provider";
 import { toast } from "sonner";
 import { ApiResult } from "@/hooks/utils";
 import AlertModal from "@/components/shared/AlertModal";
+import { useRouter } from "next/navigation";
 
 const CLASSROOM_COLORS = ["green", "blue", "yellow", "gray"] as const;
 
 export default function EducatorClassroom() {
+  const router = useRouter();
   const { user } = useAuth();
   const [classrooms, setClassrooms] = useState<ClassroomWithStudentCount[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -43,10 +45,10 @@ export default function EducatorClassroom() {
     getClassrooms(user.id);
   }, [user]);
 
-  useEffect(() => {
-    console.log(classrooms);
-  }, [classrooms]);
-
+  const handleClassCardClick = (classroomId: number) => {
+    router.push(`/educator/${user?.id}/${classroomId}`);
+  };
+  ``
   const openCreateModal = () => {
     setShowModal(true);
   };
@@ -138,6 +140,7 @@ export default function EducatorClassroom() {
               variant={CLASSROOM_COLORS[index % CLASSROOM_COLORS.length]}
               onEdit={() => openEditModal(cls)}
               onDelete={() => openDeleteModal(cls)}
+              onCardClick={handleClassCardClick}
             />
           ))}
         </div>
