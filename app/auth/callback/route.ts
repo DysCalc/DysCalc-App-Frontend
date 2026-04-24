@@ -35,7 +35,11 @@ export async function GET(request: Request) {
       if (user) {
         const role = user.user_metadata?.role?.toLowerCase();
 
-        // Has profile with role → send to role dashboard
+        // No role → send to setup page
+        if (!role) {
+          return NextResponse.redirect(`${baseUrl}/setup`)
+        }
+
         return NextResponse.redirect(`${baseUrl}/${role}/dashboard`)
       }
     }

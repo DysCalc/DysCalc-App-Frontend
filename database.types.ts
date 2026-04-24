@@ -17,26 +17,29 @@ export type Database = {
       classrooms: {
         Row: {
           created_at: string
-          educator: string | null
+          educator_id: string
           id: number
+          is_archived: boolean
           name: string
         }
         Insert: {
           created_at?: string
-          educator?: string | null
+          educator_id?: string
           id?: number
+          is_archived?: boolean
           name: string
         }
         Update: {
           created_at?: string
-          educator?: string | null
+          educator_id?: string
           id?: number
+          is_archived?: boolean
           name?: string
         }
         Relationships: [
           {
             foreignKeyName: "classrooms_educator_fkey"
-            columns: ["educator"]
+            columns: ["educator_id"]
             isOneToOne: false
             referencedRelation: "educator"
             referencedColumns: ["id"]
@@ -170,7 +173,6 @@ export type Database = {
           date_of_birth: string
           id: string
           nickname: string | null
-          role: Database["public"]["Enums"]["ROLE"]
           sex: Database["public"]["Enums"]["SEX"]
         }
         Insert: {
@@ -178,7 +180,6 @@ export type Database = {
           date_of_birth: string
           id?: string
           nickname?: string | null
-          role: Database["public"]["Enums"]["ROLE"]
           sex: Database["public"]["Enums"]["SEX"]
         }
         Update: {
@@ -186,7 +187,6 @@ export type Database = {
           date_of_birth?: string
           id?: string
           nickname?: string | null
-          role?: Database["public"]["Enums"]["ROLE"]
           sex?: Database["public"]["Enums"]["SEX"]
         }
         Relationships: []

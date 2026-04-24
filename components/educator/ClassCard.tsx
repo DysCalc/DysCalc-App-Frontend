@@ -1,20 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
-  ClipboardDocumentIcon,
   EllipsisVerticalIcon,
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { toast } from "sonner";
 
 type ClassCardProps = {
-  title?: string;
-  students?: number;
+  id: number;
+  name: string;
+  student_count: number;
   variant?: "green" | "blue" | "gray" | "yellow" | "empty";
-  onClick?: () => void;
-  onMenuClick?: () => void;
   className?: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
 };
 
 const variantStyles = {
@@ -80,148 +81,125 @@ const variantStyles = {
   },
 };
 
-function generateHexCode(length = 8) {
-  const chars = "ABCDEF0123456789";
-  return Array.from(
-    { length },
-    () => chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
-}
-
 export default function ClassCard({
-  title,
-  students,
+  id,
+  name,
+  student_count,
   variant = "green",
-  onClick,
-  onMenuClick,
   className = "",
+  onEdit,
+  onDelete,
 }: ClassCardProps) {
   const styles = variantStyles[variant];
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const accessCode = useMemo(() => generateHexCode(8), []);
-
-  const handleCopyCode = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(accessCode);
-      console.log(`${title}: copied access code ${accessCode}`);
-      setMenuOpen(false);
-    } catch {
-      console.log(`Failed to copy access code for ${title}`);
-    }
+  const onCardClick = () => {
+    toast.success(`Navigating to ${name} (${id})`);
   };
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onMouseLeave={() => setMenuOpen(false)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick?.();
-        }
-        if (e.key === "Escape") {
-          setMenuOpen(false);
-        }
-      }}
-      className={`
-        group relative flex flex-col rounded-xl px-6 py-5 text-left transition-all duration-200
-        ${styles.bg} ${styles.border} ${styles.hover}
-        ${variant === "empty" ? "items-center justify-center" : "w-full items-start justify-end"}
-        ${onClick ? "cursor-pointer" : ""}
-        ${className}
-      `}
-    >
-      {variant !== "empty" && (
-        <div
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onCardClick}
+        onMouseLeave={() => setMenuOpen(false)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onCardClick();
+          }
+          if (e.key === "Escape") {
+            setMenuOpen(false);
+          }
+        }}
         className={`
-            absolute top-3 right-3 z-20 flex items-stretch overflow-hidden rounded-lg
-            ${styles.menuBg}
-            transition-all duration-200 ease-out
-            ${
-            menuOpen
+          group relative flex flex-col rounded-xl px-6 py-5 text-left transition-all duration-200
+          ${styles.bg} ${styles.border} ${styles.hover}
+          ${variant === "empty" ? "items-center justify-center" : "w-full items-start justify-end"}
+          cursor-pointer
+          ${className}
+        `}
+      >
+        {variant !== "empty" && (
+          <div
+            className={`
+              absolute top-3 right-3 z-20 flex items-stretch overflow-hidden rounded-lg
+              ${styles.menuBg}
+              transition-all duration-200 ease-out
+              ${menuOpen
                 ? "max-w-[360px] opacity-100 translate-x-0"
                 : "max-w-0 opacity-0 translate-x-4 group-hover:max-w-[36px] group-hover:opacity-100 group-hover:translate-x-0"
-            }
-        `}
-        onClick={(e) => e.stopPropagation()}
-        >
-        {/* ACTIONS */}
-        <div
-            className={`
-            flex items-stretch overflow-hidden transition-all duration-200 ease-out
-            ${menuOpen ? "max-w-[324px] opacity-100" : "max-w-0 opacity-0"}
-            `}
-        >
+              }
+          `}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* ACTIONS */}
+            <div
+              className={`
+              flex items-stretch overflow-hidden transition-all duration-200 ease-out
+              ${menuOpen ? "max-w-[324px] opacity-100" : "max-w-0 opacity-0"}
+              `}
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.();
+                  setMenuOpen(false);
+                }}
+                className={`flex h-9 items-center px-3 text-xs font-medium border-l-0 ${styles.menuText} ${styles.menuHover}`}
+              >
+                <PencilSquareIcon className="h-4 w-4 mr-1" />
+                Edit
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.();
+                  setMenuOpen(false);
+                }}
+                className={`flex h-9 items-center px-3 text-xs font-medium border-l border-white/10 ${styles.menuText} ${styles.menuHover}`}
+              >
+                <TrashIcon className="h-4 w-4 mr-1" />
+                Delete
+              </button>
+            </div>
+
+            {/* ELLIPSIS */}
             <button
-            onClick={(e) => {
+              onClick={(e) => {
                 e.stopPropagation();
-                console.log(`${title} edit clicked`);
-                setMenuOpen(false);
-            }}
-            className={`flex h-9 items-center px-3 text-xs font-medium border-l-0 ${styles.menuText} ${styles.menuHover}`}
+                setMenuOpen((prev) => !prev);
+              }}
+              className={`
+              flex h-9 w-9 items-center justify-center
+              ${styles.icon}
+              ${styles.ellipsisHover}
+              border-l border-white/10
+              `}
             >
-            <PencilSquareIcon className="h-4 w-4 mr-1" />
-            Edit
+              <EllipsisVerticalIcon className="h-5 w-5" />
             </button>
+          </div>
+        )}
 
-            <button
-            onClick={(e) => {
-                e.stopPropagation();
-                console.log(`${title} delete clicked`);
-                setMenuOpen(false);
-            }}
-            className={`flex h-9 items-center px-3 text-xs font-medium border-l border-white/10 ${styles.menuText} ${styles.menuHover}`}
-            >
-            <TrashIcon className="h-4 w-4 mr-1" />
-            Delete
-            </button>
-
-            <button
-            onClick={handleCopyCode}
-            className={`flex h-9 items-center px-3 text-xs font-medium border-l border-white/10 ${styles.menuText} ${styles.menuHover}`}
-            >
-            <ClipboardDocumentIcon className="h-4 w-4 mr-1" />
-            Copy Code [{accessCode}]
-            </button>
-        </div>
-
-        {/* ELLIPSIS */}
-        <button
-            onClick={(e) => {
-            e.stopPropagation();
-            setMenuOpen((prev) => !prev);
-            }}
-            className={`
-            flex h-9 w-9 items-center justify-center
-            ${styles.icon}
-            ${styles.ellipsisHover}
-            border-l border-white/10
-            `}
-        >
-            <EllipsisVerticalIcon className="h-5 w-5" />
-        </button>
-        </div>
-      )}
-
-      {variant === "empty" ? (
-        <span className="text-sm font-medium text-[#A0A0A0]">
-          + Add Class
-        </span>
-      ) : (
-        <>
-          <span className={`text-xl font-semibold leading-none ${styles.text}`}>
-            {title}
+        {variant === "empty" ? (
+          <span className="text-sm font-medium text-[#A0A0A0]">
+            + Add Class
           </span>
+        ) : (
+          <>
+            <span className={`text-xl font-semibold leading-none ${styles.text}`}>
+              {name}
+            </span>
 
-          <span className={`mt-1 text-sm leading-none ${styles.sub}`}>
-            {students} {students === 1 ? "student" : "students"}
-          </span>
-        </>
-      )}
-    </div>
+            <span className={`mt-1 text-sm leading-none ${styles.sub}`}>
+              {student_count} {student_count === 1 ? "student" : "students"}
+            </span>
+          </>
+        )}
+      </div>
+    </>
   );
 }
