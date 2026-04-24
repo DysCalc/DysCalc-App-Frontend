@@ -1,7 +1,7 @@
 "use client";
 
 import {
-    ChartBarIcon,
+  ChartBarIcon,
   EllipsisVerticalIcon,
   EnvelopeIcon,
   InformationCircleIcon,
@@ -52,10 +52,9 @@ export default function StudentCard({
           className={`
             absolute right-10 top-1/2 z-20 flex -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-[#D9D9D9] bg-white shadow-md
             transition-all duration-200 ease-out
-            ${
-              isOpen
-                ? "max-h-40 opacity-100 translate-x-0"
-                : "pointer-events-none max-h-0 opacity-0 translate-x-2"
+            ${isOpen
+              ? "max-h-40 opacity-100 translate-x-0"
+              : "pointer-events-none max-h-0 opacity-0 translate-x-2"
             }
           `}
         >
@@ -122,9 +121,8 @@ export default function StudentCard({
           `}
         >
           <EllipsisVerticalIcon
-            className={`h-5 w-5 transition-transform duration-200 ${
-              isOpen ? "rotate-90" : "group-hover:rotate-90"
-            }`}
+            className={`h-5 w-5 transition-transform duration-200 ${isOpen ? "rotate-90" : "group-hover:rotate-90"
+              }`}
           />
         </button>
       </div>

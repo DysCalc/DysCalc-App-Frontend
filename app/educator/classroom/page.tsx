@@ -1,54 +1,108 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ClassCard from "@/components/educator/ClassCard";
-import { classroomMap } from "./data";
+import CreateClassModal from "@/components/educator/CreateClassModal";
+import { type Classroom, type ClassroomWithStudentCount } from "@/types";
+import { createClassroomAPI } from "@/hooks/use-classroom";
+import { createClient } from "@/lib/supabase-client";
+import { useAuth } from "@/contexts/auth-provider";
+import { toast } from "sonner";
+import { ApiResult } from "@/hooks/utils";
+import AlertModal from "@/components/shared/AlertModal";
 
-type ClassItem = {
-  id: string;
-  title: string;
-  students: number;
-  variant: "yellow" | "green" | "blue" | "gray";
-};
-
-const MAX_CLASSES = 6;
+const CLASSROOM_COLORS = ["green", "blue", "yellow", "gray"] as const;
 
 export default function EducatorClassroom() {
-  const router = useRouter();
-  const initialClasses: ClassItem[] = Object.values(classroomMap);
-  const [classes, setClasses] = useState<ClassItem[]>(initialClasses);
-
+  const { user } = useAuth();
+  const [classrooms, setClassrooms] = useState<ClassroomWithStudentCount[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [classroomName, setClassroomName] = useState("");
+
+  // Operations
+  const [isLoading, setIsLoading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedClassroom, setSelectedClassroom] = useState<ClassroomWithStudentCount | null>(null);
+  const [editName, setEditName] = useState("");
+
+  const supabase = createClient();
+  const { getAllClassrooms, createClassroom, deleteClassroom, updateClassroomName } = createClassroomAPI(supabase);
+
+  if (!user) return;
+  useEffect(() => {
+    async function getClassrooms(userId: string) {
+      const classroomResult: ApiResult<ClassroomWithStudentCount[]> = await getAllClassrooms(userId);
+      if (!classroomResult.success) {
+        console.log(classroomResult.error);
+        toast.error("Failed to fetch classrooms");
+        return;
+      }
+      setClassrooms(classroomResult.data);
+    }
+
+    getClassrooms(user.id);
+  }, [user]);
+
+  useEffect(() => {
+    console.log(classrooms);
+  }, [classrooms]);
 
   const openCreateModal = () => {
-    if (classes.length >= MAX_CLASSES) return;
     setShowModal(true);
   };
 
   const closeCreateModal = () => {
     setShowModal(false);
-    setClassroomName("");
   };
 
-  const handleCreateClass = () => {
-    const trimmedName = classroomName.trim();
+  const openEditModal = (classroom: ClassroomWithStudentCount) => {
+    setSelectedClassroom(classroom);
+    setEditName(classroom.name);
+    setShowEditModal(true);
+  };
 
-    if (!trimmedName || classes.length >= MAX_CLASSES) return;
+  const openDeleteModal = (classroom: ClassroomWithStudentCount) => {
+    setSelectedClassroom(classroom);
+    setShowDeleteModal(true);
+  };
 
-    const colorCycle: ClassItem["variant"][] = ["green", "blue", "yellow", "gray"];
-    const nextVariant = colorCycle[classes.length % colorCycle.length];
+  const handleEditClassroom = async () => {
+    if (!selectedClassroom) return;
+    if (!editName.trim()) {
+      toast.error("Classroom name is required");
+      return;
+    }
 
-    const newClass: ClassItem = {
-      id: `cls_${Date.now()}`,
-      title: trimmedName,
-      students: 0,
-      variant: nextVariant,
-    };
+    setIsLoading(true);
+    const res = await updateClassroomName(selectedClassroom.id, editName);
+    setIsLoading(false);
 
-    setClasses([...classes, newClass]);
-    closeCreateModal();
+    if (res.success) {
+      toast.success("Classroom name updated successfully");
+      setClassrooms(prev => prev.map(c => c.id === selectedClassroom.id ? { ...c, name: editName } : c));
+      setShowEditModal(false);
+      setSelectedClassroom(null);
+    } else {
+      toast.error("Failed to update classroom name");
+    }
+  };
+
+  const handleDeleteClassroom = async () => {
+    if (!selectedClassroom) return;
+
+    setIsLoading(true);
+    const res = await deleteClassroom(selectedClassroom.id);
+    setIsLoading(false);
+
+    if (res.success) {
+      toast.success("Classroom deleted successfully");
+      setClassrooms(prev => prev.filter(c => c.id !== selectedClassroom.id));
+      setShowDeleteModal(false);
+      setSelectedClassroom(null);
+    } else {
+      toast.error("Failed to delete classroom");
+    }
   };
 
   return (
@@ -56,7 +110,7 @@ export default function EducatorClassroom() {
       <div className="flex h-full w-full flex-2 items-center justify-end border-b border-[#D9D9D9] bg-neutral-50 pt-15">
         <div className="flex flex-1 flex-col items-start gap-0 bg-neutral-50 px-15">
           <div className="text-5xl font-semibold text-neutral-600">
-            Juan Dela Cruz
+            {user.user_metadata.full_name}
           </div>
 
           <div className="flex-1 text-lg font-light text-neutral-600">
@@ -68,7 +122,6 @@ export default function EducatorClassroom() {
           <button
             onClick={openCreateModal}
             className="inline-flex items-center justify-center rounded-md bg-[#29A177] px-15 py-3 text-lg font-medium text-white shadow-sm transition duration-200 hover:bg-[#018255] hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={classes.length >= MAX_CLASSES}
           >
             Create a Class
           </button>
@@ -77,75 +130,87 @@ export default function EducatorClassroom() {
 
       <div className="flex h-full w-full flex-5 gap-3">
         <div className="grid h-full w-full grid-cols-3 grid-rows-2 gap-5 p-15 pb-55">
-          {classes.map((cls, index) => (
+          {classrooms.map((cls, index) => (
             <ClassCard
-              key={index}
-              title={cls.title}
-              students={cls.students}
-              variant={cls.variant}
-              onClick={() => router.push(`/educator/classroom/${cls.id}`)}
-              onMenuClick={() => console.log(`${cls.title} menu clicked`)}
+              key={cls.id}
+              id={cls.id}
+              name={cls.name}
+              student_count={cls.student_count}
+              variant={CLASSROOM_COLORS[index % CLASSROOM_COLORS.length]}
+              onEdit={() => openEditModal(cls)}
+              onDelete={() => openDeleteModal(cls)}
             />
           ))}
-
-          {classes.length < MAX_CLASSES && (
-            <ClassCard
-              variant="empty"
-              onClick={openCreateModal}
-            />
-          )}
         </div>
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <div className="mb-5">
-              <h2 className="text-3xl font-semibold text-[#6C6C6C]">
-                Create Classroom
-              </h2>
-              <p className="mt-1 text-base text-neutral-500">
-                Enter a classroom name.
-              </p>
-            </div>
+        <CreateClassModal
+          educatorId={user?.id}
+          closeCreateModal={closeCreateModal}
+          createClassroom={createClassroom}
+          classrooms={classrooms}
+          setClassrooms={setClassrooms}
+        />
+      )}
 
+      {selectedClassroom && (
+        <>
+          <AlertModal
+            isOpen={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            title="Delete Classroom"
+            description={`Are you sure you want to delete ${selectedClassroom.name}?`}
+            primaryAction={{
+              label: isLoading ? "Deleting..." : "Delete",
+              onClick: handleDeleteClassroom,
+              variant: "danger",
+              disabled: isLoading,
+            }}
+            secondaryAction={{
+              label: "Cancel",
+              onClick: () => setShowDeleteModal(false),
+              disabled: isLoading,
+            }}
+          />
+
+          <AlertModal
+            isOpen={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            title="Edit Classroom"
+            description="Update the name of your classroom."
+            primaryAction={{
+              label: isLoading ? "Saving..." : "Save Changes",
+              onClick: handleEditClassroom,
+              disabled: !editName.trim() || isLoading,
+            }}
+            secondaryAction={{
+              label: "Cancel",
+              onClick: () => setShowEditModal(false),
+              disabled: isLoading,
+            }}
+            maxWidth="lg"
+          >
             <div className="flex flex-col gap-2">
               <label
-                htmlFor="classroom-name"
+                htmlFor="edit-classroom"
                 className="text-sm font-medium text-[#6C6C6C]"
               >
                 Name
               </label>
-
               <input
-                id="classroom-name"
+                id="edit-classroom"
                 type="text"
-                value={classroomName}
-                onChange={(e) => setClassroomName(e.target.value)}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
                 placeholder="Enter classroom name"
                 className="rounded-lg border border-[#D9D9D9] px-4 py-3 text-base text-[#6C6C6C] outline-none transition focus:border-[#29A177] focus:ring-2 focus:ring-[#29A177]/20"
                 autoFocus
+                disabled={isLoading}
               />
             </div>
-
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <button
-                onClick={closeCreateModal}
-                className="rounded-lg border border-[#D9D9D9] px-4 py-2 text-sm font-medium text-[#6C6C6C] transition hover:bg-neutral-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleCreateClass}
-                className="rounded-lg bg-[#29A177] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#018255] disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={!classroomName.trim()}
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
+          </AlertModal>
+        </>
       )}
     </div>
   );

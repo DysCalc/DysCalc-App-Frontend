@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth-provider";
-import { type Role, type Sex, type Profiles, RoleEnum, SexEnum } from "@/types";
+import { type Role, type Sex, type Profile, RoleEnum, SexEnum } from "@/types";
 import { toast } from "sonner";
 
 export default function Setup() {
@@ -36,12 +36,11 @@ export default function Setup() {
       if (authError) throw authError;
 
       // 2. Prepare clean profile object
-      const userProfile: Profiles = {
+      const userProfile: Profile = {
         id: user.id,
         created_at: new Date().toISOString(),
         date_of_birth: dateOfBirth,
         sex,
-        role,
         nickname: nickname || null,
       };
 

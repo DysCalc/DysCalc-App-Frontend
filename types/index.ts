@@ -1,13 +1,13 @@
 import { type Database, Constants } from "@/database.types";
 import { toEnumObject } from "./utils";
 
-export type Classrooms = Database["public"]["Tables"]["classrooms"]["Row"];
+export type Classroom = Database["public"]["Tables"]["classrooms"]["Row"];
 export type Educator = Database["public"]["Tables"]["educator"]["Row"];
 export type InitialTestClassification = Database["public"]["Tables"]["initial_test_classification"]["Row"];
-export type Profiles = Database["public"]["Tables"]["profiles"]["Row"];
-export type StudentInvites = Database["public"]["Tables"]["student_invites"]["Row"];
-export type InitialTestResults = Database["public"]["Tables"]["initial_test_results"]["Row"];
-export type Students = Database["public"]["Tables"]["students"]["Row"];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type StudentInvite = Database["public"]["Tables"]["student_invites"]["Row"];
+export type InitialTestResult = Database["public"]["Tables"]["initial_test_results"]["Row"];
+export type Student = Database["public"]["Tables"]["students"]["Row"];
 
 
 // Enums
@@ -25,3 +25,6 @@ export const RoleEnum = toEnumObject(
 export const SexEnum = toEnumObject(
   Constants.public.Enums.SEX
 ) satisfies Record<string, Sex>;
+
+
+export type ClassroomWithStudentCount = Classroom & { student_count: number };

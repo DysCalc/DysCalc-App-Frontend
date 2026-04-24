@@ -16,7 +16,7 @@ import {
   STUDENT_NAVIGATIONS,
   EDUCATOR_NAVIGATIONS,
   ADMIN_NAVIGATIONS,
-  NavGroup,
+  type NavGroup,
 } from "@/types/navigation";
 import LogoutModal from "./LogoutModal";
 
@@ -45,7 +45,7 @@ export default function Sidebar() {
   if (!user) return null;
 
   const getNavigations = () => {
-    const isAdminUser = userRole.toLowerCase() === "admin" || userRole.toLowerCase() === "administrator";
+    const isAdminUser = userRole.toLowerCase() === "admin";
 
     // Determine the context based on URL, fallback to user's actual role
     let currentContext = userRole.toLowerCase();
@@ -53,7 +53,7 @@ export default function Sidebar() {
       currentContext = "admin";
     } else if (pathname.startsWith("/student")) {
       currentContext = "student";
-    } else if (pathname.startsWith("/educator") || pathname.startsWith("/teacher")) {
+    } else if (pathname.startsWith("/educator")) {
       currentContext = "educator";
     }
 
@@ -236,11 +236,11 @@ export default function Sidebar() {
               : "w-auto translate-x-0 opacity-100"
               }`}
           >
-            <p className="text-base leading-tight opacity-90">
-              {userRole} Account
+            <p className="text-base leading-tight opacity-90" title={userNickname ? userNickname : userRole + " Account"}>
+              {userRole} {userNickname || "Account"}
             </p>
             <h2 className="truncate text-xl font-semibold leading-tight" title={userName}>
-              {userName} {userNickname && <span className="text-sm text-gray-200">({userNickname})</span>}
+              {userName}
             </h2>
           </div>
         </div>

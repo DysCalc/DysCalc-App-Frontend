@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-provider";
 import Footer from "@/components/shared/Footer";
 import Sidebar from "@/components/shared/Sidebar";
+import Toaster from "@/components/shared/Toaster";
 
 const beiruti = Beiruti({
   subsets: ["latin"],
@@ -39,6 +40,7 @@ export default function RootLayout({
           ${inter.variable}
           ${manrope.variable}
           font-sans
+          bg-[#f5f5f0]
         `}
       >
         <AuthProvider>
@@ -51,6 +53,7 @@ export default function RootLayout({
               <Footer />
             </div>
           </div>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

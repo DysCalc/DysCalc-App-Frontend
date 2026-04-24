@@ -1,23 +1,24 @@
 import {
     Cog8ToothIcon,
     HomeIcon,
-    UserIcon,
     UserGroupIcon,
     ClipboardDocumentListIcon,
-    ChartBarIcon
+    ChartBarIcon,
+    AcademicCapIcon,
+    PencilIcon
 } from "@heroicons/react/24/outline";
 
-export interface NavLinks {
+export type NavLink = {
     label: string;
     href: string;
     icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
-export interface NavGroup {
+export type NavGroup = {
     title: string;
-    links: NavLinks[];
+    links: NavLink[];
 }
 
-const SHARED_NAVIGATIONS: NavLinks[] = []
+const SHARED_NAVIGATIONS: NavLink[] = []
 
 export const STUDENT_NAVIGATIONS: NavGroup[] = [
     {
@@ -97,14 +98,14 @@ export const ADMIN_NAVIGATIONS: NavGroup[] = [
         title: "Navigation",
         links: [
             {
-                label: "Educator Dashboard",
+                label: "Educator View",
                 href: "/educator/dashboard",
-                icon: UserIcon,
+                icon: AcademicCapIcon,
             },
             {
-                label: "Student Dashboard",
+                label: "Student View",
                 href: "/student/dashboard",
-                icon: UserIcon,
+                icon: PencilIcon,
             },
         ]
     },
