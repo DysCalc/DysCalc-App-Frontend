@@ -6,16 +6,17 @@ import {
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { type Classroom } from "@/types";
 
 type ClassCardProps = {
-  id: number;
-  name: string;
+  id: Classroom['id'];
+  name: Classroom['name'];
   student_count: number;
   variant?: "green" | "blue" | "gray" | "yellow" | "empty";
   className?: string;
   onEdit: () => void;
   onDelete: () => void;
-  onCardClick: (classroomId: number) => void;
+  onCardClick: (classroomId: Classroom['id']) => void;
 };
 
 const variantStyles = {

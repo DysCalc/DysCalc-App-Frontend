@@ -60,11 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setLoadingMessage("Checking user...");
                 setLoading(true);
                 setUser(session?.user ?? null)
-                if (session?.user?.id) {
-                    setLoadingMessage("Loading profile...");
-                    const profile = await getUserProfile(session.user.id);
-                    setProfile(profile);
-                } else {
+                if (!user) {
                     setProfile(null);
                 }
                 setLoadingMessage("Loading...");

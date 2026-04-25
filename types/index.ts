@@ -5,10 +5,9 @@ export type Classroom = Database["public"]["Tables"]["classrooms"]["Row"];
 export type Educator = Database["public"]["Tables"]["educator"]["Row"];
 export type InitialTestClassification = Database["public"]["Tables"]["initial_test_classification"]["Row"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-export type StudentInvite = Database["public"]["Tables"]["student_invites"]["Row"];
 export type InitialTestResult = Database["public"]["Tables"]["initial_test_results"]["Row"];
 export type Student = Database["public"]["Tables"]["students"]["Row"];
-
+export type StudentInvite = Database["public"]["Tables"]["student_invites"]["Row"]
 
 // Enums
 export type Classification = typeof Constants.public.Enums.CLASSIFICATION[number];

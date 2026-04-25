@@ -6,7 +6,7 @@ import { Profile } from "@/types";
 export function formatProfile(user: User, profile?: Profile | null) {
     return {
         id: user?.id ?? "",
-        name: toProperCase(user?.user_metadata?.full_name ?? ""),
+        name: toProperCase(user?.user_metadata?.full_name || profile?.nickname || user?.email?.split('@')[0] || "User"),
         avatar_url: user?.user_metadata?.avatar_url,
         role: toProperCase(user?.user_metadata?.role ?? ""),
         nickname: toProperCase(profile?.nickname ?? ""),
@@ -16,7 +16,7 @@ export function formatProfile(user: User, profile?: Profile | null) {
     }
 }
 
-export async function getUserProfile(userId: string): Promise<Profile | null> {
+export async function getUserProfile(userId: Profile['id']): Promise<Profile | null> {
     const supabase = createClient();
     const { data, error } = await supabase.from('profiles')
         .select("id,created_at,date_of_birth,nickname,sex")

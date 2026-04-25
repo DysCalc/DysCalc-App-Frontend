@@ -44,6 +44,10 @@ export default function Sidebar() {
 
   if (!user) return null;
 
+  // Don't show sidebar on auth pages, setup, or landing page
+  const hiddenPaths = ["/setup", "/login", "/", "/auth/verify-implicit", "/auth/auth-code-error"];
+  if (hiddenPaths.includes(pathname)) return null;
+
   const getNavigations = () => {
     const isAdminUser = userRole.toLowerCase() === "admin";
 

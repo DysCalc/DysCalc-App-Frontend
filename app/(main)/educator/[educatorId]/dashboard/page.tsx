@@ -1,6 +1,13 @@
+"use client";
+
 import Image from "next/image";
+import { createStudentAPI } from "@/hooks/use-students";
+import { createClient } from "@/lib/supabase-client";
 
 export default function EducatorDashboard() {
+  const supabase = createClient();
+  const { inviteStudentByEmail } = createStudentAPI(supabase);
+
   return (
     <div className="flex h-full w-full flex-col">
 
@@ -38,6 +45,28 @@ export default function EducatorDashboard() {
 
             <button className="mt-10 h-12 w-48 rounded-full bg-white text-xl font-semibold text-[#6C6C6C] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-[#29A177] hover:text-white hover:shadow-lg">
               Let’s get started
+            </button>
+
+            <button className="mt-5 h-12 w-48 rounded-full bg-white text-xl font-semibold text-[#6C6C6C] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-[#29A177] hover:text-white hover:shadow-lg"
+              onClick={async () => {
+                const res = await inviteStudentByEmail("caine.bautista@gmail.com", '', "CCS-3H", "Admin KenKen");
+                if (res.success) {
+                  console.log("Student invited successfully:", res.data);
+                  import("sonner").then(({ toast }) => {
+                    toast.success("Invite sent!", {
+                      description: `Link: ${res.data}`,
+                      action: {
+                        label: "Copy",
+                        onClick: () => navigator.clipboard.writeText(res.data)
+                      }
+                    });
+                  });
+                } else {
+                  console.error("Failed to invite student", res.error);
+                }
+              }}
+            >
+              Invite Student
             </button>
 
           </div>

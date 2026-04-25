@@ -1,10 +1,10 @@
-import { Classroom, ClassroomWithStudentCount } from "@/types";
+import type { Classroom, ClassroomWithStudentCount } from "@/types";
 import { handleReturnError, type ApiResult } from "./utils";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export function createClassroomAPI(supabase: SupabaseClient) {
     return {
-        async createClassroom(educatorId: string, name: string): Promise<ApiResult<Classroom>> {
+        async createClassroom(educatorId: Classroom['educator_id'], name: Classroom['name']): Promise<ApiResult<Classroom>> {
             try {
                 const { data, error } = await supabase.from('classrooms')
                     .insert({
@@ -22,7 +22,7 @@ export function createClassroomAPI(supabase: SupabaseClient) {
                 return handleReturnError(error);
             }
         },
-        async getAllClassrooms(educatorId: string): Promise<ApiResult<ClassroomWithStudentCount[]>> {
+        async getAllClassrooms(educatorId: Classroom['educator_id']): Promise<ApiResult<ClassroomWithStudentCount[]>> {
             try {
                 const { data, error } = await supabase
                     .from('classrooms')
@@ -49,7 +49,7 @@ export function createClassroomAPI(supabase: SupabaseClient) {
                 return handleReturnError(error);
             }
         },
-        async getClassroomById(classroomId: number): Promise<ApiResult<ClassroomWithStudentCount>> {
+        async getClassroomById(classroomId: Classroom['id']): Promise<ApiResult<ClassroomWithStudentCount>> {
             try {
                 const { data, error } = await supabase.from('classrooms')
                     .select("id,name,created_at,educator_id,student_count:students(count)")
@@ -65,7 +65,7 @@ export function createClassroomAPI(supabase: SupabaseClient) {
                 return handleReturnError(error);
             }
         },
-        async deleteClassroom(classroomId: number): Promise<ApiResult<boolean>> {
+        async deleteClassroom(classroomId: Classroom['id']): Promise<ApiResult<boolean>> {
             try {
                 const { error } = await supabase.from('classrooms')
                     .update({ is_archived: true })
@@ -78,7 +78,7 @@ export function createClassroomAPI(supabase: SupabaseClient) {
                 return handleReturnError(error);
             }
         },
-        async updateClassroomName(classroomId: number, name: string): Promise<ApiResult<ClassroomWithStudentCount>> {
+        async updateClassroomName(classroomId: Classroom['id'], name: Classroom['name']): Promise<ApiResult<ClassroomWithStudentCount>> {
             try {
                 const { data, error } = await supabase.from('classrooms')
                     .update({ name: name })

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { ApiResult } from "@/hooks/utils";
 import AlertModal from "@/components/shared/AlertModal";
 import { useRouter } from "next/navigation";
+import { type Classroom } from "@/types";
 
 const CLASSROOM_COLORS = ["green", "blue", "yellow", "gray"] as const;
 
@@ -32,8 +33,8 @@ export default function EducatorClassroom() {
 
   if (!user) return;
   useEffect(() => {
-    async function getClassrooms(userId: string) {
-      const classroomResult: ApiResult<ClassroomWithStudentCount[]> = await getAllClassrooms(userId);
+    async function getClassrooms(educator_id: Classroom['educator_id']) {
+      const classroomResult: ApiResult<ClassroomWithStudentCount[]> = await getAllClassrooms(educator_id);
       if (!classroomResult.success) {
         console.log(classroomResult.error);
         toast.error("Failed to fetch classrooms");
@@ -45,7 +46,7 @@ export default function EducatorClassroom() {
     getClassrooms(user.id);
   }, [user]);
 
-  const handleClassCardClick = (classroomId: number) => {
+  const handleClassCardClick = (classroomId: Classroom['id']) => {
     router.push(`/educator/${user?.id}/${classroomId}`);
   };
   ``
