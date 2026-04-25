@@ -42,7 +42,9 @@ export default function Sidebar() {
     setUserNickname(nickname);
   }, [user, loading, profile]);
 
-  if (!user) return null;
+  const showIn = ['/admin', '/student', '/educator'];
+  const shouldShow = showIn.some(path => pathname.startsWith(path));
+  if (!user || !shouldShow) return null;
 
   // Don't show sidebar on auth pages, setup, or landing page
   const hiddenPaths = ["/setup", "/login", "/", "/auth/verify-implicit", "/auth/auth-code-error"];

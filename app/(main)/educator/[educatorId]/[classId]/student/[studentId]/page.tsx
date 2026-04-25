@@ -14,6 +14,7 @@ import ScreeningInformation from "./tabs/ScreeningInformation";
 import LearningPath from "./tabs/LearningPath";
 import Performance from "./tabs/Performance";
 import { getClassroomVariant } from "../../../classroom/data";
+import type { Classroom, Student } from "@/types";
 
 type ActiveTab = "screening" | "learning" | "performance";
 
@@ -106,12 +107,8 @@ function scoreFromJson(value: Json): number | null {
 export default function StudentDetailPage() {
   const params = useParams();
 
-  const classId = Array.isArray(params.classId)
-    ? params.classId[0]
-    : (params.classId as string);
-  const studentId = Array.isArray(params.studentId)
-    ? params.studentId[0]
-    : (params.studentId as string);
+  const classId = params.classId as Classroom['id'];
+  const studentId = params.studentId as Student['id'];
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("screening");
   const [isLoading, setIsLoading] = useState(true);

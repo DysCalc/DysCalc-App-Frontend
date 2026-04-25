@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase-client";
+import { createStudentAPI } from "@/hooks/use-students";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-provider";
@@ -18,6 +19,7 @@ export default function Setup() {
   const router = useRouter();
   const { user } = useAuth();
   const supabase = createClient();
+  const { acceptInvite } = createStudentAPI(supabase);
 
 
   useEffect(() => {
@@ -82,18 +84,12 @@ export default function Setup() {
       // 3.5 Process pending invites if they are a student
       const params = new URLSearchParams(window.location.search);
       const urlClassId = params.get("class_id");
+      const inviteEmail = params.get("invite_email");
       const invitedClassId = urlClassId || user.user_metadata?.invited_class_id;
       if (invitedClassId && role === RoleEnum.STUDENT) {
-        const { error: studentError } = await supabase
-          .from("students")
-          .upsert({
-            id: user.id,
-            classroom_id: String(invitedClassId),
-            accepted: true,
-          }, { onConflict: "id,classroom_id" });
-
-        if (studentError) {
-          console.error("Failed to link student to class:", studentError);
+        const result = await acceptInvite(String(invitedClassId), inviteEmail || user.email || undefined);
+        if (!result.success) {
+          console.error("Failed to link student to class:", result.error);
         }
       }
 

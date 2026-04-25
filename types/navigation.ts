@@ -54,7 +54,7 @@ export const getEducatorNavigations = (userId: string): NavGroup[] => [
                 icon: HomeIcon,
             },
             {
-                label: "Classroom",
+                label: "Classrooms",
                 href: `/educator/${userId}/classroom`,
                 icon: UserGroupIcon,
             },

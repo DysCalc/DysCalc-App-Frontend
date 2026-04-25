@@ -9,7 +9,8 @@ import { createStudentAPI } from "@/hooks/use-students";
 import { useAuth } from "@/contexts/auth-provider";
 import { toast } from "sonner";
 import { headerStyles, getClassroomVariant } from "../classroom/data";
-import type { ClassroomWithStudentCount } from "@/types";
+import type { Classroom, ClassroomWithStudentCount } from "@/types";
+import AlertModal from "@/components/shared/AlertModal";
 
 type StudentCardModel = {
   id: string;
@@ -21,14 +22,15 @@ export default function ClassroomPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const classId = params.classId as string;
-  const educatorId = params.educatorId as string;
+  const classId = params.classId as Classroom['id'];
+  const educatorId = params.educatorId as Classroom['educator_id'];
 
   const [classroom, setClassroom] = useState<ClassroomWithStudentCount | null>(null);
   const [students, setStudents] = useState<StudentCardModel[]>([]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"students" | "notifications">("students");
   const [isLoading, setIsLoading] = useState(true);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
 
@@ -125,6 +127,7 @@ export default function ClassroomPage() {
 
     if (res.success) {
       setInviteEmail("");
+      setShowInviteModal(false);
       toast.success("Invite sent!", {
         description: `Link: ${res.data}`,
         action: {
@@ -155,26 +158,18 @@ export default function ClassroomPage() {
         </div>
 
         <div className="flex flex-1 items-center justify-end gap-3 px-15">
-          <input
-            type="email"
-            value={inviteEmail}
-            onChange={(event) => setInviteEmail(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                void handleInviteStudent();
-              }
-            }}
-            placeholder="student@email.com"
-            className="h-11 w-full max-w-sm rounded-md border border-white/30 bg-white px-4 text-base text-[#4A4A4A] outline-none transition focus:border-[#29A177] focus:ring-2 focus:ring-[#29A177]/20"
-          />
-
           <button
-            onClick={() => void handleInviteStudent()}
-            disabled={isInviting || !inviteEmail.trim()}
+            onClick={() => setShowInviteModal(true)}
             className="inline-flex h-11 items-center justify-center rounded-md bg-[#29A177] px-6 text-base font-medium text-white shadow-sm transition duration-200 hover:bg-[#018255] hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isInviting ? "Inviting..." : "Invite Student"}
+            Invite Student
+          </button>
+
+          <button
+            onClick={() => router.push(`/educator/${educatorId}/${classId}/invites`)}
+            className="inline-flex h-11 items-center justify-center rounded-md border border-white/40 bg-white/90 px-6 text-base font-medium text-[#4A4A4A] shadow-sm transition duration-200 hover:bg-white"
+          >
+            Pending Invites
           </button>
         </div>
       </div>
@@ -193,7 +188,10 @@ export default function ClassroomPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("notifications")}
+            onClick={() => {
+              setActiveTab("notifications");
+              router.push(`/educator/${educatorId}/${classId}/invites`);
+            }}
             className={`px-10 py-2 text-lg font-semibold transition ${
               activeTab === "notifications"
                 ? "bg-[#F3F3F3] text-[#706F6F]"
@@ -236,11 +234,61 @@ export default function ClassroomPage() {
             )}
           </div>
         ) : (
-          <div className="flex w-full items-center justify-center p-15 text-lg font-light text-[#7A7A7A]">
-            Notifications are not available yet.
+          <div className="flex w-full items-center justify-center p-15">
+            <button
+              onClick={() => router.push(`/educator/${educatorId}/${classId}/invites`)}
+              className="rounded-lg border border-[#D9D9D9] bg-white px-6 py-3 text-lg font-medium text-[#5C5E64] transition hover:bg-[#F8F8F8]"
+            >
+              Open Invite Management
+            </button>
           </div>
         )}
       </div>
+
+      <AlertModal
+        isOpen={showInviteModal}
+        onClose={() => {
+          if (isInviting) return;
+          setShowInviteModal(false);
+        }}
+        title="Invite Student"
+        description="Send an email invite to add a student to this classroom."
+        primaryAction={{
+          label: isInviting ? "Sending..." : "Send Invite",
+          onClick: () => {
+            void handleInviteStudent();
+          },
+          disabled: isInviting || !inviteEmail.trim(),
+        }}
+        secondaryAction={{
+          label: "Cancel",
+          onClick: () => setShowInviteModal(false),
+          disabled: isInviting,
+        }}
+        maxWidth="md"
+      >
+        <div className="flex flex-col gap-2">
+          <label htmlFor="invite-email" className="text-sm font-medium text-[#6C6C6C]">
+            Student Email
+          </label>
+          <input
+            id="invite-email"
+            type="email"
+            value={inviteEmail}
+            onChange={(event) => setInviteEmail(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void handleInviteStudent();
+              }
+            }}
+            placeholder="student@email.com"
+            className="rounded-lg border border-[#D9D9D9] px-4 py-3 text-base text-[#6C6C6C] outline-none transition focus:border-[#29A177] focus:ring-2 focus:ring-[#29A177]/20"
+            autoFocus
+            disabled={isInviting}
+          />
+        </div>
+      </AlertModal>
     </div>
   );
 }

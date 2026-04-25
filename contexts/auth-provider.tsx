@@ -94,6 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoadingMessage("Signing out...");
         setLoading(true);
         await supabase.auth.signOut({ scope: 'local' })
+        setUser(null);
+        setProfile(null);
         window.location.href = "/";
         setLoadingMessage("Loading...");
         setLoading(false);
