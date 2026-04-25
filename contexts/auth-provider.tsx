@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-client";
 import { Profile } from '@/types';
@@ -33,6 +33,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
     const supabase = createClient();
 
+    const userRef = useRef<string | null>(null);
+
+    // Keep ref in sync
+    useEffect(() => {
+        userRef.current = user?.id ?? null;
+    }, [user]);
+
     useEffect(() => {
         const getSession = async () => {
             try {
@@ -56,11 +63,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         getSession();
 
         const { data: listener } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
+            async (event, session) => {
+                if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') return;
+
+                const nextUser = session?.user ?? null;
+
+                // Same user, nothing actually changed — skip
+                if (nextUser?.id === userRef.current) return;
+
                 setLoadingMessage("Checking user...");
                 setLoading(true);
-                const nextUser = session?.user ?? null;
+
                 setUser(nextUser);
+                userRef.current = nextUser?.id ?? null;
 
                 if (!nextUser) {
                     setProfile(null);
@@ -69,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const profile = await getUserProfile(nextUser.id);
                     setProfile(profile);
                 }
+
                 setLoadingMessage("Loading...");
                 setLoading(false);
             }
@@ -82,10 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loginWithGoogle = async (): Promise<void> => {
         setLoadingMessage("Signing in...");
         setLoading(true);
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: `${origin}/auth/callback`,
             },
         })
         setLoadingMessage("Loading...");
