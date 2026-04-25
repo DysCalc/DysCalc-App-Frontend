@@ -10,10 +10,12 @@ import { useAuth } from "@/contexts/auth-provider";
 import { toast } from "sonner";
 import { ApiResult } from "@/hooks/utils";
 import AlertModal from "@/components/shared/AlertModal";
-
-const CLASSROOM_COLORS = ["green", "blue", "yellow", "gray"] as const;
+import { useRouter } from "next/navigation";
+import { type Classroom } from "@/types";
+import { getClassroomVariant } from "@/constants/classroom-variants";
 
 export default function EducatorClassroom() {
+  const router = useRouter();
   const { user } = useAuth();
   const [classrooms, setClassrooms] = useState<ClassroomWithStudentCount[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -28,10 +30,10 @@ export default function EducatorClassroom() {
   const supabase = createClient();
   const { getAllClassrooms, createClassroom, deleteClassroom, updateClassroomName } = createClassroomAPI(supabase);
 
-  if (!user) return;
+  if (!user) return null;
   useEffect(() => {
-    async function getClassrooms(userId: string) {
-      const classroomResult: ApiResult<ClassroomWithStudentCount[]> = await getAllClassrooms(userId);
+    async function getClassrooms(educator_id: Classroom['educator_id']) {
+      const classroomResult: ApiResult<ClassroomWithStudentCount[]> = await getAllClassrooms(educator_id);
       if (!classroomResult.success) {
         console.log(classroomResult.error);
         toast.error("Failed to fetch classrooms");
@@ -43,9 +45,9 @@ export default function EducatorClassroom() {
     getClassrooms(user.id);
   }, [user]);
 
-  useEffect(() => {
-    console.log(classrooms);
-  }, [classrooms]);
+  const handleClassCardClick = (classroomId: Classroom['id']) => {
+    router.push(`/educator/${user?.id}/${classroomId}`);
+  };
 
   const openCreateModal = () => {
     setShowModal(true);
@@ -129,15 +131,16 @@ export default function EducatorClassroom() {
 
       <div className="flex h-full w-full flex-5 gap-3">
         <div className="grid h-full w-full grid-cols-3 grid-rows-2 gap-5 p-15 pb-55">
-          {classrooms.map((cls, index) => (
+          {classrooms.map((cls) => (
             <ClassCard
               key={cls.id}
               id={cls.id}
               name={cls.name}
               student_count={cls.student_count}
-              variant={CLASSROOM_COLORS[index % CLASSROOM_COLORS.length]}
+              variant={getClassroomVariant(cls.id)}
               onEdit={() => openEditModal(cls)}
               onDelete={() => openDeleteModal(cls)}
+              onCardClick={handleClassCardClick}
             />
           ))}
         </div>

@@ -18,33 +18,25 @@ export type Database = {
         Row: {
           created_at: string
           educator_id: string
-          id: number
+          id: string
           is_archived: boolean
           name: string
         }
         Insert: {
           created_at?: string
           educator_id?: string
-          id?: number
+          id?: string
           is_archived?: boolean
           name: string
         }
         Update: {
           created_at?: string
           educator_id?: string
-          id?: number
+          id?: string
           is_archived?: boolean
           name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "classrooms_educator_fkey"
-            columns: ["educator_id"]
-            isOneToOne: false
-            referencedRelation: "educator"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       educator: {
         Row: {
@@ -115,7 +107,7 @@ export type Database = {
       }
       initial_test_results: {
         Row: {
-          classroom_id: number | null
+          classroom_id: string | null
           complex_arithmetic: Json
           created_at: string
           dot_matching: Json
@@ -127,7 +119,7 @@ export type Database = {
           student_id: string | null
         }
         Insert: {
-          classroom_id?: number | null
+          classroom_id?: string | null
           complex_arithmetic: Json
           created_at?: string
           dot_matching: Json
@@ -139,7 +131,7 @@ export type Database = {
           student_id?: string | null
         }
         Update: {
-          classroom_id?: number | null
+          classroom_id?: string | null
           complex_arithmetic?: Json
           created_at?: string
           dot_matching?: Json
@@ -193,22 +185,22 @@ export type Database = {
       }
       student_invites: {
         Row: {
-          classroom_id: number | null
+          classroom_id: string
           email: string
-          id: number
           invited_at: string
+          is_accepted: boolean
         }
         Insert: {
-          classroom_id?: number | null
+          classroom_id?: string
           email: string
-          id?: number
           invited_at?: string
+          is_accepted?: boolean
         }
         Update: {
-          classroom_id?: number | null
+          classroom_id?: string
           email?: string
-          id?: number
           invited_at?: string
+          is_accepted?: boolean
         }
         Relationships: [
           {
@@ -223,23 +215,23 @@ export type Database = {
       students: {
         Row: {
           accepted: boolean | null
-          classroom_id: number
+          classroom_id: string
           id: string
-          invited_at: string | null
+          invited_at: string
           joined_at: string
         }
         Insert: {
           accepted?: boolean | null
-          classroom_id: number
+          classroom_id: string
           id?: string
-          invited_at?: string | null
+          invited_at?: string
           joined_at?: string
         }
         Update: {
           accepted?: boolean | null
-          classroom_id?: number
+          classroom_id?: string
           id?: string
-          invited_at?: string | null
+          invited_at?: string
           joined_at?: string
         }
         Relationships: [

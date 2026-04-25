@@ -1,8 +1,9 @@
 "use client";
 
 import { createClient } from "@/lib/supabase-client";
+import { createStudentAPI } from "@/hooks/use-students";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-provider";
 import { type Role, type Sex, type Profile, RoleEnum, SexEnum } from "@/types";
 import { toast } from "sonner";
@@ -13,10 +14,39 @@ export default function Setup() {
   const [nickname, setNickname] = useState<string>("");
   const [sex, setSex] = useState<Sex>(SexEnum.MALE);
   const [loading, setLoading] = useState(false);
+  const [isRoleLocked, setIsRoleLocked] = useState(false);
 
   const router = useRouter();
   const { user } = useAuth();
   const supabase = createClient();
+  const { acceptInvite } = createStudentAPI(supabase);
+
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlClassId = params.get("class_id");
+
+    // Check URL params first (New explicit invite flow)
+    if (urlClassId) {
+      setRole(RoleEnum.STUDENT);
+      setIsRoleLocked(true);
+      return;
+    }
+
+    // Check user metadata (Legacy automated email invite flow)
+    const invitedClassId = user?.user_metadata?.invited_class_id;
+    if (invitedClassId) {
+      setRole(RoleEnum.STUDENT);
+      setIsRoleLocked(true);
+      return;
+    }
+
+    const forcedRole = params.get("role")?.toUpperCase() as Role;
+    if (forcedRole && Object.values(RoleEnum).includes(forcedRole)) {
+      setRole(forcedRole);
+      setIsRoleLocked(true);
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +54,7 @@ export default function Setup() {
 
     try {
       if (!user) {
-        router.push("/login");
+        router.push("/");
         return;
       }
 
@@ -51,11 +81,23 @@ export default function Setup() {
 
       if (profileError) throw profileError;
 
+      // 3.5 Process pending invites if they are a student
+      const params = new URLSearchParams(window.location.search);
+      const urlClassId = params.get("class_id");
+      const inviteEmail = params.get("invite_email");
+      const invitedClassId = urlClassId || user.user_metadata?.invited_class_id;
+      if (invitedClassId && role === RoleEnum.STUDENT) {
+        const result = await acceptInvite(String(invitedClassId), inviteEmail || user.email || undefined);
+        if (!result.success) {
+          console.error("Failed to link student to class:", result.error);
+        }
+      }
+
       // 4. Force session sync (IMPORTANT)
       await supabase.auth.getSession();
 
       // 5. Hard redirect (prevents middleware loop)
-      window.location.replace(`/${role.toLowerCase()}/dashboard`);
+      window.location.replace(`/${role.toLowerCase()}/${user.id}/dashboard`);
     } catch (error: unknown) {
       const message =
         error instanceof Error
@@ -82,7 +124,8 @@ export default function Setup() {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as Role)}
-              className="w-full p-3 border rounded"
+              disabled={isRoleLocked}
+              className={`w-full p-3 border rounded ${isRoleLocked ? 'bg-gray-100 cursor-not-allowed opacity-70' : ''}`}
             >
               <option value={RoleEnum.STUDENT}>Student</option>
               <option value={RoleEnum.EDUCATOR}>Educator</option>

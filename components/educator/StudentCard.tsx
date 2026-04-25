@@ -1,5 +1,6 @@
 "use client";
 
+import type { Student, Profile } from "@/types";
 import {
   ChartBarIcon,
   EllipsisVerticalIcon,
@@ -8,18 +9,17 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
-type Student = {
-  id: string;
-  name: string;
-};
+type StudentInfo = {
+  id: Profile['id'],
+  name: string
+}
 
 type Props = {
-  student: Student;
+  student: StudentInfo;
   isOpen: boolean;
   onToggle: (id: string) => void;
   onClose: () => void;
   onClick: (id: string) => void;
-
 };
 
 export default function StudentCard({

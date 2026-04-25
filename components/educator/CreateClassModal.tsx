@@ -4,11 +4,11 @@ import { toast } from "sonner";
 import { type Classroom, type ClassroomWithStudentCount } from "@/types";
 
 interface CreateClassModalProps {
-    educatorId: string | null;
+    educatorId: Classroom['educator_id'];
     closeCreateModal: () => void;
     classrooms: ClassroomWithStudentCount[];
     setClassrooms: (classrooms: ClassroomWithStudentCount[]) => void;
-    createClassroom: (educatorId: string, classroomName: string) => Promise<ApiResult<Classroom>>;
+    createClassroom: (educatorId: Classroom['educator_id'], classroomName: Classroom['name']) => Promise<ApiResult<Classroom>>;
 }
 
 export default function CreateClassModal({

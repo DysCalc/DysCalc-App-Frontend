@@ -16,8 +16,8 @@ import {
   getStudentNavigations,
   getEducatorNavigations,
   getAdminNavigations,
-  type NavGroup,
-} from "@/types/navigation";
+} from "@/constants/navigation-links";
+import type { NavGroup } from "@/types/navigation"
 import LogoutModal from "./LogoutModal";
 
 export default function Sidebar() {
@@ -42,7 +42,13 @@ export default function Sidebar() {
     setUserNickname(nickname);
   }, [user, loading, profile]);
 
-  if (!user) return null;
+  const showIn = ['/admin', '/student', '/educator'];
+  const shouldShow = showIn.some(path => pathname.startsWith(path));
+  if (!user || !shouldShow) return null;
+
+  // Don't show sidebar on auth pages, setup, or landing page
+  const hiddenPaths = ["/setup", "/login", "/", "/auth/verify-implicit", "/auth/auth-code-error"];
+  if (hiddenPaths.includes(pathname)) return null;
 
   const getNavigations = () => {
     const isAdminUser = userRole.toLowerCase() === "admin";
