@@ -23,14 +23,8 @@ export async function GET(request: Request) {
         console.error('getUser Error:', userError.message)
       }
 
-      // Determine base URL
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-      const baseUrl = isLocalEnv
-        ? origin
-        : forwardedHost
-          ? `https://${forwardedHost}`
-          : origin
+      // Always redirect to the current request origin to avoid cross-domain cookie issues.
+      const baseUrl = origin
 
       if (user) {
         const role = user.user_metadata?.role?.toLowerCase();

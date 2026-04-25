@@ -8,6 +8,15 @@ function isProtectedPath(pathname: string) {
 }
 
 function copyCookies(from: NextResponse, to: NextResponse) {
+  const setCookieHeaders = from.headers.getSetCookie?.() ?? [];
+
+  if (setCookieHeaders.length > 0) {
+    setCookieHeaders.forEach((headerValue) => {
+      to.headers.append("set-cookie", headerValue);
+    });
+    return;
+  }
+
   from.cookies.getAll().forEach((cookie) => {
     to.cookies.set(cookie);
   });
