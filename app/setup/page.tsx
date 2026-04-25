@@ -88,7 +88,7 @@ export default function Setup() {
           .from("students")
           .upsert({
             id: user.id,
-            classroom_id: Number(invitedClassId),
+            classroom_id: String(invitedClassId),
             accepted: true,
           }, { onConflict: "id,classroom_id" });
 
@@ -101,7 +101,7 @@ export default function Setup() {
       await supabase.auth.getSession();
 
       // 5. Hard redirect (prevents middleware loop)
-      window.location.replace(`/${role.toLowerCase()}/dashboard`);
+      window.location.replace(`/${role.toLowerCase()}/${user.id}/dashboard`);
     } catch (error: unknown) {
       const message =
         error instanceof Error

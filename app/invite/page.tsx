@@ -73,11 +73,15 @@ function InvitePageContent() {
       }
 
       // 3. Insert into students table
+      if (!classId) {
+        throw new Error("Invalid invite link. Missing class ID.");
+      }
+
       const { error: studentError } = await supabase
         .from("students")
         .upsert({
           id: user.id,
-          classroom_id: Number(classId),
+          classroom_id: classId,
           accepted: true,
         }, { onConflict: "id,classroom_id" });
 
@@ -87,7 +91,7 @@ function InvitePageContent() {
 
       // 4. Navigate to student dashboard
       // We do a hard navigation to ensure middleware syncs correctly
-      window.location.href = `/student/dashboard`;
+      window.location.href = `/student/${user.id}/dashboard`;
 
     } catch (error: any) {
       toast.error(error.message || "Failed to join classroom");

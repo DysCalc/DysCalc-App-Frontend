@@ -1,40 +1,11 @@
-// app/educator/classroom/data.ts
+export const CLASSROOM_VARIANTS = ["yellow", "green", "blue", "gray"] as const;
 
-export const classroomMap = {
-  cls_001: {
-    id: "cls_001",
-    title: "2023 SpEd Iligan City",
-    students: 8,
-    variant: "yellow",
-  },
-  cls_002: {
-    id: "cls_002",
-    title: "2025 SpEd Lanao del Norte",
-    students: 21,
-    variant: "green",
-  },
-  cls_003: {
-    id: "cls_003",
-    title: "Class 3",
-    students: 10,
-    variant: "blue",
-  },
-  cls_004: {
-    id: "cls_004",
-    title: "2025 Computer Science SpEd",
-    students: 15,
-    variant: "green",
-  },
-  cls_005: {
-    id: "cls_005",
-    title: "2026 MSUIIT SpEd Center",
-    students: 24,
-    variant: "yellow",
-  },
-} as const;
+export type ClassroomVariant = (typeof CLASSROOM_VARIANTS)[number];
 
-
-export const headerStyles = {
+export const headerStyles: Record<
+  ClassroomVariant,
+  { bg: string; title: string; sub: string }
+> = {
   yellow: {
     bg: "bg-[#E3D860]",
     title: "text-[#827D2A]",
@@ -57,23 +28,15 @@ export const headerStyles = {
   },
 };
 
-export const studentsMap = {
-  cls_001: [
-    { id: "s1", name: "Juan Dela Cruz" },
-    { id: "s2", name: "Maria Santos" },
-    { id: "s3", name: "Pedro Reyes" },
-    { id: "s4", name: "Ana Lopez" },
-    { id: "s5", name: "Carlos Mendoza" },
-  ],
-  cls_002: [
-    { id: "s6", name: "Liza Ramos" },
-    { id: "s7", name: "Mark Bautista" },
-    { id: "s8", name: "Ella Cruz" },
-    { id: "s9", name: "John Lim" },
-    { id: "s10", name: "Paolo Garcia" },
-  ],
-  cls_003: [
-    { id: "s11", name: "Kim Torres" },
-    { id: "s12", name: "Nina Flores" },
-  ],
-} as const;
+export function getClassroomVariant(seed: string): ClassroomVariant {
+  if (!seed) return CLASSROOM_VARIANTS[0];
+
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash << 5) - hash + seed.charCodeAt(index);
+    hash |= 0;
+  }
+
+  const safeIndex = Math.abs(hash) % CLASSROOM_VARIANTS.length;
+  return CLASSROOM_VARIANTS[safeIndex];
+}

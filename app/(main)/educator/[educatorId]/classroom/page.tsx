@@ -12,8 +12,7 @@ import { ApiResult } from "@/hooks/utils";
 import AlertModal from "@/components/shared/AlertModal";
 import { useRouter } from "next/navigation";
 import { type Classroom } from "@/types";
-
-const CLASSROOM_COLORS = ["green", "blue", "yellow", "gray"] as const;
+import { getClassroomVariant } from "./data";
 
 export default function EducatorClassroom() {
   const router = useRouter();
@@ -31,7 +30,7 @@ export default function EducatorClassroom() {
   const supabase = createClient();
   const { getAllClassrooms, createClassroom, deleteClassroom, updateClassroomName } = createClassroomAPI(supabase);
 
-  if (!user) return;
+  if (!user) return null;
   useEffect(() => {
     async function getClassrooms(educator_id: Classroom['educator_id']) {
       const classroomResult: ApiResult<ClassroomWithStudentCount[]> = await getAllClassrooms(educator_id);
@@ -49,7 +48,7 @@ export default function EducatorClassroom() {
   const handleClassCardClick = (classroomId: Classroom['id']) => {
     router.push(`/educator/${user?.id}/${classroomId}`);
   };
-  ``
+
   const openCreateModal = () => {
     setShowModal(true);
   };
@@ -132,13 +131,13 @@ export default function EducatorClassroom() {
 
       <div className="flex h-full w-full flex-5 gap-3">
         <div className="grid h-full w-full grid-cols-3 grid-rows-2 gap-5 p-15 pb-55">
-          {classrooms.map((cls, index) => (
+          {classrooms.map((cls) => (
             <ClassCard
               key={cls.id}
               id={cls.id}
               name={cls.name}
               student_count={cls.student_count}
-              variant={CLASSROOM_COLORS[index % CLASSROOM_COLORS.length]}
+              variant={getClassroomVariant(cls.id)}
               onEdit={() => openEditModal(cls)}
               onDelete={() => openDeleteModal(cls)}
               onCardClick={handleClassCardClick}
