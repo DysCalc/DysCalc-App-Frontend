@@ -2,6 +2,16 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareClient } from "@/lib/supabase-server";
 
 const protectedPaths = ["/educator", "/student", "/setup", "/admin"];
+const AUTH_DEBUG = process.env.AUTH_DEBUG === "true";
+
+function authDebug(message: string, data?: Record<string, unknown>) {
+  if (!AUTH_DEBUG) return;
+  if (data) {
+    console.log(`[AUTH_DEBUG] ${message}`, data);
+    return;
+  }
+  console.log(`[AUTH_DEBUG] ${message}`);
+}
 
 function isProtectedPath(pathname: string) {
   return protectedPaths.some((path) => pathname.startsWith(path));
@@ -9,6 +19,11 @@ function isProtectedPath(pathname: string) {
 
 function copyCookies(from: NextResponse, to: NextResponse) {
   const setCookieHeaders = from.headers.getSetCookie?.() ?? [];
+
+  authDebug("copyCookies", {
+    fromSetCookieHeaderCount: setCookieHeaders.length,
+    fromCookieNames: from.cookies.getAll().map((cookie) => cookie.name),
+  });
 
   if (setCookieHeaders.length > 0) {
     setCookieHeaders.forEach((headerValue) => {
@@ -27,10 +42,24 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const loginPath = "/";
 
+  authDebug("middleware request", {
+    pathname,
+    host: request.headers.get("host"),
+    origin: request.nextUrl.origin,
+    requestCookieNames: request.cookies.getAll().map((cookie) => cookie.name),
+  });
+
   // ✅ Use getUser for secure server-side validation
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  authDebug("middleware getUser result", {
+    hasUser: Boolean(user),
+    userId: user?.id,
+    userRole: user?.user_metadata?.role,
+    responseCookieNames: supabaseResponse.cookies.getAll().map((cookie) => cookie.name),
+    responseSetCookieHeaderCount: supabaseResponse.headers.getSetCookie?.().length ?? 0,
+  });
   const isProtected = isProtectedPath(pathname);
   // =========================
   // 🚫 NOT LOGGED IN
@@ -39,6 +68,11 @@ export async function proxy(request: NextRequest) {
     if (isProtected) {
       const url = request.nextUrl.clone();
       url.pathname = loginPath;
+
+      authDebug("redirect unauthenticated protected route", {
+        fromPathname: pathname,
+        toPathname: url.pathname,
+      });
 
       const redirect = NextResponse.redirect(url);
       copyCookies(supabaseResponse, redirect);
@@ -59,6 +93,11 @@ export async function proxy(request: NextRequest) {
     if (!pathname.startsWith("/setup")) {
       const url = request.nextUrl.clone();
       url.pathname = "/setup";
+
+      authDebug("redirect missing role", {
+        fromPathname: pathname,
+        toPathname: url.pathname,
+      });
 
       const redirect = NextResponse.redirect(url);
       copyCookies(supabaseResponse, redirect);
@@ -83,6 +122,12 @@ export async function proxy(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/unauthorized";
 
+      authDebug("redirect unauthorized role access", {
+        fromPathname: pathname,
+        toPathname: url.pathname,
+        userRole,
+      });
+
       const redirect = NextResponse.redirect(url);
       copyCookies(supabaseResponse, redirect);
       return redirect;
@@ -92,6 +137,11 @@ export async function proxy(request: NextRequest) {
     if (pathname.startsWith("/setup")) {
       const url = request.nextUrl.clone();
       url.pathname = `/${userRole.toLowerCase()}/${user.id}/dashboard`;
+
+      authDebug("redirect setup completed", {
+        fromPathname: pathname,
+        toPathname: url.pathname,
+      });
 
       const redirect = NextResponse.redirect(url);
       copyCookies(supabaseResponse, redirect);
@@ -120,6 +170,12 @@ export async function proxy(request: NextRequest) {
       url.pathname = `/${userRole.toLowerCase()}/${user.id}/dashboard`;
     }
 
+    authDebug("redirect root/dashboard alias", {
+      fromPathname: pathname,
+      toPathname: url.pathname,
+      userRole,
+    });
+
     const redirect = NextResponse.redirect(url);
     copyCookies(supabaseResponse, redirect);
     return redirect;
@@ -128,6 +184,11 @@ export async function proxy(request: NextRequest) {
   // =========================
   // ✅ ALLOW REQUEST
   // =========================
+  authDebug("allow request", {
+    pathname,
+    userId: user.id,
+    userRole,
+  });
   return supabaseResponse;
 }
 
