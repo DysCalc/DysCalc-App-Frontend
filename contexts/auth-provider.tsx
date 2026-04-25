@@ -59,9 +59,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             async (_event, session) => {
                 setLoadingMessage("Checking user...");
                 setLoading(true);
-                setUser(session?.user ?? null)
-                if (!user) {
+                const nextUser = session?.user ?? null;
+                setUser(nextUser);
+
+                if (!nextUser) {
                     setProfile(null);
+                } else {
+                    setLoadingMessage("Loading profile...");
+                    const profile = await getUserProfile(nextUser.id);
+                    setProfile(profile);
                 }
                 setLoadingMessage("Loading...");
                 setLoading(false);
