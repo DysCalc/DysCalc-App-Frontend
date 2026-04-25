@@ -12,7 +12,7 @@ import { ApiResult } from "@/hooks/utils";
 import AlertModal from "@/components/shared/AlertModal";
 import { useRouter } from "next/navigation";
 import { type Classroom } from "@/types";
-import { getClassroomVariant } from "./data";
+import { getClassroomVariant } from "@/constants/classroom-variants";
 
 export default function EducatorClassroom() {
   const router = useRouter();

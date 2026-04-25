@@ -16,8 +16,8 @@ import {
   getStudentNavigations,
   getEducatorNavigations,
   getAdminNavigations,
-  type NavGroup,
-} from "@/types/navigation";
+} from "@/constants/navigation-links";
+import type { NavGroup } from "@/types/navigation"
 import LogoutModal from "./LogoutModal";
 
 export default function Sidebar() {

@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import ScreeningInformation from "./tabs/ScreeningInformation";
 import LearningPath from "./tabs/LearningPath";
 import Performance from "./tabs/Performance";
-import { getClassroomVariant } from "../../../classroom/data";
+import { getClassroomVariant } from "@/constants/classroom-variants";
 import type { Classroom, Student } from "@/types";
 
 type ActiveTab = "screening" | "learning" | "performance";

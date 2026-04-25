@@ -8,7 +8,7 @@ import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI } from "@/hooks/use-students";
 import { useAuth } from "@/contexts/auth-provider";
 import { toast } from "sonner";
-import { headerStyles, getClassroomVariant } from "../classroom/data";
+import { headerStyles, getClassroomVariant } from "@/constants/classroom-variants";
 import type { Classroom, ClassroomWithStudentCount } from "@/types";
 import AlertModal from "@/components/shared/AlertModal";
 

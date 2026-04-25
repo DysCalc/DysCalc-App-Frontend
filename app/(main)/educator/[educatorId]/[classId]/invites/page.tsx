@@ -7,7 +7,7 @@ import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI, type PendingInvite } from "@/hooks/use-students";
 import { useAuth } from "@/contexts/auth-provider";
 import { toast } from "sonner";
-import { getClassroomVariant, headerStyles } from "../../classroom/data";
+import { getClassroomVariant, headerStyles } from "@/constants/classroom-variants";
 import type { Classroom, ClassroomWithStudentCount } from "@/types";
 
 export default function ClassroomInvitesPage() {
