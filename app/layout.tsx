@@ -25,6 +25,10 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "DysCalc",
   description: "Dyscalculia screening thesis app",
+  icons: {
+    icon: "/icons/dyscalc-icon.svg",
+    apple: "/icons/dyscalc-icon.svg",
+  },
 };
 
 export default function RootLayout({

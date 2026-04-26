@@ -40,29 +40,29 @@ export type Database = {
       }
       educator: {
         Row: {
-          doctorate: Json[] | null
+          doctorate: Json | null
           id: string
           license_id: number
-          masters: Json[] | null
-          undergrad: Json[]
+          masters: Json | null
+          undergrad: Json
           workplace_address: string
           worksplace_name: string | null
         }
         Insert: {
-          doctorate?: Json[] | null
+          doctorate?: Json | null
           id?: string
           license_id: number
-          masters?: Json[] | null
-          undergrad: Json[]
+          masters?: Json | null
+          undergrad: Json
           workplace_address: string
           worksplace_name?: string | null
         }
         Update: {
-          doctorate?: Json[] | null
+          doctorate?: Json | null
           id?: string
           license_id?: number
-          masters?: Json[] | null
-          undergrad?: Json[]
+          masters?: Json | null
+          undergrad?: Json
           workplace_address?: string
           worksplace_name?: string | null
         }
@@ -253,10 +253,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      educator_details: {
+        Row: {
+          classroom_count: number | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          nickname: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "educator_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      validate_education_jsonb: { Args: { obj: Json }; Returns: boolean }
+      validate_educational_jsonb_array: {
+        Args: { arr: Json[] }
+        Returns: boolean
+      }
     }
     Enums: {
       CLASSIFICATION: "TYPICAL" | "AT-RISK"
