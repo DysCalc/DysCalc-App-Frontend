@@ -29,9 +29,11 @@ export default function Educators() {
     }, []);
 
     async function handleDelete(id: string) {
+        setIsDeleting(true);
         const educatorsResult = await educatorsAPI.deleteEducator(id);
         if (!educatorsResult.success) toast.error(educatorsResult.error || "Failed to delete educator");
         else setEducators((prev) => prev.filter((e) => e.id !== id));
+        setIsDeleting(false);
         setDeletingId(null);
     }
 
@@ -196,9 +198,9 @@ export default function Educators() {
                     title="Delete Educator"
                     description={`Are you sure you want to delete ${educators.find((e) => e.id === deletingId)?.full_name}?`}
                     primaryAction={{
-                        label: "Confirm Delete",
+                        label: isDeleting ? "Deleting..." : "Confirm Delete",
                         onClick: async () => {
-                            handleDelete(deletingId)
+                            await handleDelete(deletingId)
                         },
                         variant: "danger",
                         disabled: isDeleting
@@ -206,6 +208,7 @@ export default function Educators() {
                     secondaryAction={{
                         label: "Cancel",
                         onClick: () => { setDeletingId(null) },
+                        disabled: isDeleting
                     }}
                 />
             )}

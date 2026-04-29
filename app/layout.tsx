@@ -26,8 +26,8 @@ export const metadata: Metadata = {
   title: "DysCalc",
   description: "Dyscalculia screening thesis app",
   icons: {
-    icon: "/icons/dyscalc-icon.svg",
-    apple: "/icons/dyscalc-icon.svg",
+    icon: { url: "/icons/dyscalc-icon.svg", type: "image/svg+xml" },
+    apple: { url: "/icons/dyscalc-icon.svg", type: "image/svg+xml" },
   },
 };
 
@@ -50,8 +50,8 @@ export default function RootLayout({
         <AuthProvider>
           <div className="flex h-screen overflow-hidden bg-[#f5f5f0]">
             <Sidebar />
-            <div className="flex flex-1 flex-col overflow-y-auto">
-              <main className="flex-1">
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <main className="flex-1 overflow-y-auto">
                 {children}
               </main>
               <Footer />

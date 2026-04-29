@@ -13,12 +13,15 @@ import { useRouter } from "next/navigation";
 import { type Classroom } from "@/types";
 import { getClassroomVariant } from "@/constants/classroom-variants";
 import { createEducatorsAPI } from "@/hooks/use-educators";
+import { toProperCase } from "@/hooks/use-text";
+
+const educatorAPI = createEducatorsAPI();
 
 export default function EducatorClassroom() {
   const params = useParams();
   const router = useRouter();
   const [classrooms, setClassrooms] = useState<ClassroomWithStudentCount[]>([]);
-  const [educatorName, setEducatorName] = useState("Educator");
+  const [educatorName, setEducatorName] = useState("");
   const [showModal, setShowModal] = useState(false);
 
   const educatorId = params.educatorId as Classroom['educator_id'];
@@ -34,13 +37,12 @@ export default function EducatorClassroom() {
     () => createClassroomAPI(supabase),
     [supabase]
   );
-  const { fetchEducatorById } = useMemo(() => createEducatorsAPI(supabase), [supabase]);
 
   useEffect(() => {
     async function getClassrooms(educator_id: Classroom['educator_id']) {
       const [classroomResult, educatorResult] = await Promise.all([
         getAllClassrooms(educator_id),
-        fetchEducatorById(educator_id),
+        educatorAPI.fetchEducatorById(educator_id),
       ]);
 
       if (!classroomResult.success) {
@@ -57,7 +59,7 @@ export default function EducatorClassroom() {
     }
 
     getClassrooms(educatorId);
-  }, [educatorId, fetchEducatorById, getAllClassrooms]);
+  }, [educatorId, getAllClassrooms]);
 
   const handleClassCardClick = (classroomId: Classroom['id']) => {
     router.push(`/educator/${educatorId}/${classroomId}`);
@@ -125,7 +127,7 @@ export default function EducatorClassroom() {
       <div className="flex h-full w-full flex-2 items-center justify-end border-b border-[#D9D9D9] bg-neutral-50 pt-15">
         <div className="flex flex-1 flex-col items-start gap-0 bg-neutral-50 px-15">
           <div className="text-5xl font-semibold text-neutral-600">
-            {educatorName}
+            {toProperCase(educatorName)} Educator
           </div>
 
           <div className="flex-1 text-lg font-light text-neutral-600">

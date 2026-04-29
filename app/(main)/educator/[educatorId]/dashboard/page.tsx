@@ -45,10 +45,6 @@ export default function EducatorDashboard() {
           </div>
         </div>
       </div>
-
-      {/* BOTTOM SPACE = 20% (matches sidebar avatar section) */}
-      <div className="flex-[10%]" />
-
     </div>
   );
 }
