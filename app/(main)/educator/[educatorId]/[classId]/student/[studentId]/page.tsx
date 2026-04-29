@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { createClient } from "@/lib/supabase-client";
 import { createClassroomAPI } from "@/hooks/use-classroom";
+import { createStudentAPI } from "@/hooks/use-students";
 import type { Json } from "@/database.types";
 import { toast } from "sonner";
 import ScreeningInformation from "./tabs/ScreeningInformation";
@@ -118,6 +119,10 @@ export default function StudentDetailPage() {
 
   const supabase = useMemo(() => createClient(), []);
   const { getClassroomById } = useMemo(() => createClassroomAPI(supabase), [supabase]);
+  const { getClassroomStudent, getLatestInitialTestResult, getInitialTestClassification } = useMemo(
+    () => createStudentAPI(supabase),
+    [supabase]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -127,40 +132,14 @@ export default function StudentDetailPage() {
 
       const [classroomResult, studentResult, testResult] = await Promise.all([
         getClassroomById(classId),
-        supabase.functions.invoke("classroom-student", {
-          body: { classId, studentId },
-        }),
-        supabase
-          .from("initial_test_results")
-          .select(
-            "id,created_at,dot_matching,number_comparison,number_series,single_addition,single_subtraction,complex_arithmetic"
-          )
-          .eq("classroom_id", classId)
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
+        getClassroomStudent(classId, studentId),
+        getLatestInitialTestResult(classId, studentId),
       ]);
 
       if (!isMounted) return;
 
-      if (!classroomResult.success || studentResult.error) {
+      if (!classroomResult.success || !studentResult.success || !testResult.success) {
         toast.error("Failed to load student details");
-        setIsLoading(false);
-        return;
-      }
-
-      const studentPayload = studentResult.data as {
-        success: boolean;
-        data?: {
-          id: string;
-          name: string;
-        };
-        error?: string;
-      };
-
-      if (!studentPayload.success || !studentPayload.data) {
-        toast.error(studentPayload.error || "Failed to load student details");
         setIsLoading(false);
         return;
       }
@@ -168,16 +147,12 @@ export default function StudentDetailPage() {
       let classification: "TYPICAL" | "AT-RISK" | null = null;
       let classificationPrompt: string | null = null;
 
-      if (testResult.data?.id) {
-        const classificationResult = await supabase
-          .from("initial_test_classification")
-          .select("classification,prompt")
-          .eq("test_id", testResult.data.id)
-          .maybeSingle();
+      if (testResult.data && testResult.data.id) {
+        const classificationResult = await getInitialTestClassification(testResult.data.id);
 
-        if (!classificationResult.error) {
-          classification = classificationResult.data?.classification ?? null;
-          classificationPrompt = classificationResult.data?.prompt ?? null;
+        if (classificationResult.success && classificationResult.data) {
+          classification = classificationResult.data.classification;
+          classificationPrompt = classificationResult.data.prompt;
         }
       }
 
@@ -210,8 +185,8 @@ export default function StudentDetailPage() {
       });
 
       setStudent({
-        id: studentPayload.data.id,
-        name: studentPayload.data.name,
+        id: studentResult.data.id,
+        name: studentResult.data.name,
       });
 
       setScreening({
@@ -230,7 +205,14 @@ export default function StudentDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [classId, getClassroomById, studentId, supabase]);
+  }, [
+    classId,
+    getClassroomById,
+    getClassroomStudent,
+    getInitialTestClassification,
+    getLatestInitialTestResult,
+    studentId,
+  ]);
 
   if (isLoading) {
     return (

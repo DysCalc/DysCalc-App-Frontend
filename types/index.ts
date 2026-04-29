@@ -1,5 +1,6 @@
 import { type Database, Constants } from "@/database.types";
 import { toEnumObject } from "./utils";
+import { User } from "@supabase/supabase-js";
 
 export type Classroom = Database["public"]["Tables"]["classrooms"]["Row"];
 export type Educator = Database["public"]["Tables"]["educator"]["Row"];
@@ -27,3 +28,29 @@ export const SexEnum = toEnumObject(
 
 
 export type ClassroomWithStudentCount = Classroom & { student_count: number };
+
+export type EducatorData = {
+  created_at: Profile['created_at'];
+  sex: Profile['sex'];
+  date_of_birth: Profile['date_of_birth'];
+  nickname: Profile['nickname'];
+  license_id: Educator['license_id'];
+  workplace_name: Educator['workplace_name'];
+  workplace_address: Educator['workplace_address'];
+  undergrad: Educator['undergrad'];
+  masters: Educator['masters'];
+  doctorate: Educator['doctorate'];
+  id: User['id'];
+  email: User['email'];
+  full_name: User['user_metadata']['full_name'];
+  avatar_url: User['user_metadata']['avatar_url'];
+}
+
+export type EducatorRow = {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
+  nickname?: string | null;
+  classroom_count: number;
+};

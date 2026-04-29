@@ -41,3 +41,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ```bash
 npx supabase gen types typescript --schema public > database.types.ts
 ```
+
+### Create Migration Files
+```bash
+npx supabase migration new <migration-file-name>
+```

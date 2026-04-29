@@ -46,7 +46,7 @@ export type Database = {
           masters: Json | null
           undergrad: Json
           workplace_address: string
-          worksplace_name: string | null
+          workplace_name: string | null
         }
         Insert: {
           doctorate?: Json | null
@@ -55,7 +55,7 @@ export type Database = {
           masters?: Json | null
           undergrad: Json
           workplace_address: string
-          worksplace_name?: string | null
+          workplace_name?: string | null
         }
         Update: {
           doctorate?: Json | null
@@ -64,7 +64,7 @@ export type Database = {
           masters?: Json | null
           undergrad?: Json
           workplace_address?: string
-          worksplace_name?: string | null
+          workplace_name?: string | null
         }
         Relationships: [
           {
@@ -255,6 +255,7 @@ export type Database = {
     Views: {
       educator_details: {
         Row: {
+          avatar_url: string | null
           classroom_count: number | null
           email: string | null
           full_name: string | null

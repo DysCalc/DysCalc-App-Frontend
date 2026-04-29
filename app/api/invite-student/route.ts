@@ -1,130 +1,24 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 import { createServer } from "@/lib/supabase-server";
-import { StudentInvite } from "@/types";
+import { createAdminClient } from "@/lib/supabase-admin";
+import type { StudentInvite } from "@/types";
+import { buildInviteLink, sendInviteEmail, requireAuthenticatedEducator } from "./helpers"
 
-function getAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return null;
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
-
-function buildInviteLink(
-  siteUrl: string,
-  classroomId: string,
-  classroomName: string,
-  educatorName: string,
-  email: string
-) {
-  return `${siteUrl}/invite?class_id=${classroomId}&class_name=${encodeURIComponent(
-    classroomName || ""
-  )}&invited_by=${encodeURIComponent(educatorName || "")}&invite_email=${encodeURIComponent(
-    email
-  )}`;
-}
-
-async function sendInviteEmail(args: {
-  email: string;
-  classroomName: string;
-  educatorName: string;
-  inviteLink: string;
-}) {
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-
-  if (!smtpUser || !smtpPass) {
-    throw new Error("No SMTP Credentials included.");
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-  });
-
-  console.log("Invite Link:", args.inviteLink)
-
-  await transporter.sendMail({
-    from: `"DysCalc" <${smtpUser}>`,
-    to: args.email,
-    subject: `You're invited to join ${args.classroomName || "a class"} on DysCalc!`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
-        <h2 style="color: #111827; margin-bottom: 16px;">You've been invited!</h2>
-        <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
-          <strong>${args.educatorName || "An educator"}</strong> has invited you to join their class: <strong style="color: #29A177;">${args.classroomName || "Class"}</strong> on DysCalc.
-        </p>
-        <div style="margin: 32px 0; text-align: center;">
-          <a href="${args.inviteLink}" style="background-color: #29A177; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-            Accept Invite & Join Class
-          </a>
-        </div>
-        <p style="color: #6b7280; font-size: 14px;">
-          If the button doesn't work, copy and paste this link into your browser:<br/>
-          <a href="${args.inviteLink}" style="color: #2563eb; word-break: break-all;">${args.inviteLink}</a>
-        </p>
-      </div>
-    `,
-  });
-}
-
-async function requireAuthenticatedEducator(classroomId: string) {
-  const supabase = await createServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: "Unauthorized", status: 401 as const, user: null, classroom: null };
-  }
-
-  const { data: classroom, error } = await supabase
-    .from("classrooms")
-    .select("id,name,educator_id")
-    .eq("id", classroomId)
-    .eq("educator_id", user.id)
-    .maybeSingle();
-
-  if (error) {
-    return { error: error.message, status: 400 as const, user, classroom: null };
-  }
-
-  if (!classroom) {
-    return { error: "Classroom not found", status: 404 as const, user, classroom: null };
-  }
-
-  return { error: null, status: 200 as const, user, classroom };
-}
 
 export async function GET(req: NextRequest) {
   try {
     const classroomId = req.nextUrl.searchParams.get("classroomId");
-
-    if (!classroomId) {
-      return NextResponse.json({ error: "classroomId is required" }, { status: 400 });
+    const educator_id = req.nextUrl.searchParams.get("educator_id");
+    if (!classroomId || !educator_id) {
+      return NextResponse.json({ error: "classroomId and educator_id are required" }, { status: 400 });
     }
 
-    const access = await requireAuthenticatedEducator(classroomId);
+    const access = await requireAuthenticatedEducator(classroomId, educator_id);
     if (access.error) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
-    const supabaseAdmin = getAdminClient();
+    const supabaseAdmin = createAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server config error" }, { status: 500 });
     }
@@ -161,21 +55,21 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, classroomId, classroomName, educatorName } = await req.json();
+    const { email, classroomId, classroomName, educatorName, educator_id } = await req.json();
 
-    if (!email || !classroomId) {
+    if (!email || !classroomId || !educator_id) {
       return NextResponse.json(
-        { error: "Email and classroomId are required" },
+        { error: "Email and classroomId and educator_id are required" },
         { status: 400 }
       );
     }
 
-    const access = await requireAuthenticatedEducator(classroomId);
+    const access = await requireAuthenticatedEducator(classroomId, educator_id);
     if (access.error) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
-    const supabaseAdmin = getAdminClient();
+    const supabaseAdmin = createAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json(
         { error: "Service role key is not configured on the server." },
@@ -232,18 +126,18 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { email, classroomId, classroomName, educatorName } = await req.json();
+    const { email, classroomId, classroomName, educatorName, educator_id } = await req.json();
 
-    if (!email || !classroomId) {
-      return NextResponse.json({ error: "Email and classroomId are required" }, { status: 400 });
+    if (!email || !classroomId || !educator_id) {
+      return NextResponse.json({ error: "Email and classroomId and educator_id are required" }, { status: 400 });
     }
 
-    const access = await requireAuthenticatedEducator(classroomId);
+    const access = await requireAuthenticatedEducator(classroomId, educator_id);
     if (access.error) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
-    const supabaseAdmin = getAdminClient();
+    const supabaseAdmin = createAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server config error" }, { status: 500 });
     }
@@ -289,18 +183,18 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { email, classroomId } = await req.json();
+    const { email, classroomId, educator_id } = await req.json();
 
-    if (!email || !classroomId) {
-      return NextResponse.json({ error: "Email and classroomId are required" }, { status: 400 });
+    if (!email || !classroomId || !educator_id) {
+      return NextResponse.json({ error: "Email and classroomId and educator_id are required" }, { status: 400 });
     }
 
-    const access = await requireAuthenticatedEducator(classroomId);
+    const access = await requireAuthenticatedEducator(classroomId, educator_id);
     if (access.error) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
-    const supabaseAdmin = getAdminClient();
+    const supabaseAdmin = createAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server config error" }, { status: 500 });
     }
@@ -349,7 +243,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Invite email does not match your account" }, { status: 403 });
     }
 
-    const supabaseAdmin = getAdminClient();
+    const supabaseAdmin = createAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server config error" }, { status: 500 });
     }

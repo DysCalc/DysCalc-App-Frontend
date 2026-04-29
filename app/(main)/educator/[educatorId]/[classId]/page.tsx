@@ -6,7 +6,7 @@ import StudentCard from "@/components/educator/StudentCard";
 import { createClient } from "@/lib/supabase-client";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI } from "@/hooks/use-students";
-import { useAuth } from "@/contexts/auth-provider";
+import { createEducatorsAPI } from "@/hooks/use-educators";
 import { toast } from "sonner";
 import { headerStyles, getClassroomVariant } from "@/constants/classroom-variants";
 import type { Classroom, ClassroomWithStudentCount } from "@/types";
@@ -20,7 +20,6 @@ type StudentCardModel = {
 export default function ClassroomPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
 
   const classId = params.classId as Classroom['id'];
   const educatorId = params.educatorId as Classroom['educator_id'];
@@ -33,10 +32,12 @@ export default function ClassroomPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
+  const [educatorName, setEducatorName] = useState("Educator");
 
   const supabase = useMemo(() => createClient(), []);
+  const { fetchEducatorById } = useMemo(() => createEducatorsAPI(supabase), [supabase]);
   const { getClassroomById } = useMemo(() => createClassroomAPI(supabase), [supabase]);
-  const { inviteStudentByEmail } = useMemo(() => createStudentAPI(supabase), [supabase]);
+  const { inviteStudentByEmail, getClassroomStudents } = useMemo(() => createStudentAPI(supabase), [supabase]);
 
   const classroomVariant = useMemo(() => getClassroomVariant(classId), [classId]);
   const styles = headerStyles[classroomVariant];
@@ -47,11 +48,10 @@ export default function ClassroomPage() {
     const getData = async () => {
       setIsLoading(true);
 
-      const [classroomResult, studentsResult] = await Promise.all([
+      const [classroomResult, studentsResult, educatorResult] = await Promise.all([
         getClassroomById(classId),
-        supabase.functions.invoke("classroom-students", {
-          body: { classId },
-        }),
+        getClassroomStudents(classId),
+        fetchEducatorById(educatorId),
       ]);
 
       if (!isMounted) return;
@@ -62,26 +62,19 @@ export default function ClassroomPage() {
         return;
       }
 
-      if (studentsResult.error) {
+      if (!studentsResult.success) {
         toast.error("Failed to load students");
         setIsLoading(false);
         return;
       }
 
-      const studentsPayload = studentsResult.data as {
-        success: boolean;
-        data?: StudentCardModel[];
-        error?: string;
-      };
+      setClassroom(classroomResult.data);
+      setStudents(studentsResult.data);
 
-      if (!studentsPayload.success || !studentsPayload.data) {
-        toast.error(studentsPayload.error || "Failed to load students");
-        setIsLoading(false);
-        return;
+      if (educatorResult.success && educatorResult.data?.full_name) {
+        setEducatorName(educatorResult.data.full_name);
       }
 
-      setClassroom(classroomResult.data);
-      setStudents(studentsPayload.data);
       setIsLoading(false);
     };
 
@@ -90,7 +83,7 @@ export default function ClassroomPage() {
     return () => {
       isMounted = false;
     };
-  }, [classId, getClassroomById, supabase]);
+  }, [classId, educatorId, fetchEducatorById, getClassroomById, getClassroomStudents]);
 
   if (isLoading) {
     return (
@@ -121,7 +114,8 @@ export default function ClassroomPage() {
       email,
       classId,
       classroom.name,
-      (user?.user_metadata?.full_name as string) || user?.email || "Educator"
+      educatorName,
+      educatorId
     );
     setIsInviting(false);
 
@@ -178,11 +172,10 @@ export default function ClassroomPage() {
         <div className="flex items-center">
           <button
             onClick={() => setActiveTab("students")}
-            className={`px-10 py-2 text-lg font-semibold transition ${
-              activeTab === "students"
-                ? "bg-[#F3F3F3] text-[#706F6F]"
-                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
-            }`}
+            className={`px-10 py-2 text-lg font-semibold transition ${activeTab === "students"
+              ? "bg-[#F3F3F3] text-[#706F6F]"
+              : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+              }`}
           >
             Students
           </button>
@@ -192,11 +185,10 @@ export default function ClassroomPage() {
               setActiveTab("notifications");
               router.push(`/educator/${educatorId}/${classId}/invites`);
             }}
-            className={`px-10 py-2 text-lg font-semibold transition ${
-              activeTab === "notifications"
-                ? "bg-[#F3F3F3] text-[#706F6F]"
-                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
-            }`}
+            className={`px-10 py-2 text-lg font-semibold transition ${activeTab === "notifications"
+              ? "bg-[#F3F3F3] text-[#706F6F]"
+              : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+              }`}
           >
             Notifications
           </button>

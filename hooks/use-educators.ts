@@ -1,45 +1,96 @@
-import { SupabaseClient } from "@supabase/supabase-js";
 import { handleReturnError, type ApiResult } from "./utils";
+import type { EducatorRow } from "@/types";
 
-type EducatorRow = {
-    id: string;
-    email: string;
-    full_name: string;
-    avatar_url?: string | null;
-    nickname?: string | null;
-    classroom_count: number;
-};
-
-export default function createEducatorsAPI(supabase: SupabaseClient) {
+export function createEducatorsAPI() {
     return {
         async fetchAllEducators(): Promise<ApiResult<EducatorRow[]>> {
             try {
-                const { data, error } = await supabase.functions.invoke("educators-list");
+                const res = await fetch("/api/educators", {
+                    method: "GET",
+                });
 
-                if (error) return handleReturnError(error);
+                const json = await res.json();
 
-                let educators: EducatorRow[] = [];
-
-                if (Array.isArray(data)) {
-                    educators = data;
-                } else if (Array.isArray((data as any)?.educators)) {
-                    educators = (data as any).educators;
-                } else if (Array.isArray((data as any)?.data)) {
-                    educators = (data as any).data;
-                } else {
-                    console.error("Unexpected educators response shape:", data);
+                if (!res.ok) {
+                    return { success: false, error: json.error || "Failed to fetch educators" };
                 }
 
-                return { success: true, data: educators };
+                return { success: true, data: json.data };
+            } catch (error) {
+                return handleReturnError(error)
+            }
+        },
+        async createEducator(data: Partial<EducatorRow> & { id: string }): Promise<ApiResult<boolean>> {
+            try {
+                const res = await fetch(`/api/educator/${data.id}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const json = await res.json();
+
+                if (!res.ok) {
+                    return { success: false, error: json.error || "Failed to create educator" };
+                }
+
+                return { success: true, data: true };
             } catch (error) {
                 return handleReturnError(error);
             }
         },
+        async fetchEducatorById(id: string): Promise<ApiResult<EducatorRow | null>> {
+            try {
+                const res = await fetch(`/api/educators/${id}`, {
+                    method: "GET",
+                });
 
+                const json = await res.json();
+
+                if (!res.ok) {
+                    return { success: false, error: json.error || "Failed to fetch educator" };
+                }
+
+                return { success: true, data: json.data };
+            } catch (error) {
+                return handleReturnError(error);
+            }
+        },
         async deleteEducator(id: string): Promise<ApiResult<boolean>> {
             try {
-                const { error } = await supabase.from("educators").delete().eq("id", id);
-                if (error) return handleReturnError(error);
+                const res = await fetch(`/api/educators/${id}`, {
+                    method: "DELETE",
+                });
+
+                const json = await res.json();
+
+                if (!res.ok) {
+                    return { success: false, error: json.error || "Failed to delete educator" };
+                }
+
+                return { success: true, data: true };
+            } catch (error) {
+                return handleReturnError(error);
+            }
+        },
+        async updateEducator(data: Partial<EducatorRow> & { id: string }): Promise<ApiResult<boolean>> {
+            try {
+                const res = await fetch(`/api/educators/${data.id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const json = await res.json();
+
+                if (!res.ok) {
+                    return { success: false, error: json.error || "Failed to update educator" };
+                }
+
                 return { success: true, data: true };
             } catch (error) {
                 return handleReturnError(error);

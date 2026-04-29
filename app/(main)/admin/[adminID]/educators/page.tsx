@@ -1,55 +1,38 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase-client"; // adjust to your supabase client path
-import createEducatorsAPI from "@/hooks/use-educators";
+import { createEducatorsAPI } from "@/hooks/use-educators";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
+import AlertModal from "@/components/shared/AlertModal";
 
-type EducatorRow = {
-    id: string;
-    email: string;
-    full_name: string;
-    avatar_url?: string | null;
-    nickname?: string | null;
-    classroom_count: number;
-};
-
-const supabase = createClient();
-const api = createEducatorsAPI(supabase);
+import type { EducatorRow } from "@/types";
+const educatorsAPI = createEducatorsAPI();
 
 export default function Educators() {
     const router = useRouter();
     const [educators, setEducators] = useState<EducatorRow[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [deletingId, setDeletingId] = useState<string | null>(null);
-    const [confirmId, setConfirmId] = useState<string | null>(null);
-
+    const [isDeleting, setIsDeleting] = useState(false);
     useEffect(() => {
+        async function fetchEducators() {
+            setLoading(true);
+            const educatorsResult = await educatorsAPI.fetchAllEducators();
+            if (!educatorsResult.success) toast.error(educatorsResult.error || "Failed to load educators");
+            else setEducators(educatorsResult.data);
+            setLoading(false);
+        }
+
         fetchEducators();
     }, []);
 
-    async function fetchEducators() {
-        setLoading(true);
-        setError(null);
-        const educatorsResult = await api.fetchAllEducators();
-        if (!educatorsResult.success) {
-            toast.error(educatorsResult.error || "Failed to load educators");
-        } else setEducators(educatorsResult.data);
-        setLoading(false);
-    }
-
     async function handleDelete(id: string) {
-        setDeletingId(id);
-        const educatorsResult = await api.deleteEducator(id);
-        if (!educatorsResult.success) {
-            toast.error(educatorsResult.error || "Failed to delete educator");
-        }
+        const educatorsResult = await educatorsAPI.deleteEducator(id);
+        if (!educatorsResult.success) toast.error(educatorsResult.error || "Failed to delete educator");
         else setEducators((prev) => prev.filter((e) => e.id !== id));
         setDeletingId(null);
-        setConfirmId(null);
     }
 
     const filtered = educators.filter((e) => {
@@ -61,11 +44,8 @@ export default function Educators() {
         );
     });
 
-    const confirmEducator = educators.find((e) => e.id === confirmId);
-
     return (
         <div className="flex h-full w-full flex-col items-center bg-neutral-50">
-
             {/* Header */}
             <div className="flex w-full items-center justify-between border-b border-[#D9D9D9] px-15 py-10">
                 <div>
@@ -186,15 +166,16 @@ export default function Educators() {
                                                 </button>
 
                                                 <button
-                                                    className="rounded-md border border-[#D9D9D9] px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100"
-                                                // onClick={() => router.push(`/educators/${educator.id}/edit`)}
+                                                    className="rounded-md border border-[#D9D9D9] px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                                                    // onClick={() => router.push(`/educators/${educator.id}/edit`)}
+                                                    disabled
                                                 >
                                                     Edit
                                                 </button>
 
                                                 <button
                                                     className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-500 hover:bg-red-50"
-                                                // onClick={() => setConfirmId(educator.id)}
+                                                    onClick={() => setDeletingId(educator.id)}
                                                 >
                                                     Delete
                                                 </button>
@@ -207,6 +188,27 @@ export default function Educators() {
                     </table>
                 </div>
             </div>
-        </div>
+
+            {deletingId && (
+                <AlertModal
+                    isOpen={!!deletingId}
+                    onClose={() => setDeletingId(null)}
+                    title="Delete Educator"
+                    description={`Are you sure you want to delete ${educators.find((e) => e.id === deletingId)?.full_name}?`}
+                    primaryAction={{
+                        label: "Confirm Delete",
+                        onClick: async () => {
+                            handleDelete(deletingId)
+                        },
+                        variant: "danger",
+                        disabled: isDeleting
+                    }}
+                    secondaryAction={{
+                        label: "Cancel",
+                        onClick: () => { setDeletingId(null) },
+                    }}
+                />
+            )}
+        </div >
     );
 }
