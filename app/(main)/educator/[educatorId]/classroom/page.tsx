@@ -6,7 +6,6 @@ import ClassCard from "@/components/educator/ClassCard";
 import CreateClassModal from "@/components/educator/CreateClassModal";
 import { type ClassroomWithStudentCount } from "@/types";
 import { createClassroomAPI } from "@/hooks/use-classroom";
-import { createClient } from "@/lib/supabase-client";
 import { toast } from "sonner";
 import AlertModal from "@/components/shared/AlertModal";
 import { useRouter } from "next/navigation";
@@ -16,6 +15,7 @@ import { createEducatorsAPI } from "@/hooks/use-educators";
 import { toProperCase } from "@/hooks/use-text";
 
 const educatorAPI = createEducatorsAPI();
+const classroomAPI = createClassroomAPI();
 
 export default function EducatorClassroom() {
   const params = useParams();
@@ -32,16 +32,10 @@ export default function EducatorClassroom() {
   const [selectedClassroom, setSelectedClassroom] = useState<ClassroomWithStudentCount | null>(null);
   const [editName, setEditName] = useState("");
 
-  const supabase = useMemo(() => createClient(), []);
-  const { getAllClassrooms, createClassroom, deleteClassroom, updateClassroomName } = useMemo(
-    () => createClassroomAPI(supabase),
-    [supabase]
-  );
-
   useEffect(() => {
     async function getClassrooms(educator_id: Classroom['educator_id']) {
       const [classroomResult, educatorResult] = await Promise.all([
-        getAllClassrooms(educator_id),
+        classroomAPI.getAllClassrooms(educator_id),
         educatorAPI.fetchEducatorById(educator_id),
       ]);
 
@@ -59,7 +53,7 @@ export default function EducatorClassroom() {
     }
 
     getClassrooms(educatorId);
-  }, [educatorId, getAllClassrooms]);
+  }, [educatorId]);
 
   const handleClassCardClick = (classroomId: Classroom['id']) => {
     router.push(`/educator/${educatorId}/${classroomId}`);
@@ -92,7 +86,7 @@ export default function EducatorClassroom() {
     }
 
     setIsLoading(true);
-    const res = await updateClassroomName(selectedClassroom.id, editName);
+    const res = await classroomAPI.updateClassroomName(selectedClassroom.id, editName);
     setIsLoading(false);
 
     if (res.success) {
@@ -109,7 +103,7 @@ export default function EducatorClassroom() {
     if (!selectedClassroom) return;
 
     setIsLoading(true);
-    const res = await deleteClassroom(selectedClassroom.id);
+    const res = await classroomAPI.deleteClassroom(selectedClassroom.id);
     setIsLoading(false);
 
     if (res.success) {
@@ -166,7 +160,7 @@ export default function EducatorClassroom() {
         <CreateClassModal
           educatorId={educatorId}
           closeCreateModal={closeCreateModal}
-          createClassroom={createClassroom}
+          createClassroom={classroomAPI.createClassroom}
           classrooms={classrooms}
           setClassrooms={setClassrooms}
         />

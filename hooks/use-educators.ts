@@ -11,18 +11,17 @@ export function createEducatorsAPI() {
 
                 const json = await res.json();
 
-                if (!res.ok) {
-                    return { success: false, error: json.error || "Failed to fetch educators" };
-                }
+                if (!res.ok) return handleReturnError(json.error || "Failed to fetch educators");
 
                 return { success: true, data: json.data };
             } catch (error) {
                 return handleReturnError(error)
             }
         },
+        // TODO: To be implemented properly later, same structure as on createClassroom
         async createEducator(data: Partial<EducatorRow> & { id: string }): Promise<ApiResult<boolean>> {
             try {
-                const res = await fetch(`/api/educator/${data.id}`, {
+                const res = await fetch(`/api/educators/${data.id}`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -32,9 +31,7 @@ export function createEducatorsAPI() {
 
                 const json = await res.json();
 
-                if (!res.ok) {
-                    return { success: false, error: json.error || "Failed to create educator" };
-                }
+                if (!res.ok) return handleReturnError(json.error || "Failed to create educator");
 
                 return { success: true, data: true };
             } catch (error) {
@@ -49,9 +46,7 @@ export function createEducatorsAPI() {
 
                 const json = await res.json();
 
-                if (!res.ok) {
-                    return { success: false, error: json.error || "Failed to fetch educator" };
-                }
+                if (!res.ok) return handleReturnError(json.error || "Failed to fetch educator");
 
                 return { success: true, data: json.data };
             } catch (error) {
@@ -66,9 +61,7 @@ export function createEducatorsAPI() {
 
                 const json = await res.json();
 
-                if (!res.ok) {
-                    return { success: false, error: json.error || "Failed to delete educator" };
-                }
+                if (!res.ok) return handleReturnError(json.error || "Failed to delete educator");
 
                 return { success: true, data: true };
             } catch (error) {
@@ -87,9 +80,7 @@ export function createEducatorsAPI() {
 
                 const json = await res.json();
 
-                if (!res.ok) {
-                    return { success: false, error: json.error || "Failed to update educator" };
-                }
+                if (!res.ok) return handleReturnError(json.error || "Failed to update educator");
 
                 return { success: true, data: true };
             } catch (error) {

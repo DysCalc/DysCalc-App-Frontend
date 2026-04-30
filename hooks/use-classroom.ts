@@ -1,96 +1,101 @@
 import type { Classroom, ClassroomWithStudentCount } from "@/types";
 import { handleReturnError, type ApiResult } from "./utils";
-import { SupabaseClient } from "@supabase/supabase-js";
 
-export function createClassroomAPI(supabase: SupabaseClient) {
+export function createClassroomAPI() {
     return {
-        async createClassroom(educatorId: Classroom['educator_id'], name: Classroom['name']): Promise<ApiResult<Classroom>> {
+        async createClassroom(educator_id: Classroom['educator_id'], name: Classroom['name']): Promise<ApiResult<Classroom>> {
             try {
-                const { data, error } = await supabase.from('classrooms')
-                    .insert({
-                        educator_id: educatorId,
-                        name: name
-                    })
-                    .select("id,name,created_at,educator_id")
-                    .single();
-
-                if (error) {
-                    return handleReturnError(error);
-                }
-                return { success: true, data: data as Classroom };
-            } catch (error) {
-                return handleReturnError(error);
-            }
-        },
-        async getAllClassrooms(educatorId: Classroom['educator_id']): Promise<ApiResult<ClassroomWithStudentCount[]>> {
-            try {
-                const { data, error } = await supabase
-                    .from('classrooms')
-                    .select(`
-                        id,
-                        name,
-                        created_at,
+                const res = await fetch("/api/classrooms", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
                         educator_id,
-                        student_count:students(count)
-                    `)
-                    .eq('educator_id', educatorId)
-                    .eq('is_archived', false)
-                    .order('created_at', { ascending: false });
-                if (error) {
-                    return handleReturnError(error);
-                }
-                // Transform the raw data to match ClassroomWithStudentCount type
-                const transformedData = data?.map((item: any) => ({
-                    ...item,
-                    student_count: item.student_count?.[0]?.count ?? 0
-                })) as ClassroomWithStudentCount[];
-                return { success: true, data: transformedData };
+                        name,
+                    }),
+                });
+
+                const json = await res.json();
+
+                if (!res.ok) return handleReturnError(json.error || "Failed to create classroom");
+
+                return { success: true, data: json.data as Classroom };
             } catch (error) {
                 return handleReturnError(error);
             }
         },
-        async getClassroomById(classroomId: Classroom['id']): Promise<ApiResult<ClassroomWithStudentCount>> {
+        async getAllClassrooms(educator_id: Classroom['educator_id']): Promise<ApiResult<ClassroomWithStudentCount[]>> {
             try {
-                const { data, error } = await supabase.from('classrooms')
-                    .select("id,name,created_at,educator_id,student_count:students(count)")
-                    .eq('id', classroomId)
-                    .eq("is_archived", false)
-                    .single();
-                if (error) {
-                    return handleReturnError(error);
-                }
-                const transformedData = { ...data, student_count: data.student_count?.[0]?.count ?? 0 } as ClassroomWithStudentCount
-                return { success: true, data: transformedData }
+                const res = await fetch(`/api/classrooms?educator_id=${educator_id}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                });
+
+                const json = await res.json();
+
+                if (!res.ok) return handleReturnError(json.error || "Failed to get all classrooms");
+
+                return { success: true, data: json.data as ClassroomWithStudentCount[] };
             } catch (error) {
                 return handleReturnError(error);
             }
         },
-        async deleteClassroom(classroomId: Classroom['id']): Promise<ApiResult<boolean>> {
+        async getClassroomById(classroom_id: Classroom['id']): Promise<ApiResult<ClassroomWithStudentCount>> {
             try {
-                const { error } = await supabase.from('classrooms')
-                    .update({ is_archived: true })
-                    .eq('id', classroomId);
-                if (error) {
-                    return handleReturnError(error)
-                }
-                return { success: true, data: true };
+                const res = await fetch(`/api/classrooms/${classroom_id}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                });
+
+                const json = await res.json();
+
+                if (!res.ok) return handleReturnError(json.error || "Failed to get classroom by ID");
+
+                return { success: true, data: json.data as ClassroomWithStudentCount };
             } catch (error) {
                 return handleReturnError(error);
             }
         },
-        async updateClassroomName(classroomId: Classroom['id'], name: Classroom['name']): Promise<ApiResult<ClassroomWithStudentCount>> {
+        async deleteClassroom(classroom_id: Classroom['id']): Promise<ApiResult<boolean>> {
             try {
-                const { data, error } = await supabase.from('classrooms')
-                    .update({ name: name })
-                    .eq('id', classroomId)
-                    .eq("is_archived", false)
-                    .select("id,name,created_at,educator_id,student_count:students(count)")
-                    .single();
-                if (error) {
-                    return handleReturnError(error);
-                }
-                const transformedData = { ...data, student_count: data.student_count?.[0]?.count ?? 0 } as ClassroomWithStudentCount
-                return { success: true, data: transformedData };
+                const res = await fetch(`/api/classrooms/${classroom_id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                });
+
+                const json = await res.json();
+
+                if (!res.ok) return handleReturnError(json.error || "Failed to delete classroom");
+
+                return { success: true, data: json.data };
+            } catch (error) {
+                return handleReturnError(error);
+            }
+        },
+        async updateClassroomName(classroom_id: Classroom['id'], name: Classroom['name']): Promise<ApiResult<ClassroomWithStudentCount>> {
+            try {
+                const res = await fetch(`/api/classrooms/${classroom_id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        name,
+                    }),
+                });
+
+                const json = await res.json();
+
+                if (!res.ok) return handleReturnError(json.error || "Failed to update classroom");
+
+                return { success: true, data: json.data as ClassroomWithStudentCount };
             } catch (error) {
                 return handleReturnError(error);
             }

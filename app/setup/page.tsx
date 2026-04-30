@@ -5,14 +5,8 @@ import { createStudentAPI } from "@/hooks/use-students";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-provider";
-import { type Role, type Sex, type Profile, RoleEnum, SexEnum } from "@/types";
+import { type Role, type Sex, type Profile, type EducatorEducation, RoleEnum, SexEnum } from "@/types";
 import { toast } from "sonner";
-
-type EducationForm = {
-  program: string;
-  school: string;
-  year: string;
-};
 
 const YEAR_RANGE_REGEX = /^[0-9]{4}-[0-9]{4}$/;
 
@@ -28,17 +22,17 @@ export default function Setup() {
   const [licenseId, setLicenseId] = useState<string>("");
   const [workplaceAddress, setWorkplaceAddress] = useState<string>("");
   const [workplaceName, setWorkplaceName] = useState<string>("");
-  const [undergrad, setUndergrad] = useState<EducationForm>({
+  const [undergrad, setUndergrad] = useState<EducatorEducation>({
     program: "",
     school: "",
     year: "",
   });
-  const [masters, setMasters] = useState<EducationForm>({
+  const [masters, setMasters] = useState<EducatorEducation>({
     program: "",
     school: "",
     year: "",
   });
-  const [doctorate, setDoctorate] = useState<EducationForm>({
+  const [doctorate, setDoctorate] = useState<EducatorEducation>({
     program: "",
     school: "",
     year: "",
@@ -49,11 +43,11 @@ export default function Setup() {
   const supabase = createClient();
   const { acceptInvite } = createStudentAPI(supabase);
 
-  const isEducationBlank = (education: EducationForm) =>
+  const isEducationBlank = (education: EducatorEducation) =>
     !education.program.trim() && !education.school.trim() && !education.year.trim();
 
   const toEducationPayload = (
-    education: EducationForm,
+    education: EducatorEducation,
     fieldLabel: string,
     options?: { optional?: boolean }
   ): { program: string; school: string; year: string } | null => {

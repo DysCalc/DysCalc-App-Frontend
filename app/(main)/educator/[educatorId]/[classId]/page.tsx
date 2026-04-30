@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import StudentCard from "@/components/educator/StudentCard";
+import StudentCard, { type StudentCardInfo } from "@/components/educator/StudentCard";
 import { createClient } from "@/lib/supabase-client";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI } from "@/hooks/use-students";
@@ -12,20 +12,16 @@ import { headerStyles, getClassroomVariant } from "@/constants/classroom-variant
 import type { Classroom, ClassroomWithStudentCount } from "@/types";
 import AlertModal from "@/components/shared/AlertModal";
 
-type StudentCardModel = {
-  id: string;
-  name: string;
-};
+const educatorAPI = createEducatorsAPI();
+const classroomAPI = createClassroomAPI();
 
 export default function ClassroomPage() {
   const params = useParams();
   const router = useRouter();
-
   const classId = params.classId as Classroom['id'];
   const educatorId = params.educatorId as Classroom['educator_id'];
-
   const [classroom, setClassroom] = useState<ClassroomWithStudentCount | null>(null);
-  const [students, setStudents] = useState<StudentCardModel[]>([]);
+  const [students, setStudents] = useState<StudentCardInfo[]>([]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"students" | "notifications">("students");
   const [isLoading, setIsLoading] = useState(true);
@@ -35,8 +31,6 @@ export default function ClassroomPage() {
   const [educatorName, setEducatorName] = useState("Educator");
 
   const supabase = useMemo(() => createClient(), []);
-  const { fetchEducatorById } = useMemo(() => createEducatorsAPI(supabase), [supabase]);
-  const { getClassroomById } = useMemo(() => createClassroomAPI(supabase), [supabase]);
   const { inviteStudentByEmail, getClassroomStudents } = useMemo(() => createStudentAPI(supabase), [supabase]);
 
   const classroomVariant = useMemo(() => getClassroomVariant(classId), [classId]);
@@ -49,9 +43,9 @@ export default function ClassroomPage() {
       setIsLoading(true);
 
       const [classroomResult, studentsResult, educatorResult] = await Promise.all([
-        getClassroomById(classId),
+        classroomAPI.getClassroomById(classId),
         getClassroomStudents(classId),
-        fetchEducatorById(educatorId),
+        educatorAPI.fetchEducatorById(educatorId),
       ]);
 
       if (!isMounted) return;
@@ -83,7 +77,7 @@ export default function ClassroomPage() {
     return () => {
       isMounted = false;
     };
-  }, [classId, educatorId, fetchEducatorById, getClassroomById, getClassroomStudents]);
+  }, [classId, educatorId, getClassroomStudents]);
 
   if (isLoading) {
     return (
@@ -183,7 +177,6 @@ export default function ClassroomPage() {
           <button
             onClick={() => {
               setActiveTab("notifications");
-              router.push(`/educator/${educatorId}/${classId}/invites`);
             }}
             className={`px-10 py-2 text-lg font-semibold transition ${activeTab === "notifications"
               ? "bg-[#F3F3F3] text-[#706F6F]"
@@ -212,7 +205,7 @@ export default function ClassroomPage() {
                   onClose={() => setOpenMenuId(null)}
                   onClick={(id) => {
                     router.push(
-                      `/educator/${educatorId}/${classId}/student/${id}`
+                      `/educator/${educatorId}/${classId}/${id}`
                     );
                   }}
                 />
@@ -227,12 +220,9 @@ export default function ClassroomPage() {
           </div>
         ) : (
           <div className="flex w-full items-center justify-center p-15">
-            <button
-              onClick={() => router.push(`/educator/${educatorId}/${classId}/invites`)}
-              className="rounded-lg border border-[#D9D9D9] bg-white px-6 py-3 text-lg font-medium text-[#5C5E64] transition hover:bg-[#F8F8F8]"
-            >
-              Open Invite Management
-            </button>
+            <div className="col-span-3 rounded-lg border border-dashed border-[#D9D9D9] bg-white p-10 text-center text-[#7A7A7A]">
+              No notifications found for this classroom yet.
+            </div>
           </div>
         )}
       </div>

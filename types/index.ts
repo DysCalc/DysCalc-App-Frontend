@@ -54,3 +54,9 @@ export type EducatorRow = {
   nickname?: string | null;
   classroom_count: number;
 };
+
+export type EducatorEducation = {
+  program: string;
+  school: string;
+  year: string;
+}
