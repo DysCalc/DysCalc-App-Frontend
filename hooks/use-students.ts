@@ -1,31 +1,17 @@
-import type { Classroom, InitialTestClassification, InitialTestResult, Student, StudentInvite } from "@/types";
+import type {
+    Classroom,
+    InitialTestClassification,
+    InitialTestResult,
+    Student,
+    StudentClassroomProfile,
+    StudentInvite
+} from "@/types";
 import { handleReturnError, type ApiResult } from "./utils";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-export type PendingInvite = {
-    classroom_id: StudentInvite['classroom_id'];
-    email: StudentInvite['email'];
-    invited_at: StudentInvite['invited_at'];
-    is_accepted: StudentInvite['is_accepted'];
+export type PendingInvite = StudentInvite & {
     inviteLink: string;
 }
-
-type ClassroomStudentSummary = {
-    id: Student['id'];
-    name: string;
-};
-
-export type ClassroomStudentPayload = {
-    success: boolean;
-    data?: ClassroomStudentSummary;
-    error?: string;
-};
-
-export type ClassroomStudentsPayload = {
-    success: boolean;
-    data?: ClassroomStudentSummary[];
-    error?: string;
-};
 
 export function createStudentAPI(supabase: SupabaseClient) {
     return {
@@ -45,7 +31,7 @@ export function createStudentAPI(supabase: SupabaseClient) {
             educator_id: Classroom['educator_id']
         ): Promise<ApiResult<string>> {
             try {
-                const response = await fetch("/api/invite-student", {
+                const response = await fetch("/api/students/invite", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -72,7 +58,7 @@ export function createStudentAPI(supabase: SupabaseClient) {
         },
         async getPendingInvites(classroomId: StudentInvite['classroom_id'], educator_id: Classroom['educator_id']): Promise<ApiResult<PendingInvite[]>> {
             try {
-                const response = await fetch(`/api/invite-student?classroomId=${encodeURIComponent(classroomId)}&educator_id=${encodeURIComponent(educator_id)}`);
+                const response = await fetch(`/api/students/invite?classroomId=${encodeURIComponent(classroomId)}&educator_id=${encodeURIComponent(educator_id)}`);
                 const result = await response.json();
 
                 if (!response.ok) {
@@ -92,7 +78,7 @@ export function createStudentAPI(supabase: SupabaseClient) {
             educator_id: Classroom['educator_id']
         ): Promise<ApiResult<string>> {
             try {
-                const response = await fetch("/api/invite-student", {
+                const response = await fetch("/api/students/invite", {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
@@ -117,7 +103,7 @@ export function createStudentAPI(supabase: SupabaseClient) {
             educator_id: Classroom['educator_id']
         ): Promise<ApiResult<boolean>> {
             try {
-                const response = await fetch("/api/invite-student", {
+                const response = await fetch("/api/students/invite", {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
@@ -138,7 +124,7 @@ export function createStudentAPI(supabase: SupabaseClient) {
         },
         async acceptInvite(classroomId: StudentInvite['classroom_id'], email?: StudentInvite['email']): Promise<ApiResult<boolean>> {
             try {
-                const response = await fetch("/api/invite-student", {
+                const response = await fetch("/api/students/invite", {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -157,53 +143,28 @@ export function createStudentAPI(supabase: SupabaseClient) {
                 return handleReturnError(error);
             }
         },
-        async getClassroomStudents(classroomId: Classroom['id']): Promise<ApiResult<ClassroomStudentSummary[]>> {
+        async getClassroomStudents(classroom_id: Classroom['id']): Promise<ApiResult<StudentClassroomProfile[]>> {
             try {
-                const response = await supabase.functions.invoke("classroom-students", {
-                    body: { classId: classroomId },
-                });
+                const response = await fetch(`/api/classrooms/${classroom_id}/students`);
 
-                if (response.error) {
-                    return handleReturnError(response.error);
-                }
+                const result = await response.json();
 
-                const payload = response.data as ClassroomStudentsPayload;
+                if (!response.ok) return handleReturnError(result.error || "Failed to get list of students");
 
-                if (!payload?.success || !payload.data) {
-                    return {
-                        success: false,
-                        error: payload?.error || "Failed to load students",
-                    };
-                }
-
-                return { success: true, data: payload.data };
+                return { success: true, data: result.data };
             } catch (error) {
                 return handleReturnError(error);
             }
         },
-        async getClassroomStudent(
-            classroomId: Classroom['id'],
-            studentId: Student['id']
-        ): Promise<ApiResult<ClassroomStudentSummary>> {
+        async getClassroomStudent(classroom_id: Classroom['id'], student_id: Student['id']): Promise<ApiResult<StudentClassroomProfile>> {
             try {
-                const response = await supabase.functions.invoke("classroom-student", {
-                    body: { classId: classroomId, studentId },
-                });
+                const response = await fetch(`/api/classrooms/${classroom_id}/students/${student_id}`);
 
-                if (response.error) {
-                    return handleReturnError(response.error);
-                }
+                const result = await response.json();
 
-                const payload = response.data as ClassroomStudentPayload;
+                if (!response.ok) return handleReturnError(result.error || "Failed to get student details");
 
-                if (!payload?.success || !payload.data) {
-                    return {
-                        success: false,
-                        error: payload?.error || "Failed to load student details",
-                    };
-                }
-
-                return { success: true, data: payload.data };
+                return { success: true, data: result.data };
             } catch (error) {
                 return handleReturnError(error);
             }

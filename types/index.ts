@@ -47,11 +47,11 @@ export type EducatorData = {
 }
 
 export type EducatorRow = {
-  id: string;
-  email: string;
-  full_name: string;
-  avatar_url?: string | null;
-  nickname?: string | null;
+  id: Profile['id'];
+  email: User['email'];
+  full_name: User['user_metadata']['full_name'];
+  avatar_url: User['user_metadata']['avatar_url'];
+  nickname: Profile['nickname'];
   classroom_count: number;
 };
 
@@ -60,3 +60,19 @@ export type EducatorEducation = {
   school: string;
   year: string;
 }
+
+export type StudentClassroomProfile = {
+  id: Profile['id'];
+  name: User['user_metadata']['full_name'];
+  email: User['email'];
+  classroom_id: Classroom['id'];
+  accepted: StudentInvite['is_accepted'];
+  joined_at: Student['joined_at'];
+  invited_at: StudentInvite['invited_at'];
+  profile: {
+    nickname: Profile['nickname'];
+    date_of_birth: Profile['date_of_birth'];
+    sex: Profile['sex'];
+    created_at: Profile['created_at'];
+  } | null;
+};

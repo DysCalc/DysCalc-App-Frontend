@@ -280,7 +280,7 @@ export async function PUT(req: NextRequest) {
 
     const { error: acceptedError } = await supabaseAdmin
       .from("student_invites")
-      .update({ is_accepted: true })
+      .update({ is_accepted: true, joined_at: new Date().toISOString() })
       .eq("classroom_id", classroomId)
       .eq("email", requestedEmail);
 
