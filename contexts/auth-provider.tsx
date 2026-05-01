@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useRef } from "react";
-import { User } from "@supabase/supabase-js";
+import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-client";
 import { Profile } from '@/types';
 import { getUserProfile } from "@/hooks/use-profile";
@@ -59,11 +59,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
                 setLoadingMessage("Checking user...");
                 setLoading(true);
-                const { data: { user } } = await supabase.auth.getUser();
-                setUser(user);
-                if (user?.id) {
+
+                // getUser() validates the JWT via a network request.
+                // If offline, fall back to the cached session from local storage.
+                let resolvedUser: User | null = null;
+
+                const { data: { user: verifiedUser }, error: getUserError } = await supabase.auth.getUser();
+
+                if (verifiedUser) {
+                    resolvedUser = verifiedUser;
+                } else if (getUserError) {
+                    // Network error — fall back to cached session
+                    console.warn("getUser() failed (possibly offline), falling back to cached session:", getUserError.message);
+                    const { data: { session } } = await supabase.auth.getSession();
+                    resolvedUser = session?.user ?? null;
+                }
+
+                setUser(resolvedUser);
+                if (resolvedUser?.id) {
                     setLoadingMessage("Loading profile...");
-                    const profile = await getUserProfile(user.id);
+                    const profile = await getUserProfile(resolvedUser.id);
                     setProfile(profile);
                 }
             } catch (err) {
@@ -77,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         getSession();
 
         const { data: listener } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
+            async (event: AuthChangeEvent, session: Session | null) => {
                 if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') return;
 
                 const nextUser = session?.user ?? null;
