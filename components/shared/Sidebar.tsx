@@ -29,6 +29,9 @@ export default function Sidebar() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { user, loading, profile, logout } = useAuth();
   const pathname = usePathname();
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const currentRoute = pathSegments[0] ?? "";
+  const routeId = pathSegments[1] ?? "";
 
   useEffect(() => {
     if (!user) return;
@@ -66,13 +69,19 @@ export default function Sidebar() {
     let baseNavigations: NavGroup[] = [];
     switch (currentContext) {
       case "student":
-        baseNavigations = getStudentNavigations(user.id);
+        baseNavigations = getStudentNavigations(
+          currentRoute === "student" && routeId ? routeId : user.id
+        );
         break;
       case "educator":
-        baseNavigations = getEducatorNavigations(user.id);
+        baseNavigations = getEducatorNavigations(
+          currentRoute === "educator" && routeId ? routeId : user.id
+        );
         break;
       case "admin":
-        baseNavigations = getAdminNavigations(user.id);
+        baseNavigations = getAdminNavigations(
+          currentRoute === "admin" && routeId ? routeId : user.id
+        );
         break;
       default:
         baseNavigations = [];

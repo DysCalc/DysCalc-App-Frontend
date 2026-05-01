@@ -1,13 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { createStudentAPI } from "@/hooks/use-students";
-import { createClient } from "@/lib/supabase-client";
 
 export default function EducatorDashboard() {
-  const supabase = createClient();
-  const { inviteStudentByEmail } = createStudentAPI(supabase);
-
   return (
     <div className="flex h-full w-full flex-col">
 
@@ -50,10 +45,6 @@ export default function EducatorDashboard() {
           </div>
         </div>
       </div>
-
-      {/* BOTTOM SPACE = 20% (matches sidebar avatar section) */}
-      <div className="flex-[10%]" />
-
     </div>
   );
 }

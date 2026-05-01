@@ -2,10 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase-client";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI, type PendingInvite } from "@/hooks/use-students";
-import { useAuth } from "@/contexts/auth-provider";
+import { createEducatorsAPI } from "@/hooks/use-educators";
 import { toast } from "sonner";
 import { getClassroomVariant, headerStyles } from "@/constants/classroom-variants";
 import type { Classroom, ClassroomWithStudentCount } from "@/types";
@@ -13,22 +12,19 @@ import type { Classroom, ClassroomWithStudentCount } from "@/types";
 export default function ClassroomInvitesPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
 
   const classId = params.classId as Classroom['id'];
   const educatorId = params.educatorId as Classroom['educator_id'];
 
   const [classroom, setClassroom] = useState<ClassroomWithStudentCount | null>(null);
   const [invites, setInvites] = useState<PendingInvite[]>([]);
+  const [educatorName, setEducatorName] = useState("Educator");
   const [isLoading, setIsLoading] = useState(true);
   const [rowLoadingEmail, setRowLoadingEmail] = useState<string | null>(null);
 
-  const supabase = useMemo(() => createClient(), []);
-  const { getClassroomById } = useMemo(() => createClassroomAPI(supabase), [supabase]);
-  const { getPendingInvites, resendInvite, removeInvite } = useMemo(
-    () => createStudentAPI(supabase),
-    [supabase]
-  );
+  const classroomAPI = useMemo(() => createClassroomAPI(), []);
+  const educatorAPI = useMemo(() => createEducatorsAPI(), []);
+  const studentAPI = useMemo(() => createStudentAPI(), []);
 
   const style = useMemo(() => headerStyles[getClassroomVariant(classId)], [classId]);
 
@@ -37,9 +33,10 @@ export default function ClassroomInvitesPage() {
 
     const getData = async () => {
       setIsLoading(true);
-      const [classroomResult, invitesResult] = await Promise.all([
-        getClassroomById(classId),
-        getPendingInvites(classId),
+      const [classroomResult, invitesResult, educatorResult] = await Promise.all([
+        classroomAPI.getClassroomById(classId),
+        studentAPI.getPendingInvites(classId, educatorId),
+        educatorAPI.fetchEducatorById(educatorId),
       ]);
 
       if (!isMounted) return;
@@ -58,6 +55,11 @@ export default function ClassroomInvitesPage() {
 
       setClassroom(classroomResult.data);
       setInvites(invitesResult.data);
+
+      if (educatorResult.success && educatorResult.data?.full_name) {
+        setEducatorName(educatorResult.data.full_name);
+      }
+
       setIsLoading(false);
     };
 
@@ -66,7 +68,7 @@ export default function ClassroomInvitesPage() {
     return () => {
       isMounted = false;
     };
-  }, [classId, getClassroomById, getPendingInvites]);
+  }, [classId, educatorId, classroomAPI, educatorAPI, studentAPI]);
 
   if (isLoading) {
     return (
@@ -139,13 +141,13 @@ export default function ClassroomInvitesPage() {
                   <button
                     disabled={isBusy}
                     onClick={async () => {
-                      if (!user) return;
                       setRowLoadingEmail(invite.email);
-                      const result = await resendInvite(
+                      const result = await studentAPI.resendInvite(
                         invite.email,
                         classId,
                         classroom.name,
-                        (user.user_metadata?.full_name as string) || user.email || "Educator"
+                        educatorName,
+                        educatorId
                       );
                       setRowLoadingEmail(null);
 
@@ -172,7 +174,7 @@ export default function ClassroomInvitesPage() {
                     disabled={isBusy}
                     onClick={async () => {
                       setRowLoadingEmail(invite.email);
-                      const result = await removeInvite(invite.email, classId);
+                      const result = await studentAPI.removeInvite(invite.email, classId, educatorId);
                       setRowLoadingEmail(null);
 
                       if (!result.success) {

@@ -14,7 +14,7 @@ function InvitePageContent() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
   const supabase = createClient();
-  const { acceptInvite } = createStudentAPI(supabase);
+  const { acceptInvite } = createStudentAPI();
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -113,7 +113,6 @@ function InvitePageContent() {
   const isWrongRecipient = !!user && !!inviteEmail &&
     user.email?.toLowerCase() !== inviteEmail.toLowerCase();
 
-    console.log("iswrong:", isWrongRecipient);
   const notLoggedIn = (
     <>
     <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">

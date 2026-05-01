@@ -1,34 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   EllipsisVerticalIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
-import { createClient } from "@/lib/supabase-client";
 import { createClassroomAPI } from "@/hooks/use-classroom";
+import { createStudentAPI } from "@/hooks/use-students";
 import type { Json } from "@/database.types";
 import { toast } from "sonner";
 import ScreeningInformation from "./tabs/ScreeningInformation";
 import LearningPath from "./tabs/LearningPath";
 import Performance from "./tabs/Performance";
 import { getClassroomVariant } from "@/constants/classroom-variants";
-import type { Classroom, Student } from "@/types";
-
-type ActiveTab = "screening" | "learning" | "performance";
-
-type StudentSummary = {
-  id: string;
-  name: string;
-};
-
-type ClassroomSummary = {
-  id: string;
-  name: string;
-  students: number;
-  variant: "yellow" | "green" | "blue" | "gray";
-};
+import type { Classroom, Student, ClassroomWithStudentCount, StudentClassroomProfile, Classification } from "@/types";
 
 type ScoreRow = {
   key: string;
@@ -37,12 +23,16 @@ type ScoreRow = {
 };
 
 type ScreeningDetails = {
-  classification: "TYPICAL" | "AT-RISK" | null;
-  prompt: string | null;
+  classification: Classification | null;
   created_at: string | null;
   scores: ScoreRow[];
   averageScore: number | null;
 };
+
+type ClassroomVariant = Pick<ClassroomWithStudentCount, "id" | "name" | "student_count"> & {
+  variant: "yellow" | "green" | "blue" | "gray";
+}
+type StudentSummary = Pick<StudentClassroomProfile, "id" | "name">
 
 const TEST_FIELDS: Array<{ key: string; label: string }> = [
   { key: "dot_matching", label: "Dot Matching" },
@@ -104,20 +94,20 @@ function scoreFromJson(value: Json): number | null {
   return null;
 }
 
+const classroomAPI = createClassroomAPI();
+const studentAPI = createStudentAPI();
+
 export default function StudentDetailPage() {
   const params = useParams();
 
   const classId = params.classId as Classroom['id'];
   const studentId = params.studentId as Student['id'];
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>("screening");
+  const [activeTab, setActiveTab] = useState<"screening" | "learning" | "performance">("screening");
   const [isLoading, setIsLoading] = useState(true);
   const [student, setStudent] = useState<StudentSummary | null>(null);
-  const [classroom, setClassroom] = useState<ClassroomSummary | null>(null);
+  const [classroom, setClassroom] = useState<ClassroomVariant | null>(null);
   const [screening, setScreening] = useState<ScreeningDetails | null>(null);
-
-  const supabase = useMemo(() => createClient(), []);
-  const { getClassroomById } = useMemo(() => createClassroomAPI(supabase), [supabase]);
 
   useEffect(() => {
     let isMounted = true;
@@ -126,67 +116,27 @@ export default function StudentDetailPage() {
       setIsLoading(true);
 
       const [classroomResult, studentResult, testResult] = await Promise.all([
-        getClassroomById(classId),
-        supabase.functions.invoke("classroom-student", {
-          body: { classId, studentId },
-        }),
-        supabase
-          .from("initial_test_results")
-          .select(
-            "id,created_at,dot_matching,number_comparison,number_series,single_addition,single_subtraction,complex_arithmetic"
-          )
-          .eq("classroom_id", classId)
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
+        classroomAPI.getClassroomById(classId),
+        studentAPI.getClassroomStudent(classId, studentId),
+        studentAPI.getLatestInitialTestResult(classId, studentId),
       ]);
 
       if (!isMounted) return;
 
-      if (!classroomResult.success || studentResult.error) {
+      if (!classroomResult.success || !studentResult.success || !testResult.success) {
         toast.error("Failed to load student details");
         setIsLoading(false);
         return;
       }
 
-      const studentPayload = studentResult.data as {
-        success: boolean;
-        data?: {
-          id: string;
-          name: string;
-        };
-        error?: string;
-      };
-
-      if (!studentPayload.success || !studentPayload.data) {
-        toast.error(studentPayload.error || "Failed to load student details");
-        setIsLoading(false);
-        return;
-      }
-
-      let classification: "TYPICAL" | "AT-RISK" | null = null;
-      let classificationPrompt: string | null = null;
-
-      if (testResult.data?.id) {
-        const classificationResult = await supabase
-          .from("initial_test_classification")
-          .select("classification,prompt")
-          .eq("test_id", testResult.data.id)
-          .maybeSingle();
-
-        if (!classificationResult.error) {
-          classification = classificationResult.data?.classification ?? null;
-          classificationPrompt = classificationResult.data?.prompt ?? null;
-        }
-      }
+      const classification: Classification | null = testResult.data?.classification ?? null;
 
       const scores: ScoreRow[] = testResult.data
         ? TEST_FIELDS.map((field) => ({
-            key: field.key,
-            label: field.label,
-            score: scoreFromJson((testResult.data as Record<string, Json>)[field.key]),
-          }))
+          key: field.key,
+          label: field.label,
+          score: scoreFromJson((testResult.data as Record<string, Json>)[field.key]),
+        }))
         : [];
 
       const availableScores = scores
@@ -195,28 +145,27 @@ export default function StudentDetailPage() {
 
       const averageScore = availableScores.length
         ? Number(
-            (
-              availableScores.reduce((sum, current) => sum + current, 0) /
-              availableScores.length
-            ).toFixed(1)
-          )
+          (
+            availableScores.reduce((sum, current) => sum + current, 0) /
+            availableScores.length
+          ).toFixed(1)
+        )
         : null;
 
       setClassroom({
         id: classroomResult.data.id,
         name: classroomResult.data.name,
-        students: classroomResult.data.student_count,
+        student_count: classroomResult.data.student_count,
         variant: getClassroomVariant(classroomResult.data.id),
       });
 
       setStudent({
-        id: studentPayload.data.id,
-        name: studentPayload.data.name,
+        id: studentResult.data.id,
+        name: studentResult.data.name,
       });
 
       setScreening({
         classification,
-        prompt: classificationPrompt,
         created_at: testResult.data?.created_at ?? null,
         scores,
         averageScore,
@@ -230,7 +179,7 @@ export default function StudentDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [classId, getClassroomById, studentId, supabase]);
+  }, [classId, studentId]);
 
   if (isLoading) {
     return (
@@ -271,33 +220,30 @@ export default function StudentDetailPage() {
           <div className="flex h-full items-center">
             <button
               onClick={() => setActiveTab("screening")}
-              className={`h-full px-20 text-lg font-semibold transition ${
-                activeTab === "screening"
-                  ? "bg-[#F3F3F3] text-[#706F6F]"
-                  : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
-              }`}
+              className={`h-full px-20 text-lg font-semibold transition ${activeTab === "screening"
+                ? "bg-[#F3F3F3] text-[#706F6F]"
+                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+                }`}
             >
               Screening Information
             </button>
 
             <button
               onClick={() => setActiveTab("learning")}
-              className={`h-full px-20 text-lg font-semibold transition ${
-                activeTab === "learning"
-                  ? "bg-[#F3F3F3] text-[#706F6F]"
-                  : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
-              }`}
+              className={`h-full px-20 text-lg font-semibold transition ${activeTab === "learning"
+                ? "bg-[#F3F3F3] text-[#706F6F]"
+                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+                }`}
             >
               Learning Path
             </button>
 
             <button
               onClick={() => setActiveTab("performance")}
-              className={`h-full px-20 text-lg font-semibold transition ${
-                activeTab === "performance"
-                  ? "bg-[#F3F3F3] text-[#706F6F]"
-                  : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
-              }`}
+              className={`h-full px-20 text-lg font-semibold transition ${activeTab === "performance"
+                ? "bg-[#F3F3F3] text-[#706F6F]"
+                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+                }`}
             >
               Performance
             </button>

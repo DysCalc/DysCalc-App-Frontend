@@ -2,41 +2,34 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import StudentCard from "@/components/educator/StudentCard";
-import { createClient } from "@/lib/supabase-client";
+import StudentCard, { type StudentCardInfo } from "@/components/educator/StudentCard";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI } from "@/hooks/use-students";
-import { useAuth } from "@/contexts/auth-provider";
+import { createEducatorsAPI } from "@/hooks/use-educators";
 import { toast } from "sonner";
 import { headerStyles, getClassroomVariant } from "@/constants/classroom-variants";
 import type { Classroom, ClassroomWithStudentCount } from "@/types";
 import AlertModal from "@/components/shared/AlertModal";
 
-type StudentCardModel = {
-  id: string;
-  name: string;
-};
+const educatorAPI = createEducatorsAPI();
+const classroomAPI = createClassroomAPI();
 
 export default function ClassroomPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
-
   const classId = params.classId as Classroom['id'];
   const educatorId = params.educatorId as Classroom['educator_id'];
-
   const [classroom, setClassroom] = useState<ClassroomWithStudentCount | null>(null);
-  const [students, setStudents] = useState<StudentCardModel[]>([]);
+  const [students, setStudents] = useState<StudentCardInfo[]>([]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"students" | "notifications">("students");
   const [isLoading, setIsLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
+  const [educatorName, setEducatorName] = useState("Educator");
 
-  const supabase = useMemo(() => createClient(), []);
-  const { getClassroomById } = useMemo(() => createClassroomAPI(supabase), [supabase]);
-  const { inviteStudentByEmail } = useMemo(() => createStudentAPI(supabase), [supabase]);
+  const studentAPI = createStudentAPI();
 
   const classroomVariant = useMemo(() => getClassroomVariant(classId), [classId]);
   const styles = headerStyles[classroomVariant];
@@ -47,11 +40,10 @@ export default function ClassroomPage() {
     const getData = async () => {
       setIsLoading(true);
 
-      const [classroomResult, studentsResult] = await Promise.all([
-        getClassroomById(classId),
-        supabase.functions.invoke("classroom-students", {
-          body: { classId },
-        }),
+      const [classroomResult, studentsResult, educatorResult] = await Promise.all([
+        classroomAPI.getClassroomById(classId),
+        studentAPI.getClassroomStudents(classId),
+        educatorAPI.fetchEducatorById(educatorId),
       ]);
 
       if (!isMounted) return;
@@ -62,26 +54,19 @@ export default function ClassroomPage() {
         return;
       }
 
-      if (studentsResult.error) {
+      if (!studentsResult.success) {
         toast.error("Failed to load students");
         setIsLoading(false);
         return;
       }
 
-      const studentsPayload = studentsResult.data as {
-        success: boolean;
-        data?: StudentCardModel[];
-        error?: string;
-      };
+      setClassroom(classroomResult.data);
+      setStudents(studentsResult.data);
 
-      if (!studentsPayload.success || !studentsPayload.data) {
-        toast.error(studentsPayload.error || "Failed to load students");
-        setIsLoading(false);
-        return;
+      if (educatorResult.success && educatorResult.data?.full_name) {
+        setEducatorName(educatorResult.data.full_name);
       }
 
-      setClassroom(classroomResult.data);
-      setStudents(studentsPayload.data);
       setIsLoading(false);
     };
 
@@ -90,7 +75,7 @@ export default function ClassroomPage() {
     return () => {
       isMounted = false;
     };
-  }, [classId, getClassroomById, supabase]);
+  }, [classId, educatorId]);
 
   if (isLoading) {
     return (
@@ -117,11 +102,12 @@ export default function ClassroomPage() {
     }
 
     setIsInviting(true);
-    const res = await inviteStudentByEmail(
+    const res = await studentAPI.inviteStudentByEmail(
       email,
       classId,
       classroom.name,
-      (user?.user_metadata?.full_name as string) || user?.email || "Educator"
+      educatorName,
+      educatorId
     );
     setIsInviting(false);
 
@@ -178,11 +164,10 @@ export default function ClassroomPage() {
         <div className="flex items-center">
           <button
             onClick={() => setActiveTab("students")}
-            className={`px-10 py-2 text-lg font-semibold transition ${
-              activeTab === "students"
-                ? "bg-[#F3F3F3] text-[#706F6F]"
-                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
-            }`}
+            className={`px-10 py-2 text-lg font-semibold transition ${activeTab === "students"
+              ? "bg-[#F3F3F3] text-[#706F6F]"
+              : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+              }`}
           >
             Students
           </button>
@@ -190,13 +175,11 @@ export default function ClassroomPage() {
           <button
             onClick={() => {
               setActiveTab("notifications");
-              router.push(`/educator/${educatorId}/${classId}/invites`);
             }}
-            className={`px-10 py-2 text-lg font-semibold transition ${
-              activeTab === "notifications"
-                ? "bg-[#F3F3F3] text-[#706F6F]"
-                : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
-            }`}
+            className={`px-10 py-2 text-lg font-semibold transition ${activeTab === "notifications"
+              ? "bg-[#F3F3F3] text-[#706F6F]"
+              : "text-[#9A9A9A] hover:bg-[#F8F8F8] hover:text-[#706F6F]"
+              }`}
           >
             Notifications
           </button>
@@ -220,7 +203,7 @@ export default function ClassroomPage() {
                   onClose={() => setOpenMenuId(null)}
                   onClick={(id) => {
                     router.push(
-                      `/educator/${educatorId}/${classId}/student/${id}`
+                      `/educator/${educatorId}/${classId}/${id}`
                     );
                   }}
                 />
@@ -235,12 +218,9 @@ export default function ClassroomPage() {
           </div>
         ) : (
           <div className="flex w-full items-center justify-center p-15">
-            <button
-              onClick={() => router.push(`/educator/${educatorId}/${classId}/invites`)}
-              className="rounded-lg border border-[#D9D9D9] bg-white px-6 py-3 text-lg font-medium text-[#5C5E64] transition hover:bg-[#F8F8F8]"
-            >
-              Open Invite Management
-            </button>
+            <div className="col-span-3 rounded-lg border border-dashed border-[#D9D9D9] bg-white p-10 text-center text-[#7A7A7A]">
+              No notifications found for this classroom yet.
+            </div>
           </div>
         )}
       </div>

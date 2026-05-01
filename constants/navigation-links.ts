@@ -83,10 +83,15 @@ export const getAdminNavigations = (userId: string): NavGroup[] => [
                 href: `/admin/${userId}/dashboard`,
                 icon: HomeIcon,
             },
+            {
+                label: "Educators",
+                href: `/admin/${userId}/educators`,
+                icon: AcademicCapIcon,
+            },
         ],
     },
     {
-        title: "Navigation",
+        title: "Navigation (TESTING ONLY)",
         links: [
             {
                 label: "Educator View",

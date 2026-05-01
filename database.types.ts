@@ -40,31 +40,31 @@ export type Database = {
       }
       educator: {
         Row: {
-          doctorate: Json[] | null
+          doctorate: Json | null
           id: string
           license_id: number
-          masters: Json[] | null
-          undergrad: Json[]
+          masters: Json | null
+          undergrad: Json
           workplace_address: string
-          worksplace_name: string | null
+          workplace_name: string | null
         }
         Insert: {
-          doctorate?: Json[] | null
+          doctorate?: Json | null
           id?: string
           license_id: number
-          masters?: Json[] | null
-          undergrad: Json[]
+          masters?: Json | null
+          undergrad: Json
           workplace_address: string
-          worksplace_name?: string | null
+          workplace_name?: string | null
         }
         Update: {
-          doctorate?: Json[] | null
+          doctorate?: Json | null
           id?: string
           license_id?: number
-          masters?: Json[] | null
-          undergrad?: Json[]
+          masters?: Json | null
+          undergrad?: Json
           workplace_address?: string
-          worksplace_name?: string | null
+          workplace_name?: string | null
         }
         Relationships: [
           {
@@ -76,85 +76,31 @@ export type Database = {
           },
         ]
       }
-      initial_test_classification: {
+      learning_modules: {
         Row: {
-          classification: Database["public"]["Enums"]["CLASSIFICATION"]
           created_at: string
-          prompt: string
-          test_id: number
+          paths: Json | null
+          prompt: string | null
+          result_id: string
         }
         Insert: {
-          classification: Database["public"]["Enums"]["CLASSIFICATION"]
           created_at?: string
-          prompt: string
-          test_id?: number
+          paths?: Json | null
+          prompt?: string | null
+          result_id?: string
         }
         Update: {
-          classification?: Database["public"]["Enums"]["CLASSIFICATION"]
           created_at?: string
-          prompt?: string
-          test_id?: number
+          paths?: Json | null
+          prompt?: string | null
+          result_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "initial_test_classification_test_id_fkey"
-            columns: ["test_id"]
+            foreignKeyName: "learning_modules_result_id_fkey"
+            columns: ["result_id"]
             isOneToOne: true
-            referencedRelation: "initial_test_results"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      initial_test_results: {
-        Row: {
-          classroom_id: string | null
-          complex_arithmetic: Json
-          created_at: string
-          dot_matching: Json
-          id: number
-          number_comparison: Json
-          number_series: Json
-          single_addition: Json
-          single_subtraction: Json
-          student_id: string | null
-        }
-        Insert: {
-          classroom_id?: string | null
-          complex_arithmetic: Json
-          created_at?: string
-          dot_matching: Json
-          id?: number
-          number_comparison: Json
-          number_series: Json
-          single_addition: Json
-          single_subtraction: Json
-          student_id?: string | null
-        }
-        Update: {
-          classroom_id?: string | null
-          complex_arithmetic?: Json
-          created_at?: string
-          dot_matching?: Json
-          id?: number
-          number_comparison?: Json
-          number_series?: Json
-          single_addition?: Json
-          single_subtraction?: Json
-          student_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "initial_test_results_classroom_id_fkey"
-            columns: ["classroom_id"]
-            isOneToOne: false
-            referencedRelation: "classrooms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "initial_test_results_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "test_results"
             referencedColumns: ["id"]
           },
         ]
@@ -218,21 +164,21 @@ export type Database = {
           classroom_id: string
           id: string
           invited_at: string
-          joined_at: string
+          joined_at: string | null
         }
         Insert: {
           accepted?: boolean | null
           classroom_id: string
           id?: string
           invited_at?: string
-          joined_at?: string
+          joined_at?: string | null
         }
         Update: {
           accepted?: boolean | null
           classroom_id?: string
           id?: string
           invited_at?: string
-          joined_at?: string
+          joined_at?: string | null
         }
         Relationships: [
           {
@@ -251,12 +197,128 @@ export type Database = {
           },
         ]
       }
+      test_results: {
+        Row: {
+          classification: Database["public"]["Enums"]["CLASSIFICATION"] | null
+          classroom_id: string | null
+          complex_arithmetic: Json
+          created_at: string
+          dot_matching: Json
+          id: string
+          is_approved: boolean
+          number_comparison: Json
+          number_series: Json
+          single_addition: Json
+          single_subtraction: Json
+          student_id: string | null
+        }
+        Insert: {
+          classification?: Database["public"]["Enums"]["CLASSIFICATION"] | null
+          classroom_id?: string | null
+          complex_arithmetic: Json
+          created_at?: string
+          dot_matching: Json
+          id?: string
+          is_approved?: boolean
+          number_comparison: Json
+          number_series: Json
+          single_addition: Json
+          single_subtraction: Json
+          student_id?: string | null
+        }
+        Update: {
+          classification?: Database["public"]["Enums"]["CLASSIFICATION"] | null
+          classroom_id?: string | null
+          complex_arithmetic?: Json
+          created_at?: string
+          dot_matching?: Json
+          id?: string
+          is_approved?: boolean
+          number_comparison?: Json
+          number_series?: Json
+          single_addition?: Json
+          single_subtraction?: Json
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "initial_test_results_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "initial_test_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      educator_details: {
+        Row: {
+          avatar_url: string | null
+          classroom_count: number | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          nickname: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "educator_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      create_educator_with_profile: {
+        Args: {
+          p_date_of_birth: string
+          p_doctorate: string
+          p_id: string
+          p_license_id: string
+          p_masters: string
+          p_nickname: string
+          p_sex: string
+          p_undergrad: string
+          p_workplace_address: string
+          p_workplace_name: string
+        }
+        Returns: undefined
+      }
+      delete_educator_with_profile: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      update_educator_with_profile: {
+        Args: {
+          p_date_of_birth: string
+          p_doctorate: string
+          p_id: string
+          p_license_id: string
+          p_masters: string
+          p_nickname: string
+          p_sex: string
+          p_undergrad: string
+          p_workplace_address: string
+          p_workplace_name: string
+        }
+        Returns: undefined
+      }
+      validate_education_jsonb: { Args: { obj: Json }; Returns: boolean }
+      validate_educational_jsonb_array: {
+        Args: { arr: Json[] }
+        Returns: boolean
+      }
     }
     Enums: {
       CLASSIFICATION: "TYPICAL" | "AT-RISK"

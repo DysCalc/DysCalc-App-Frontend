@@ -1,22 +1,16 @@
-"use client";
-
 import Image from "next/image";
-import { useAuth } from "@/contexts/auth-provider";
-import { useRouter } from "next/navigation";
+
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const { user } = useAuth();
-
   return (
     <main className="flex bg-[#f5f5f0]">
       <div className="flex flex-col min-h-screen w-full justify-between">
 
         {/* HERO SECTION (fixed height) */}
-        <div className="flex h-23/27 w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#78DAB8_0%,_#29A177_34%,_#076242_100%)]">
+        <div className="flex h-full w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#78DAB8_0%,_#29A177_34%,_#076242_100%)]">
 
           {/* LEFT */}
-          <div className="w-1/2 flex items-center justify-end">
+          <div className="w-1/2 h-full flex items-center justify-end">
             <div className="ml-30">
               <Image
                 src="/icons/main-icon.svg"

@@ -1,25 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useParams } from "next/navigation";
 import ClassCard from "@/components/educator/ClassCard";
 import CreateClassModal from "@/components/educator/CreateClassModal";
 import { type ClassroomWithStudentCount } from "@/types";
 import { createClassroomAPI } from "@/hooks/use-classroom";
-import { createClient } from "@/lib/supabase-client";
-import { useAuth } from "@/contexts/auth-provider";
 import { toast } from "sonner";
-import { ApiResult } from "@/hooks/utils";
 import AlertModal from "@/components/shared/AlertModal";
 import { useRouter } from "next/navigation";
 import { type Classroom } from "@/types";
 import { getClassroomVariant } from "@/constants/classroom-variants";
+import { createEducatorsAPI } from "@/hooks/use-educators";
+import { toProperCase } from "@/hooks/use-text";
+
+const educatorAPI = createEducatorsAPI();
+const classroomAPI = createClassroomAPI();
 
 export default function EducatorClassroom() {
+  const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
   const [classrooms, setClassrooms] = useState<ClassroomWithStudentCount[]>([]);
+  const [educatorName, setEducatorName] = useState("");
   const [showModal, setShowModal] = useState(false);
 
+  const educatorId = params.educatorId as Classroom['educator_id'];
   // Operations
   const [isLoading, setIsLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -27,26 +32,31 @@ export default function EducatorClassroom() {
   const [selectedClassroom, setSelectedClassroom] = useState<ClassroomWithStudentCount | null>(null);
   const [editName, setEditName] = useState("");
 
-  const supabase = createClient();
-  const { getAllClassrooms, createClassroom, deleteClassroom, updateClassroomName } = createClassroomAPI(supabase);
-
-  if (!user) return null;
   useEffect(() => {
     async function getClassrooms(educator_id: Classroom['educator_id']) {
-      const classroomResult: ApiResult<ClassroomWithStudentCount[]> = await getAllClassrooms(educator_id);
+      const [classroomResult, educatorResult] = await Promise.all([
+        classroomAPI.getAllClassrooms(educator_id),
+        educatorAPI.fetchEducatorById(educator_id),
+      ]);
+
       if (!classroomResult.success) {
         console.log(classroomResult.error);
         toast.error("Failed to fetch classrooms");
         return;
       }
+
+      if (educatorResult.success && educatorResult.data?.full_name) {
+        setEducatorName(educatorResult.data.full_name);
+      }
+
       setClassrooms(classroomResult.data);
     }
 
-    getClassrooms(user.id);
-  }, [user]);
+    getClassrooms(educatorId);
+  }, [educatorId]);
 
   const handleClassCardClick = (classroomId: Classroom['id']) => {
-    router.push(`/educator/${user?.id}/${classroomId}`);
+    router.push(`/educator/${educatorId}/${classroomId}`);
   };
 
   const openCreateModal = () => {
@@ -76,7 +86,7 @@ export default function EducatorClassroom() {
     }
 
     setIsLoading(true);
-    const res = await updateClassroomName(selectedClassroom.id, editName);
+    const res = await classroomAPI.updateClassroomName(selectedClassroom.id, editName);
     setIsLoading(false);
 
     if (res.success) {
@@ -93,7 +103,7 @@ export default function EducatorClassroom() {
     if (!selectedClassroom) return;
 
     setIsLoading(true);
-    const res = await deleteClassroom(selectedClassroom.id);
+    const res = await classroomAPI.deleteClassroom(selectedClassroom.id);
     setIsLoading(false);
 
     if (res.success) {
@@ -111,7 +121,7 @@ export default function EducatorClassroom() {
       <div className="flex h-full w-full flex-2 items-center justify-end border-b border-[#D9D9D9] bg-neutral-50 pt-15">
         <div className="flex flex-1 flex-col items-start gap-0 bg-neutral-50 px-15">
           <div className="text-5xl font-semibold text-neutral-600">
-            {user.user_metadata.full_name}
+            {toProperCase(educatorName)} Educator
           </div>
 
           <div className="flex-1 text-lg font-light text-neutral-600">
@@ -148,9 +158,9 @@ export default function EducatorClassroom() {
 
       {showModal && (
         <CreateClassModal
-          educatorId={user?.id}
+          educatorId={educatorId}
           closeCreateModal={closeCreateModal}
-          createClassroom={createClassroom}
+          createClassroom={classroomAPI.createClassroom}
           classrooms={classrooms}
           setClassrooms={setClassrooms}
         />
