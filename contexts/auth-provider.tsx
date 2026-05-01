@@ -32,6 +32,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
     const supabase = createClient();
+    const [showInternetHint, setShowInternetHint] = useState(false);
+
+    useEffect(() => {
+        if (!loading) {
+            setShowInternetHint(false);
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            setShowInternetHint(true);
+        }, 10000); // 10 seconds
+
+        return () => clearTimeout(timeout);
+    }, [loading]);
 
     const userRef = useRef<string | null>(null);
 
@@ -139,9 +153,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             {loading ? (
                 <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-[#f5f5f0]">
                     <div className="h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#29A177] border-t-transparent"></div>
+
                     {loadingMessage && (
-                        <div className="text-lg font-semibold text-[#6C6C6C] animate-pulse">
+                        <div className="animate-pulse text-lg font-semibold text-[#6C6C6C]">
                             {loadingMessage}
+                        </div>
+                    )}
+
+                    {showInternetHint && (
+                        <div className="max-w-sm animate-pulse text-center text-sm text-[#8A8A8A]">
+                            This is taking longer than expected. Please check your
+                            internet connection and try refreshing the page.
                         </div>
                     )}
                 </div>
