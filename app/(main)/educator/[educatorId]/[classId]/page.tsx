@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import StudentCard, { type StudentCardInfo } from "@/components/educator/StudentCard";
-import { createClient } from "@/lib/supabase-client";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI } from "@/hooks/use-students";
 import { createEducatorsAPI } from "@/hooks/use-educators";
@@ -30,8 +29,7 @@ export default function ClassroomPage() {
   const [isInviting, setIsInviting] = useState(false);
   const [educatorName, setEducatorName] = useState("Educator");
 
-  const supabase = useMemo(() => createClient(), []);
-  const { inviteStudentByEmail, getClassroomStudents } = useMemo(() => createStudentAPI(supabase), [supabase]);
+  const studentAPI = createStudentAPI();
 
   const classroomVariant = useMemo(() => getClassroomVariant(classId), [classId]);
   const styles = headerStyles[classroomVariant];
@@ -44,7 +42,7 @@ export default function ClassroomPage() {
 
       const [classroomResult, studentsResult, educatorResult] = await Promise.all([
         classroomAPI.getClassroomById(classId),
-        getClassroomStudents(classId),
+        studentAPI.getClassroomStudents(classId),
         educatorAPI.fetchEducatorById(educatorId),
       ]);
 
@@ -77,7 +75,7 @@ export default function ClassroomPage() {
     return () => {
       isMounted = false;
     };
-  }, [classId, educatorId, getClassroomStudents]);
+  }, [classId, educatorId]);
 
   if (isLoading) {
     return (
@@ -104,7 +102,7 @@ export default function ClassroomPage() {
     }
 
     setIsInviting(true);
-    const res = await inviteStudentByEmail(
+    const res = await studentAPI.inviteStudentByEmail(
       email,
       classId,
       classroom.name,

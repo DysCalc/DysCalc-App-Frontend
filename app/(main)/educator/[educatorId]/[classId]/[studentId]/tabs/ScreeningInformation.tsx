@@ -2,6 +2,8 @@
 
 import { ArrowDownTrayIcon, DocumentPlusIcon } from "@heroicons/react/24/outline";
 
+import type { Classification } from "@/types";
+
 type ScoreRow = {
   key: string;
   label: string;
@@ -16,14 +18,13 @@ type Props = {
   classroom: {
     id: string;
     name: string;
-    students: number;
+    student_count: number;
     variant: "yellow" | "green" | "blue" | "gray";
   };
   classId: string;
   studentId: string;
   screening: {
-    classification: "TYPICAL" | "AT-RISK" | null;
-    prompt: string | null;
+    classification: Classification | null;
     created_at: string | null;
     scores: ScoreRow[];
     averageScore: number | null;
@@ -53,18 +54,16 @@ export default function ScreeningInformation({
     <div className="mt-2 mb-2 mr-2 flex w-full flex-2 gap-2 px-15">
       <div className="flex h-full w-full flex-3 flex-col border border-[#EDEDED] bg-[#F9F9F9]">
         <div
-          className={`flex flex-1 px-10 py-10 text-start ${
-            isAtRisk ? "bg-[#FFF0F0]" : "bg-[#ECF9F4]"
-          }`}
+          className={`flex flex-1 px-10 py-10 text-start ${isAtRisk ? "bg-[#FFF0F0]" : "bg-[#ECF9F4]"
+            }`}
         >
           <div className="flex max-w-md flex-col gap-3">
             <p className="text-lg font-semibold uppercase text-zinc-600">
               Screening Findings
             </p>
             <p
-              className={`mt-3 text-4xl font-semibold leading-tight ${
-                isAtRisk ? "text-red-500" : "text-[#29A177]"
-              }`}
+              className={`mt-3 text-4xl font-semibold leading-tight ${isAtRisk ? "text-red-500" : "text-[#29A177]"
+                }`}
             >
               {screening.classification === null
                 ? "No classification yet"
@@ -125,8 +124,7 @@ export default function ScreeningInformation({
         </div>
 
         <div className="text-lg font-light leading-snug text-[#5C5E64]">
-          {screening.prompt ||
-            "No classifier description has been generated yet for this student. Once screening is complete, DysCalc will provide diagnostic guidance and a recommended support approach."}
+          {"No classifier description has been generated yet for this student. Once screening is complete, DysCalc will provide diagnostic guidance and a recommended support approach."}
         </div>
 
         <button

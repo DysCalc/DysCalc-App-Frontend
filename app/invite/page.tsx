@@ -14,7 +14,7 @@ function InvitePageContent() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
   const supabase = createClient();
-  const { acceptInvite } = createStudentAPI(supabase);
+  const { acceptInvite } = createStudentAPI();
 
   const [isProcessing, setIsProcessing] = useState(false);
 

@@ -41,7 +41,7 @@ export default function Setup() {
   const router = useRouter();
   const { user } = useAuth();
   const supabase = createClient();
-  const { acceptInvite } = createStudentAPI(supabase);
+  const { acceptInvite } = createStudentAPI();
 
   const isEducationBlank = (education: EducatorEducation) =>
     !education.program.trim() && !education.school.trim() && !education.year.trim();

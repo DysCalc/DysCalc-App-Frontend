@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   EllipsisVerticalIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
-import { createClient } from "@/lib/supabase-client";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI } from "@/hooks/use-students";
 import type { Json } from "@/database.types";
@@ -15,16 +14,7 @@ import ScreeningInformation from "./tabs/ScreeningInformation";
 import LearningPath from "./tabs/LearningPath";
 import Performance from "./tabs/Performance";
 import { getClassroomVariant } from "@/constants/classroom-variants";
-import type { Classroom, Student } from "@/types";
-
-type ActiveTab = "screening" | "learning" | "performance";
-
-type ClassroomSummary = {
-  id: string;
-  name: string;
-  students: number;
-  variant: "yellow" | "green" | "blue" | "gray";
-};
+import type { Classroom, Student, ClassroomWithStudentCount, StudentClassroomProfile, Classification } from "@/types";
 
 type ScoreRow = {
   key: string;
@@ -33,12 +23,16 @@ type ScoreRow = {
 };
 
 type ScreeningDetails = {
-  classification: "TYPICAL" | "AT-RISK" | null;
-  prompt: string | null;
+  classification: Classification | null;
   created_at: string | null;
   scores: ScoreRow[];
   averageScore: number | null;
 };
+
+type ClassroomVariant = Pick<ClassroomWithStudentCount, "id" | "name" | "student_count"> & {
+  variant: "yellow" | "green" | "blue" | "gray";
+}
+type StudentSummary = Pick<StudentClassroomProfile, "id" | "name">
 
 const TEST_FIELDS: Array<{ key: string; label: string }> = [
   { key: "dot_matching", label: "Dot Matching" },
@@ -100,24 +94,20 @@ function scoreFromJson(value: Json): number | null {
   return null;
 }
 
+const classroomAPI = createClassroomAPI();
+const studentAPI = createStudentAPI();
+
 export default function StudentDetailPage() {
   const params = useParams();
 
   const classId = params.classId as Classroom['id'];
   const studentId = params.studentId as Student['id'];
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>("screening");
+  const [activeTab, setActiveTab] = useState<"screening" | "learning" | "performance">("screening");
   const [isLoading, setIsLoading] = useState(true);
   const [student, setStudent] = useState<StudentSummary | null>(null);
-  const [classroom, setClassroom] = useState<ClassroomSummary | null>(null);
+  const [classroom, setClassroom] = useState<ClassroomVariant | null>(null);
   const [screening, setScreening] = useState<ScreeningDetails | null>(null);
-
-  const supabase = useMemo(() => createClient(), []);
-  const { getClassroomById } = useMemo(() => createClassroomAPI(supabase), [supabase]);
-  const { getClassroomStudent, getLatestInitialTestResult, getInitialTestClassification } = useMemo(
-    () => createStudentAPI(supabase),
-    [supabase]
-  );
 
   useEffect(() => {
     let isMounted = true;
@@ -126,9 +116,9 @@ export default function StudentDetailPage() {
       setIsLoading(true);
 
       const [classroomResult, studentResult, testResult] = await Promise.all([
-        getClassroomById(classId),
-        getClassroomStudent(classId, studentId),
-        getLatestInitialTestResult(classId, studentId),
+        classroomAPI.getClassroomById(classId),
+        studentAPI.getClassroomStudent(classId, studentId),
+        studentAPI.getLatestInitialTestResult(classId, studentId),
       ]);
 
       if (!isMounted) return;
@@ -139,17 +129,7 @@ export default function StudentDetailPage() {
         return;
       }
 
-      let classification: "TYPICAL" | "AT-RISK" | null = null;
-      let classificationPrompt: string | null = null;
-
-      if (testResult.data && testResult.data.id) {
-        const classificationResult = await getInitialTestClassification(testResult.data.id);
-
-        if (classificationResult.success && classificationResult.data) {
-          classification = classificationResult.data.classification;
-          classificationPrompt = classificationResult.data.prompt;
-        }
-      }
+      const classification: Classification | null = testResult.data?.classification ?? null;
 
       const scores: ScoreRow[] = testResult.data
         ? TEST_FIELDS.map((field) => ({
@@ -175,7 +155,7 @@ export default function StudentDetailPage() {
       setClassroom({
         id: classroomResult.data.id,
         name: classroomResult.data.name,
-        students: classroomResult.data.student_count,
+        student_count: classroomResult.data.student_count,
         variant: getClassroomVariant(classroomResult.data.id),
       });
 
@@ -186,7 +166,6 @@ export default function StudentDetailPage() {
 
       setScreening({
         classification,
-        prompt: classificationPrompt,
         created_at: testResult.data?.created_at ?? null,
         scores,
         averageScore,
@@ -200,14 +179,7 @@ export default function StudentDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [
-    classId,
-    getClassroomById,
-    getClassroomStudent,
-    getInitialTestClassification,
-    getLatestInitialTestResult,
-    studentId,
-  ]);
+  }, [classId, studentId]);
 
   if (isLoading) {
     return (

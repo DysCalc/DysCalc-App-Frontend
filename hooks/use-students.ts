@@ -1,19 +1,17 @@
 import type {
     Classroom,
-    InitialTestClassification,
-    InitialTestResult,
+    TestResult,
     Student,
     StudentClassroomProfile,
     StudentInvite
 } from "@/types";
 import { handleReturnError, type ApiResult } from "./utils";
-import { SupabaseClient } from "@supabase/supabase-js";
 
 export type PendingInvite = StudentInvite & {
     inviteLink: string;
 }
 
-export function createStudentAPI(supabase: SupabaseClient) {
+export function createStudentAPI() {
     return {
         // async emailStudent(studentId: Student['id']): Promise<ApiResult<boolean>> {
         //     try {
@@ -169,52 +167,40 @@ export function createStudentAPI(supabase: SupabaseClient) {
                 return handleReturnError(error);
             }
         },
-        async getLatestInitialTestResult(
-            classroomId: Classroom['id'],
-            studentId: Student['id']
-        ): Promise<ApiResult<InitialTestResult | null>> {
+        async getLatestInitialTestResult(classroomId: Classroom['id'], studentId: Student['id']): Promise<ApiResult<TestResult | null>> {
             try {
-                const { data, error } = await supabase
-                    .from("initial_test_results")
-                    .select(
-                        "id,created_at,dot_matching,number_comparison,number_series,single_addition,single_subtraction,complex_arithmetic"
-                    )
-                    .eq("classroom_id", classroomId)
-                    .eq("student_id", studentId)
-                    .order("created_at", { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
+                const response = await fetch(`/api/classrooms/${classroomId}/students/${studentId}/tests_results`);
 
-                if (error) {
-                    return handleReturnError(error);
-                }
+                const result = await response.json();
 
-                return { success: true, data: data as InitialTestResult | null };
+                if (!response.ok) return handleReturnError(result.error || "Failed to get latest initial test result");
+
+                return { success: true, data: result.data as TestResult | null };
             } catch (error) {
                 return handleReturnError(error);
             }
         },
-        async getInitialTestClassification(
-            testId: InitialTestResult['id']
-        ): Promise<ApiResult<Pick<InitialTestClassification, 'classification' | 'prompt'> | null>> {
-            try {
-                const { data, error } = await supabase
-                    .from("initial_test_classification")
-                    .select("classification,prompt")
-                    .eq("test_id", testId)
-                    .maybeSingle();
+        // async getInitialTestClassification(
+        //     testId: InitialTestResult['id']
+        // ): Promise<ApiResult<Pick<InitialTestClassification, 'classification' | 'prompt'> | null>> {
+        //     try {
+        //         const { data, error } = await supabase
+        //             .from("initial_test_classification")
+        //             .select("classification,prompt")
+        //             .eq("test_id", testId)
+        //             .maybeSingle();
 
-                if (error) {
-                    return handleReturnError(error);
-                }
+        //         if (error) {
+        //             return handleReturnError(error);
+        //         }
 
-                return {
-                    success: true,
-                    data: data as Pick<InitialTestClassification, 'classification' | 'prompt'> | null,
-                };
-            } catch (error) {
-                return handleReturnError(error);
-            }
-        }
+        //         return {
+        //             success: true,
+        //             data: data as Pick<InitialTestClassification, 'classification' | 'prompt'> | null,
+        //         };
+        //     } catch (error) {
+        //         return handleReturnError(error);
+        //     }
+        // }
     }
 }

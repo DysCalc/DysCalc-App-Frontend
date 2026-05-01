@@ -7,6 +7,8 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 
+import type { Classification } from "@/types";
+
 type ScoreRow = {
   key: string;
   label: string;
@@ -21,14 +23,13 @@ type Props = {
   classroom: {
     id: string;
     name: string;
-    students: number;
+    student_count: number;
     variant: "yellow" | "green" | "blue" | "gray";
   };
   classId: string;
   studentId: string;
   screening: {
-    classification: "TYPICAL" | "AT-RISK" | null;
-    prompt: string | null;
+    classification: Classification | null;
     created_at: string | null;
     scores: ScoreRow[];
     averageScore: number | null;
