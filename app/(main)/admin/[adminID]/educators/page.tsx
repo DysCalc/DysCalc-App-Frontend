@@ -40,8 +40,8 @@ export default function Educators() {
     const filtered = educators.filter((e) => {
         const q = search.toLowerCase();
         return (
-            e.full_name.toLowerCase().includes(q) ||
-            e.email.toLowerCase().includes(q) ||
+            e.full_name?.toLowerCase().includes(q) ||
+            e.email?.toLowerCase().includes(q) ||
             (e.nickname ?? "").toLowerCase().includes(q)
         );
     });
