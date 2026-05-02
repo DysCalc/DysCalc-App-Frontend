@@ -60,20 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setLoadingMessage("Checking user...");
                 setLoading(true);
 
-                // getUser() validates the JWT via a network request.
-                // If offline, fall back to the cached session from local storage.
-                let resolvedUser: User | null = null;
-
-                const { data: { user: verifiedUser }, error: getUserError } = await supabase.auth.getUser();
-
-                if (verifiedUser) {
-                    resolvedUser = verifiedUser;
-                } else if (getUserError) {
-                    // Network error — fall back to cached session
-                    console.warn("getUser() failed (possibly offline), falling back to cached session:", getUserError.message);
-                    const { data: { session } } = await supabase.auth.getSession();
-                    resolvedUser = session?.user ?? null;
-                }
+                // getSession() reads the cached session from local storage — no network request.
+                // The JWT is still cryptographically signed; onAuthStateChange handles refreshes.
+                const { data: { session } } = await supabase.auth.getSession();
+                const resolvedUser = session?.user ?? null;
 
                 setUser(resolvedUser);
                 if (resolvedUser?.id) {
