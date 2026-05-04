@@ -146,7 +146,7 @@ export default function ClassroomPage() {
         <div className="flex flex-1 items-center justify-end gap-3 px-15">
           <button
             onClick={() => setShowInviteModal(true)}
-            className="inline-flex h-11 items-center justify-center rounded-md bg-[#29A177] px-6 text-base font-medium text-white shadow-sm transition duration-200 hover:bg-[#018255] hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-[#efb11d] px-6 text-base font-medium text-white shadow-sm transition duration-200 hover:bg-[#018255] hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Invite Student
           </button>
@@ -188,37 +188,45 @@ export default function ClassroomPage() {
 
       <div className="flex flex-1 w-full">
         {activeTab === "students" ? (
-          <div className="grid w-full grid-cols-3 grid-rows-4 gap-2 p-15 pb-55">
-            {students.map((student) => {
-              const isOpen = openMenuId === student.id;
+          <div className="flex w-full items-center justify-center p-15">
+            
+            <div className="w-full max-w-3xl flex flex-col gap-3">
+              {students.map((student) => {
+                const isOpen = openMenuId === student.id;
 
-              return (
-                <StudentCard
-                  key={student.id}
-                  student={student}
-                  isOpen={isOpen}
-                  onToggle={(id) =>
-                    setOpenMenuId((prev) => (prev === id ? null : id))
-                  }
-                  onClose={() => setOpenMenuId(null)}
-                  onClick={(id) => {
-                    router.push(
-                      `/educator/${educatorId}/${classId}/${id}`
-                    );
-                  }}
-                />
-              );
-            })}
+                return (
+                  <div
+                    key={student.id}
+                    className="rounded-lg border border-[#E5E5E5] bg-white p-4 shadow-sm transition hover:border-[#CFCFCF] hover:shadow-md"
+                  >
+                    <StudentCard
+                      student={student}
+                      isOpen={isOpen}
+                      onToggle={(id) =>
+                        setOpenMenuId((prev) => (prev === id ? null : id))
+                      }
+                      onClose={() => setOpenMenuId(null)}
+                      onClick={(id) => {
+                        router.push(
+                          `/educator/${educatorId}/${classId}/${id}`
+                        );
+                      }}
+                    />
+                  </div>
+                );
+              })}
 
-            {!students.length && (
-              <div className="col-span-3 rounded-lg border border-dashed border-[#D9D9D9] bg-white p-10 text-center text-[#7A7A7A]">
-                No students found for this classroom yet.
-              </div>
-            )}
+              {!students.length && (
+                <div className="rounded-lg border border-dashed border-[#D9D9D9] bg-white p-10 text-center text-[#7A7A7A]">
+                  No students found for this classroom yet.
+                </div>
+              )}
+            </div>
+
           </div>
         ) : (
           <div className="flex w-full items-center justify-center p-15">
-            <div className="col-span-3 rounded-lg border border-dashed border-[#D9D9D9] bg-white p-10 text-center text-[#7A7A7A]">
+            <div className="w-full max-w-3xl rounded-lg border border-dashed border-[#D9D9D9] bg-white p-10 text-center text-[#7A7A7A]">
               No notifications found for this classroom yet.
             </div>
           </div>

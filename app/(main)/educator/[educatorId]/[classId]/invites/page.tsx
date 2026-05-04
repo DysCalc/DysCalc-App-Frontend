@@ -104,38 +104,45 @@ export default function ClassroomInvitesPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 w-full p-15">
-        <div className="w-full rounded-xl border border-[#D9D9D9] bg-white shadow-sm">
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center border-b border-[#EDEDED] px-6 py-4 text-sm font-semibold text-[#7A7A7A]">
-            <div>Email</div>
-            <div>Invited At</div>
-            <div>Status</div>
-            <div className="text-right">Actions</div>
+      <div className="flex flex-1 w-full">
+        <div className="w-full bg-white">
+
+          <div className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center border-b border-[#EDEDED] text-sm font-semibold text-[#8A8A8A] text-center">
+            <div className="px-4 py-3">Email</div>
+            <div className="px-4 py-3 border-l border-[#F2F2F2]">Invited At</div>
+            <div className="px-4 py-3 border-l border-[#F2F2F2]">Status</div>
+            <div className="px-4 py-3 border-l border-[#F2F2F2]">Actions</div>
           </div>
 
           {invites.map((invite) => {
             const isBusy = rowLoadingEmail === invite.email;
+
             return (
               <div
                 key={invite.email}
-                className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center border-b border-[#F2F2F2] px-6 py-4 text-sm text-[#5C5E64]"
+                className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center border-b border-[#F5F5F5] text-sm text-[#5C5E64] hover:bg-[#FAFAFA] transition"
               >
-                <div>{invite.email}</div>
-                <div>{new Date(invite.invited_at).toLocaleString()}</div>
-                <div>
-                  <span className="rounded-full bg-[#FFF6E6] px-3 py-1 text-xs font-medium text-[#AF7A00]">
+                <div className="px-4 py-3">{invite.email}</div>
+
+                <div className="px-4 py-3 border-l border-[#F5F5F5]">
+                  {new Date(invite.invited_at).toLocaleString()}
+                </div>
+
+                <div className="px-4 py-3 border-l border-[#F5F5F5]">
+                  <span className="text-xs font-medium text-[#AF7A00]">
                     Pending
                   </span>
                 </div>
-                <div className="flex items-center justify-end gap-2">
+
+                <div className="flex items-center justify-end gap-2 px-4 py-3 border-l border-[#F5F5F5]">
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(invite.inviteLink);
                       toast.success("Invite link copied");
                     }}
-                    className="rounded-md border border-[#D9D9D9] px-3 py-1.5 text-xs font-medium text-[#5C5E64] transition hover:bg-[#F8F8F8]"
+                    className="text-xs text-[#5C5E64] hover:underline"
                   >
-                    Copy Link
+                    Copy
                   </button>
 
                   <button
@@ -159,13 +166,18 @@ export default function ClassroomInvitesPage() {
                       setInvites((prev) =>
                         prev.map((entry) =>
                           entry.email === invite.email
-                            ? { ...entry, invited_at: new Date().toISOString(), inviteLink: result.data }
+                            ? {
+                                ...entry,
+                                invited_at: new Date().toISOString(),
+                                inviteLink: result.data,
+                              }
                             : entry
                         )
                       );
+
                       toast.success("Invite resent");
                     }}
-                    className="rounded-md bg-[#29A177] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#018255] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="text-xs text-[#29A177] hover:underline disabled:opacity-50"
                   >
                     {isBusy ? "Sending..." : "Resend"}
                   </button>
@@ -174,7 +186,11 @@ export default function ClassroomInvitesPage() {
                     disabled={isBusy}
                     onClick={async () => {
                       setRowLoadingEmail(invite.email);
-                      const result = await studentAPI.removeInvite(invite.email, classId, educatorId);
+                      const result = await studentAPI.removeInvite(
+                        invite.email,
+                        classId,
+                        educatorId
+                      );
                       setRowLoadingEmail(null);
 
                       if (!result.success) {
@@ -182,10 +198,13 @@ export default function ClassroomInvitesPage() {
                         return;
                       }
 
-                      setInvites((prev) => prev.filter((entry) => entry.email !== invite.email));
+                      setInvites((prev) =>
+                        prev.filter((entry) => entry.email !== invite.email)
+                      );
+
                       toast.success("Invite removed");
                     }}
-                    className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="text-xs text-red-600 hover:underline disabled:opacity-50"
                   >
                     Remove
                   </button>
@@ -194,8 +213,11 @@ export default function ClassroomInvitesPage() {
             );
           })}
 
+          {/* EMPTY */}
           {!invites.length && (
-            <div className="p-10 text-center text-[#7A7A7A]">No pending invites for this classroom.</div>
+            <div className="py-12 text-center text-[#9A9A9A] text-sm">
+              No pending invites for this classroom.
+            </div>
           )}
         </div>
       </div>
