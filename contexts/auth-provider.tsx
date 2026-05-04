@@ -5,13 +5,12 @@ import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-client";
 import { Profile } from '@/types';
 import { getUserProfile } from "@/hooks/use-profile";
+import { toast } from "sonner";
 
 export interface AuthContextType {
     user: User | null,
     profile: Profile | null,
     loading: boolean,
-    loadingMessage: string,
-    setLoadingMessage: (msg: string) => void,
     loginWithGoogle: () => Promise<void>,
     logout: () => Promise<void>
 }
@@ -29,23 +28,8 @@ export const useAuth = (): AuthContextType => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<Profile | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
+    const [loading, setLoading] = useState<boolean>(true);
     const supabase = createClient();
-    const [showInternetHint, setShowInternetHint] = useState(false);
-
-    useEffect(() => {
-        if (!loading) {
-            setShowInternetHint(false);
-            return;
-        }
-
-        const timeout = setTimeout(() => {
-            setShowInternetHint(true);
-        }, 10000); // 10 seconds
-
-        return () => clearTimeout(timeout);
-    }, [loading]);
 
     const userRef = useRef<string | null>(null);
 
@@ -56,10 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const getSession = async () => {
+            const toastId = toast.loading("Checking user...");
             try {
-                setLoadingMessage("Checking user...");
-                setLoading(true);
-
                 // getSession() reads the cached session from local storage — no network request.
                 // The JWT is still cryptographically signed; onAuthStateChange handles refreshes.
                 const { data: { session } } = await supabase.auth.getSession();
@@ -67,14 +49,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 setUser(resolvedUser);
                 if (resolvedUser?.id) {
-                    setLoadingMessage("Loading profile...");
+                    toast.loading("Loading profile...", { id: toastId });
                     const profile = await getUserProfile(resolvedUser.id);
                     setProfile(profile);
+                    toast.dismiss(toastId);
+                } else {
+                    toast.dismiss(toastId);
                 }
             } catch (err) {
                 console.error("Session fetch error:", err);
+                toast.dismiss(toastId);
             } finally {
-                setLoadingMessage("Loading...");
                 setLoading(false);
             }
         }
@@ -90,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Same user, nothing actually changed — skip
                 if (nextUser?.id === userRef.current) return;
 
-                setLoadingMessage("Checking user...");
+                const toastId = toast.loading("Updating session...");
                 setLoading(true);
 
                 setUser(nextUser);
@@ -98,13 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 if (!nextUser) {
                     setProfile(null);
+                    toast.dismiss(toastId);
                 } else {
-                    setLoadingMessage("Loading profile...");
+                    toast.loading("Loading profile...", { id: toastId });
                     const profile = await getUserProfile(nextUser.id);
                     setProfile(profile);
+                    toast.dismiss(toastId);
                 }
 
-                setLoadingMessage("Loading...");
                 setLoading(false);
             }
         );
@@ -112,10 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => {
             listener.subscription.unsubscribe()
         }
-    }, []);
+    }, [supabase.auth]);
 
     const loginWithGoogle = async (): Promise<void> => {
-        setLoadingMessage("Signing in...");
+        const toastId = toast.loading("Signing in...");
         setLoading(true);
         const origin = typeof window !== 'undefined' ? window.location.origin : '';
         const { error } = await supabase.auth.signInWithOAuth({
@@ -124,22 +110,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 redirectTo: `${origin}/auth/callback`,
             },
         })
-        setLoadingMessage("Loading...");
-        setLoading(false);
 
         if (error) {
             console.error(error.message)
+            toast.error(error.message, { id: toastId });
+            setLoading(false);
         }
     };
 
     const logout = async (): Promise<void> => {
-        setLoadingMessage("Signing out...");
+        const toastId = toast.loading("Signing out...");
         setLoading(true);
         await supabase.auth.signOut({ scope: 'local' })
         setUser(null);
         setProfile(null);
+        toast.dismiss(toastId);
         window.location.href = "/";
-        setLoadingMessage("Loading...");
         setLoading(false);
     };
 
@@ -147,34 +133,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         profile,
         loading,
-        loadingMessage,
-        setLoadingMessage,
         loginWithGoogle,
         logout,
     };
 
     return (
         <AuthContext.Provider value={value}>
-            {loading ? (
-                <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-[#f5f5f0]">
-                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#29A177] border-t-transparent"></div>
-
-                    {loadingMessage && (
-                        <div className="animate-pulse text-lg font-semibold text-[#6C6C6C]">
-                            {loadingMessage}
-                        </div>
-                    )}
-
-                    {showInternetHint && (
-                        <div className="max-w-sm animate-pulse text-center text-sm text-[#8A8A8A]">
-                            This is taking longer than expected. Please check your
-                            internet connection and try refreshing the page.
-                        </div>
-                    )}
-                </div>
-            ) : (
-                children
-            )}
+            {children}
         </AuthContext.Provider>
     )
 }
