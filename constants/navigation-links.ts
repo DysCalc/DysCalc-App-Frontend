@@ -27,7 +27,7 @@ export const getStudentNavigations = (userId: string): NavGroup[] => [
         links: [
             {
                 label: "Classrooms",
-                href: `/student/${userId}/classroom`,
+                href: `/student/${userId}/classrooms`,
                 icon: UserGroupIcon,
             },
         ],

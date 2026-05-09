@@ -50,7 +50,7 @@ export default function LearningPathCard({
 
   return (
     <Link
-      href={`/student/${studentId}/classroom/${id}`}
+      href={`/student/${studentId}/classrooms/${id}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);

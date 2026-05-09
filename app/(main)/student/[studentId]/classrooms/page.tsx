@@ -1,9 +1,9 @@
 import LearningPathCard from "@/components/student/LearningPathCard";
 
 type Props = {
-  params: {
+  params: Promise<{
     studentId: string;
-  };
+  }>;
 };
 
 const learningPaths = [
@@ -23,14 +23,21 @@ const learningPaths = [
     accentColor: "#29A177",
     textColor: "text-[#55AF55]",
   },
+  {
+    id: "tertiary",
+    title: "Tertiary Learning Path",
+    duration: "123 days (4months+)",
+    code: "DSLDKNSZ924S",
+    accentColor: "#ff9451",
+    textColor: "text-[#55AF55]",
+  },
 ];
 
-export default function StudentClassroomPage({ params }: Props) {
-  const { studentId } = params;
+export default async function StudentClassroomPage({ params }: Props) {
+  const { studentId } = await params;
 
   return (
     <main className="min-h-screen w-full bg-[#F7F7F7]">
-      {/* HERO */}
       <section className="w-full bg-[radial-gradient(ellipse_120%_120%_at_20%_80%,_#FFF7C8_0%,_#FFE030_40%,_#F4CB00_100%)]">
         <div className="mx-auto flex min-h-[430px] max-w-7xl items-center justify-center px-8 py-10">
           <div className="grid w-full items-center gap-10">
@@ -47,8 +54,7 @@ export default function StudentClassroomPage({ params }: Props) {
         </div>
       </section>
 
-      {/* CONTENT */}
-      <section className="mx-auto max-w-8xl px-8 py-10">
+      <section className="mx-auto max-w-[1600px] px-8 py-10">
         <div className="grid gap-8 md:grid-cols-3">
           {learningPaths.map((path) => (
             <LearningPathCard
