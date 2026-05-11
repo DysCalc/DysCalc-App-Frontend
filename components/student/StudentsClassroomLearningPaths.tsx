@@ -17,7 +17,7 @@ function getStatusClass(status: string) {
   }
 
   if (normalizedStatus === "inactive") {
-    return "border border-[#F59E0B] text-[#B86B00] bg-[#F59E0B]/10 shadow-[0_0_12px_rgba(245,158,11,0.10)]";
+    return "border border-[#ff471a] text-[#ff471a] bg-[#ff471a]/10 shadow-[0_0_12px_rgba(245,158,11,0.10)]";
   }
 
   return "border border-[#D9D9D9] text-[#8A8A8A] bg-[#D9D9D9]/10 shadow-[0_0_12px_rgba(217,217,217,0.10)]";

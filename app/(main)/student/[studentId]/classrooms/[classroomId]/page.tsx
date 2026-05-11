@@ -75,7 +75,7 @@ export default async function ClassroomLearningPathPage({ params }: Props) {
         </Link>
 
         {/* Header Card */}
-        <section className="flex w-full flex-1 items-center px-6">
+        <section className="flex w-full flex-1 items-center px-6 border-b border-[#E5E5E5]">
           <div className="flex w-full flex-1 flex-col gap-4 px-10 py-12">
             <h1 className="text-5xl font-bold text-[#9D9D9D]">
               {classroom.title}
@@ -96,7 +96,7 @@ export default async function ClassroomLearningPathPage({ params }: Props) {
         </section>
 
         {/* Module List */}
-        <div className="mt-2 flex w-full flex-1 flex-col gap-0 bg-white">
+        <div className="flex w-full flex-1 flex-col gap-0 bg-white">
           {classroom.learningPaths.map((path) => (
             <StudentsClassroomLearningPaths
               key={path.moduleId}
