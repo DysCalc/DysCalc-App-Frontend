@@ -416,11 +416,11 @@ export default function StudentTestPage() {
               <div className="border border-[#E9E9E9] bg-[#FAFAFA] px-10 py-10 shadow-[0_18px_50px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center justify-between gap-5">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-wide text-[#BDBDBD]">
+                    <p className="text-base font-bold uppercase tracking-wide text-[#BDBDBD]">
                       Question #{currentQuestion.id}
                     </p>
 
-                    <p className="mt-1 text-sm font-semibold text-[#29A177]">
+                    <p className="mt-1 text-lg font-semibold text-[#29A177]">
                       {getQuestionTypeLabel(currentQuestion.type)}
                     </p>
                   </div>
