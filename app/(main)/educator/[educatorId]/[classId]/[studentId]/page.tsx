@@ -199,23 +199,8 @@ export default function StudentDetailPage() {
 
   return (
     <div className="flex h-full w-full min-h-0 flex-col bg-neutral-50">
-      <div className="flex min-h-0 w-full flex-[25] items-center border-b border-[#D9D9D9] bg-[#F9F9F9] px-15">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-[#29A177] text-2xl font-semibold text-white">
-          {student.name.charAt(0)}
-        </div>
 
-        <div className="ml-5 flex flex-1 flex-col">
-          <div className="text-4xl font-semibold text-[#5C5E64]">{student.name} </div>
-
-          <div className="mt-2 flex gap-4 text-lg text-[#9D9D9D]">
-            <p>
-              #{classroom.name}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex min-h-0 w-full flex-[5] border-b border-[#E5E5E5] bg-white px-15">
+      <div className="flex min-h-0 w-full h-24 border-b border-[#E5E5E5] bg-white px-8">
         <div className="flex w-full items-center justify-between">
           <div className="flex h-full items-center">
             <button
