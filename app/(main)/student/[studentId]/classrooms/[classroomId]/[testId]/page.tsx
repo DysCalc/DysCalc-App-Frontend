@@ -1,6 +1,5 @@
 "use client";
 
-import QuitTestModal from "@/components/student/QuitTestModal";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -10,6 +9,7 @@ import {
   ChevronRight,
   Clock3,
 } from "lucide-react";
+import QuitTestModal from "@/components/student/QuitTestModal";
 
 type QuestionType =
   | "number-comparison"
@@ -324,17 +324,19 @@ export default function StudentTestPage() {
     ).length;
 
     const unansweredCount = questions.length - answeredCount;
+    const wrongCount = questions.length - correctCount - unansweredCount;
 
     const resultData = {
       testId,
       totalItems: questions.length,
       answeredCount,
       correctCount,
-      wrongCount: questions.length - correctCount - unansweredCount,
+      wrongCount,
       unansweredCount,
       elapsedSeconds,
       elapsedTime: formatElapsedTime(elapsedSeconds),
       answers,
+      completedAt: new Date().toISOString(),
     };
 
     localStorage.setItem("studentTestResult", JSON.stringify(resultData));
@@ -389,6 +391,7 @@ export default function StudentTestPage() {
               <p className="text-base font-bold uppercase tracking-wide text-[#B8B8B8]">
                 Progress
               </p>
+
               <p className="mt-1 text-4xl font-bold text-[#9D9D9D]">
                 {currentIndex + 1} / {questions.length}
               </p>
