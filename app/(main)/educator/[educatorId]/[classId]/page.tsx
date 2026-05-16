@@ -197,7 +197,7 @@ export default function ClassroomPage() {
                 return (
                   <div
                     key={student.id}
-                    className="rounded-lg border border-[#E5E5E5] bg-white p-4 shadow-sm transition hover:border-[#CFCFCF] hover:shadow-md"
+                    className="rounded-lg border border-[#E5E5E5] transition hover:shadow-xs"
                   >
                     <StudentCard
                       student={student}
