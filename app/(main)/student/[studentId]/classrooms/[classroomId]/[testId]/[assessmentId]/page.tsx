@@ -513,7 +513,7 @@ export default function StudentAssessmentPage() {
                   {assessment.title}
                 </h1>
 
-                <p className="mt-4 max-w-3xl text-lg font-medium leading-7 text-white/80">
+                <p className="mt-1 max-w-3xl text-lg font-base leading-7 text-white/80">
                   {assessment.instruction}
                 </p>
               </div>
