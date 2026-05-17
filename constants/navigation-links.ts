@@ -23,14 +23,13 @@ export const getStudentNavigations = (userId: string): NavGroup[] => [
         ],
     },
     {
-        title: "Settings",
+        title: "Classrooms",
         links: [
             {
-                label: "Settings",
-                href: `/student/${userId}/settings`,
-                icon: Cog8ToothIcon,
+                label: "Classrooms",
+                href: `/student/${userId}/classrooms`,
+                icon: UserGroupIcon,
             },
-            ...SHARED_NAVIGATIONS,
         ],
     },
 ];

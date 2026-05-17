@@ -120,7 +120,7 @@ export default function EducatorClassroom() {
     <div className="flex h-full w-full flex-col items-center">
       <div className="flex h-full w-full flex-2 items-center justify-end border-b border-[#D9D9D9] bg-neutral-50 pt-15">
         <div className="flex flex-1 flex-col items-start gap-0 bg-neutral-50 px-15">
-          <div className="text-5xl font-semibold text-neutral-600">
+          <div className="text-4xl font-semibold text-neutral-600">
             {toProperCase(educatorName)} Educator
           </div>
 
