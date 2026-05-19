@@ -201,43 +201,43 @@ export type Database = {
         Row: {
           classification: Database["public"]["Enums"]["CLASSIFICATION"] | null
           classroom_id: string | null
-          complex_arithmetic: Json
+          complex_arithmetic: Json | null
           created_at: string
-          dot_matching: Json
+          dot_matching: Json | null
           id: string
           is_approved: boolean
-          number_comparison: Json
-          number_series: Json
-          single_addition: Json
-          single_subtraction: Json
+          number_comparison: Json | null
+          number_series: Json | null
+          single_addition: Json | null
+          single_subtraction: Json | null
           student_id: string | null
         }
         Insert: {
           classification?: Database["public"]["Enums"]["CLASSIFICATION"] | null
           classroom_id?: string | null
-          complex_arithmetic: Json
+          complex_arithmetic?: Json | null
           created_at?: string
-          dot_matching: Json
+          dot_matching?: Json | null
           id?: string
           is_approved?: boolean
-          number_comparison: Json
-          number_series: Json
-          single_addition: Json
-          single_subtraction: Json
+          number_comparison?: Json | null
+          number_series?: Json | null
+          single_addition?: Json | null
+          single_subtraction?: Json | null
           student_id?: string | null
         }
         Update: {
           classification?: Database["public"]["Enums"]["CLASSIFICATION"] | null
           classroom_id?: string | null
-          complex_arithmetic?: Json
+          complex_arithmetic?: Json | null
           created_at?: string
-          dot_matching?: Json
+          dot_matching?: Json | null
           id?: string
           is_approved?: boolean
-          number_comparison?: Json
-          number_series?: Json
-          single_addition?: Json
-          single_subtraction?: Json
+          number_comparison?: Json | null
+          number_series?: Json | null
+          single_addition?: Json | null
+          single_subtraction?: Json | null
           student_id?: string | null
         }
         Relationships: [

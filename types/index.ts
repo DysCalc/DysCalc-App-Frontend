@@ -75,3 +75,22 @@ export type StudentClassroomProfile = {
     created_at: Profile['created_at'];
   } | null;
 };
+
+export type TestItem = {
+  number: boolean
+}
+
+export type TestOutput = TestItem[]
+
+export type TestType = "number_comparison" | "dot_matching" | "number_series"
+  | "single_addition" | "single_subtraction" | "complex_arithmetic"
+
+export type ClassroomListItem = {
+  classroom_id: string;
+  joined_at: string;
+  classrooms: {
+    name: string;
+    created_at: string;
+    educator_id: string;
+  };
+};

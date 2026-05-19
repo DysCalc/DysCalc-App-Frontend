@@ -1,4 +1,10 @@
+"use client";
+
+import { use, useEffect, useState } from "react";
 import LearningPathCard from "@/components/student/LearningPathCard";
+import { createStudentAPI } from "@/hooks/use-students";
+import { toast } from "sonner";
+import { ClassroomListItem } from "@/types";
 
 type Props = {
   params: Promise<{
@@ -6,35 +12,55 @@ type Props = {
   }>;
 };
 
-const learningPaths = [
-  {
-    id: "primary",
-    title: "Primary Learning Path",
-    duration: "63 days (2months+)",
-    code: "DSLDKNSA678B",
-    accentColor: "#EF4444",
-    textColor: "text-[#B5AA3D]",
-  },
-  {
-    id: "secondary",
-    title: "Secondary Learning Path",
-    duration: "93 days (3months+)",
-    code: "DSLDKNSZ924S",
-    accentColor: "#29A177",
-    textColor: "text-[#55AF55]",
-  },
-  {
-    id: "tertiary",
-    title: "Tertiary Learning Path",
-    duration: "123 days (4months+)",
-    code: "DSLDKNSZ924S",
-    accentColor: "#ff9451",
-    textColor: "text-[#55AF55]",
-  },
+const PATH_COLORS = [
+  { accentColor: "#EF4444", textColor: "text-[#B5AA3D]" },
+  { accentColor: "#29A177", textColor: "text-[#55AF55]" },
+  { accentColor: "#ff9451", textColor: "text-[#55AF55]" },
 ];
 
-export default async function StudentClassroomPage({ params }: Props) {
-  const { studentId } = await params;
+function formatDuration(joinedAt: string) {
+  const joinDate = new Date(joinedAt);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - joinDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 30) {
+    return `${diffDays} days`;
+  } else {
+    const months = Math.floor(diffDays / 30);
+    return `${diffDays} days (${months}months+)`;
+  }
+}
+
+export default function StudentClassroomPage({ params }: Props) {
+  const { studentId } = use(params);
+  const [classrooms, setClassrooms] = useState<ClassroomListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchClassrooms = async () => {
+      setIsLoading(true);
+      const studentAPI = createStudentAPI();
+      const result = await studentAPI.getClassrooms(studentId);
+
+      if (!isMounted) return;
+
+      if (result.success) {
+        setClassrooms(result.data);
+      } else {
+        toast.error(result.error || "Failed to fetch classrooms");
+      }
+      setIsLoading(false);
+    };
+
+    fetchClassrooms();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [studentId]);
 
   return (
     <main className="min-h-screen w-full bg-[#F7F7F7]">
@@ -55,20 +81,33 @@ export default async function StudentClassroomPage({ params }: Props) {
       </section>
 
       <section className="mx-auto max-w-[1600px] px-8 py-10">
-        <div className="grid gap-8 md:grid-cols-3">
-          {learningPaths.map((path) => (
-            <LearningPathCard
-              key={path.id}
-              studentId={studentId}
-              id={path.id}
-              title={path.title}
-              duration={path.duration}
-              code={path.code}
-              textColor={path.textColor}
-              accentColor={path.accentColor}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex w-full items-center justify-center py-20">
+            <div className="text-lg font-medium text-[#6C6C6C]">Loading classrooms...</div>
+          </div>
+        ) : classrooms.length === 0 ? (
+          <div className="flex w-full items-center justify-center py-20">
+            <div className="text-lg font-medium text-[#6C6C6C]">You haven&apos;t joined any classrooms yet.</div>
+          </div>
+        ) : (
+          <div className="grid gap-8 md:grid-cols-3">
+            {classrooms.map((item, index) => {
+              const colorConfig = PATH_COLORS[index % PATH_COLORS.length];
+              return (
+                <LearningPathCard
+                  key={item.classroom_id}
+                  studentId={studentId}
+                  id={item.classroom_id}
+                  title={item.classrooms?.name || "Classroom"}
+                  duration={formatDuration(item.joined_at)}
+                  code={item.classroom_id}
+                  textColor={colorConfig.textColor}
+                  accentColor={colorConfig.accentColor}
+                />
+              );
+            })}
+          </div>
+        )}
       </section>
     </main>
   );

@@ -3,7 +3,8 @@ import type {
     TestResult,
     Student,
     StudentClassroomProfile,
-    StudentInvite
+    StudentInvite,
+    ClassroomListItem
 } from "@/types";
 import { handleReturnError, type ApiResult } from "./utils";
 
@@ -202,5 +203,18 @@ export function createStudentAPI() {
         //         return handleReturnError(error);
         //     }
         // }
+        async getClassrooms(student_id: Student['id']): Promise<ApiResult<ClassroomListItem[]>> {
+            try {
+                const response = await fetch(`/api/students/${student_id}/classrooms`);
+
+                const result = await response.json();
+
+                if (!response.ok) return handleReturnError(result.error || "Failed to get list of classrooms");
+
+                return { success: true, data: result.data };
+            } catch (error) {
+                return handleReturnError(error);
+            }
+        }
     }
 }
