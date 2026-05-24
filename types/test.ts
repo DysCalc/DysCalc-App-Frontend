@@ -18,6 +18,17 @@ export type TestMetadata = {
 
 export type TestRecord = {
     number: boolean
+    response_time?: number
+}
+
+export type TestOutput = {
+    answered: number
+    correct: number
+    total: number
+    accuracy: number
+    efficiency_score?: number
+    elapsed_seconds: number
+    records: TestRecord[]
 }
 
 export type TestType = "number_comparison" | "dot_matching" | "number_series"

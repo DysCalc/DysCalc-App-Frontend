@@ -1,0 +1,27 @@
+import {
+  type Question,
+  type RawQuestion,
+  buildPairChoices,
+  parsePair,
+} from "./utils";
+
+export function buildNumberComparisonQuestions(
+  tests: RawQuestion[],
+  prompt: string
+): Question[] {
+  return tests
+    .map((test) => {
+      const pair = parsePair(test.question ?? "");
+
+      if (!pair || !Number.isFinite(test.correct)) return null;
+
+      return {
+        id: test.id,
+        prompt,
+        display: test.question ?? "",
+        correctAnswer: String(test.correct),
+        choices: buildPairChoices(pair[0], pair[1], test.id),
+      };
+    })
+    .filter((item): item is Question => Boolean(item));
+}

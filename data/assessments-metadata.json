@@ -1,26 +1,62 @@
 {
     "number_comparison": {
         "title": "Number Comparison",
-        "question_prompt": "Which number is bigger?"
+        "question_prompt": "Which number is bigger?",
+        "description": "Spot the larger number quickly.",
+        "accent": "#EAB308",
+        "background": "linear-gradient(135deg, #FFF7D1 0%, #FFE58A 100%)",
+        "ring": "rgba(234,179,8,0.2)",
+        "time_limit": 0,
+        "warning_time": 0
     },
     "dot_matching": {
         "title": "Digit-Dot Matching",
-        "question_prompt": "Does the dots match each other?"
+        "question_prompt": "Does the dots match each other?",
+        "description": "Match dots with the right number.",
+        "accent": "#10B981",
+        "background": "linear-gradient(135deg, #D1FAE5 0%, #6EE7B7 100%)",
+        "ring": "rgba(16,185,129,0.2)",
+        "time_limit": 0,
+        "warning_time": 0
     },
     "number_series": {
         "title": "Number Series",
-        "question_prompt": "Which number fits the blank?"
+        "question_prompt": "Which number fits the blank?",
+        "description": "Complete the missing sequence.",
+        "accent": "#6366F1",
+        "background": "linear-gradient(135deg, #E0E7FF 0%, #A5B4FC 100%)",
+        "ring": "rgba(99,102,241,0.2)",
+        "time_limit": 3,
+        "warning_time": 0
     },
     "single_addition": {
         "title": "Single-Digit Addition",
-        "question_prompt": "What is the total of the two numbers?"
+        "question_prompt": "What is the total of the two numbers?",
+        "description": "Add single-digit numbers.",
+        "accent": "#F97316",
+        "background": "linear-gradient(135deg, #FFEDD5 0%, #FDBA74 100%)",
+        "ring": "rgba(249,115,22,0.2)",
+        "time_limit": 2,
+        "warning_time": 15
     },
     "single_subtraction": {
         "title": "Single-Digit Subtraction",
-        "question_prompt": "What is the difference between the two numbers?"
+        "question_prompt": "What is the difference between the two numbers?",
+        "description": "Subtract single-digit numbers.",
+        "accent": "#EC4899",
+        "background": "linear-gradient(135deg, #FCE7F3 0%, #F9A8D4 100%)",
+        "ring": "rgba(236,72,153,0.2)",
+        "time_limit": 2,
+        "warning_time": 15
     },
     "complex_arithmetic": {
         "title": "Multi-Digit Addition and Subtraction",
-        "question_prompt": "What is the answer?"
+        "question_prompt": "What is the answer?",
+        "description": "Solve multi-digit calculations.",
+        "accent": "#0EA5E9",
+        "background": "linear-gradient(135deg, #E0F2FE 0%, #7DD3FC 100%)",
+        "ring": "rgba(14,165,233,0.2)",
+        "time_limit": 3,
+        "warning_time": 15
     }
 }
