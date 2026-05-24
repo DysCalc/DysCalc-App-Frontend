@@ -20,7 +20,7 @@ export function buildNumberComparisonQuestions(
         prompt,
         display: test.question ?? "",
         correctAnswer: String(test.correct),
-        choices: buildPairChoices(pair[0], pair[1], test.id),
+        choices: [String(pair[0]), String(pair[1])],
       };
     })
     .filter((item): item is Question => Boolean(item));

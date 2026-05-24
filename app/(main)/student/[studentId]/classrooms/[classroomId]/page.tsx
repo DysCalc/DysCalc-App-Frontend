@@ -20,7 +20,7 @@ const testTypeOrder: TestType[] = [
   "complex_arithmetic",
 ];
 
-const testTypeCards = testTypeOrder.map((type) => {
+const testTypeCards = testTypeOrder.map((type: TestType) => {
   const metadata = assessmentsMetadata[type];
 
   return {
@@ -62,8 +62,8 @@ export default function ClassroomLearningPathPage() {
       setLoadError(null);
 
       const [classroomResult, testResult] = await Promise.all([
-         classroomAPI.getClassroomById(classroomId),
-         testAPI.getAllTest(classroomId, studentId)
+        classroomAPI.getClassroomById(classroomId),
+        testAPI.getAllTest(classroomId, studentId)
       ]);
 
       if (!isMounted) return;
@@ -218,17 +218,9 @@ export default function ClassroomLearningPathPage() {
                       type="button"
                       disabled={isDone}
                       onClick={() =>
-                        !isDone && router.push(
-                          `/student/${studentId}/classrooms/${classroomId}/test?testID=${encodeURIComponent(
-                            activeTestId
-                          )}&testtype=${encodeURIComponent(testType.id)}`
-                        )
+                        !isDone && router.push(`/student/${studentId}/classrooms/${classroomId}/test?testID=${encodeURIComponent(activeTestId)}&testtype=${encodeURIComponent(testType.id)}`)
                       }
-                      className={`group relative overflow-hidden rounded-2xl border px-6 py-6 text-left shadow-sm transition duration-300 ${
-                        isDone
-                          ? "cursor-not-allowed border-gray-200 opacity-60"
-                          : "border-white/60 hover:-translate-y-1 hover:shadow-lg"
-                      }`}
+                      className={`group relative overflow-hidden rounded-2xl border px-6 py-6 text-left shadow-sm transition duration-300 ${isDone ? "cursor-not-allowed border-gray-200 opacity-60" : "border-white/60 hover:-translate-y-1 hover:shadow-lg"}`}
                       style={{
                         background: isDone ? "#f0f0f0" : testType.background,
                         boxShadow: isDone ? "none" : `0 10px 30px ${testType.ring}`,

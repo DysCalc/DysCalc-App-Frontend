@@ -17,7 +17,7 @@ export function buildComplexArithmeticQuestions(
         prompt,
         display: test.question ?? "",
         correctAnswer: String(test.correct),
-        choices: buildChoices(test.correct, test.id),
+        choices: buildChoices(test.correct, test.id, 1000),
       };
     })
     .filter((item): item is Question => Boolean(item));

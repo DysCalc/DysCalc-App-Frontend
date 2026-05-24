@@ -128,12 +128,12 @@ export function shuffleQuestions(items: Question[]) {
   return shuffled;
 }
 
-export function buildChoices(correct: number, seedKey?: string) {
+export function buildChoices(correct: number, seedKey?: string, maxOption: number = 10) {
   const choices = new Set<number>();
   choices.add(correct);
 
   while (choices.size < 4) {
-    const option = Math.floor(Math.random() * 10);
+    const option = Math.floor(Math.random() * maxOption);
     if (option !== correct) {
       choices.add(option);
     }

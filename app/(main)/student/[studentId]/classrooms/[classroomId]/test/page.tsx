@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Clock3, Check } from "lucide-react";
 import assessmentsMetadata from "@/data/assessments-metadata.json";
 import type { TestType } from "@/types/test";
 import { createTestAPI, type UnifiedAssessment } from "@/hooks/use-test";
@@ -177,6 +177,12 @@ export default function TestPage() {
                 [currentQuestion.id]: now - questionStartAt,
             };
         });
+
+        if (!isLastQuestion) {
+            setTimeout(() => {
+                setCurrentIndex((prev) => Math.min(prev + 1, questions.length - 1));
+            }, 300);
+        }
     };
 
     async function handleSubmit() {
@@ -277,8 +283,52 @@ export default function TestPage() {
                             Time is almost up.
                         </p>
                     )}
-                    <div className="mt-6 h-2 w-full rounded-full bg-white/15">
-                        <div className="h-full rounded-full bg-[#FFCC00] transition-all" style={{ width: `${progressPercent}%` }} />
+                    <div className="mt-6 flex flex-wrap items-center gap-2">
+                        {questions.map((question, index) => {
+                            const isCurrent = index === currentIndex;
+                            const isAnswered = !!answers[question.id];
+
+                            return (
+                                <button
+                                    key={question.id}
+                                    type="button"
+                                    onClick={() => setCurrentIndex(index)}
+                                    className={`
+                                        group relative flex h-6 w-6 items-center justify-center rounded-full
+                                        transition-all duration-300 ease-out
+                                        ${
+                                            isCurrent
+                                                ? "scale-110 bg-[#FFCC00] shadow-[0_0_0_4px_rgba(255,204,0,0.3)]"
+                                                : isAnswered
+                                                ? "bg-white text-[#29A177] shadow-sm hover:scale-105"
+                                                : "bg-white/20 text-transparent hover:bg-white/30"
+                                        }
+                                    `}
+                                    aria-label={`Go to question ${index + 1}`}
+                                >
+                                    <Check
+                                        size={14}
+                                        strokeWidth={3}
+                                        className={`
+                                            transition-all duration-300 ease-out
+                                            ${
+                                                isAnswered && !isCurrent
+                                                    ? "scale-100 opacity-100"
+                                                    : "scale-0 opacity-0"
+                                            }
+                                        `}
+                                    />
+                                    {isCurrent && (
+                                        <div className="h-2 w-2 rounded-full bg-[#29A177]" />
+                                    )}
+
+                                    {/* Hover Tooltip */}
+                                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                        Q{index + 1}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </header>
 
