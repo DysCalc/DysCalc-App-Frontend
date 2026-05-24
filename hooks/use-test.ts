@@ -1,16 +1,158 @@
 import type { TestOutput, TestType } from "@/types/test";
 import type { Classroom, Student } from "@/types";
 import { handleReturnError, type ApiResult } from "./utils";
+import initialAssessmentData from "@/data/initial-assessment-questions.json";
+
+function getMedian(values: number[]) {
+	if (!values.length) return 0;
+  
+	const sorted = [...values].sort((a, b) => a - b);
+	const midpoint = Math.floor(sorted.length / 2);
+  
+	if (sorted.length % 2 === 0) {
+	  return (sorted[midpoint - 1] + sorted[midpoint]) / 2;
+	}
+  
+	return sorted[midpoint];
+}
+
+export type CalcQuestion = {
+    id: string;
+    correctAnswer: string;
+};
+
+export type UnifiedAssessment = {
+    id: string;
+    testResultId?: string;
+    title: string;
+    description: string;
+    isInitial: boolean;
+    questions: Record<string, any>;
+    results: any;
+};
 
 export function createTestAPI() {
 	return {
-		async recordTest(
-			classroomId: Classroom['id'],
-			studentId: Student['id'],
-			testType: TestType,
-			output: TestOutput
-		): Promise<ApiResult<{ id: string; created_at: string }>> {
+		async getAllTest(classroomId: Classroom['id'], studentId: Student['id']): Promise<ApiResult<UnifiedAssessment[]>> {
 			try {
+				const response = await fetch(
+					`/api/test/classroom/${classroomId}/student/${studentId}`,
+					{
+						method: "GET",
+						headers: {
+							"Content-Type": "application/json",
+						},
+					}
+				);
+
+				const result = await response.json();
+
+				if (!response.ok) {
+					return handleReturnError(result.error || "Failed to get all tests");
+				}
+
+				const dbResults = result.data || [];
+
+				let foundInitial = false;
+
+				const unifiedAssessments: UnifiedAssessment[] = dbResults.map((row: any) => {
+                    const isInitial = !row.assessment_questions || (Array.isArray(row.assessment_questions) && row.assessment_questions.length === 0) || Object.keys(row.assessment_questions).length === 0;
+
+                    if (isInitial) {
+						foundInitial = true;
+                        return {
+                            id: "initial-assessment",
+                            testResultId: row.id,
+                            title: "Initial Assessment",
+                            description: "Standard initial assessment questions",
+                            isInitial: true,
+                            questions: initialAssessmentData,
+                            results: row
+                        };
+                    } else {
+                        const aq = Array.isArray(row.assessment_questions) ? row.assessment_questions[0] : row.assessment_questions;
+                        return {
+                            id: aq.test_result_id,
+                            testResultId: row.id,
+                            title: aq.title,
+                            description: aq.description || "",
+                            isInitial: false,
+                            questions: {
+                                number_comparison: aq.number_comparison,
+                                dot_matching: aq.dot_matching,
+                                number_series: aq.number_series,
+                                single_addition: aq.single_addition,
+                                single_subtraction: aq.single_subtraction,
+                                complex_arithmetic: aq.complex_arithmetic
+                            },
+                            results: row
+                        };
+                    }
+                });
+
+				if (!foundInitial) {
+					unifiedAssessments.unshift({
+						id: "initial-assessment",
+						testResultId: "initial-assessment",
+						title: "Initial Assessment",
+						description: "Standard initial assessment questions",
+						isInitial: true,
+						questions: initialAssessmentData,
+						results: null
+					});
+				}
+
+				return { success: true, data: unifiedAssessments };
+			} catch (error) {
+				return handleReturnError(error);
+			}
+		},
+		async recordTest(
+			classroomId: Classroom['id'], 
+			studentId: Student['id'], 
+			testType: TestType, 
+			testResultId: string,
+			answers: Record<string, string>,
+			reactionTimes: Record<string, number>,
+			questions: CalcQuestion[],
+			elapsedSeconds: number
+		): Promise<ApiResult<{ id: string; created_at: string; result: any }>> {
+			try {
+				const totalCount = questions.length;
+                const correctItems = questions.filter(
+                    (item) => answers[item.id] === item.correctAnswer
+                );
+                const correctCount = correctItems.length;
+                const percentCorrect = totalCount ? (correctCount / totalCount) * 100 : 0;
+                const answeredCount = Object.keys(answers).length;
+
+                const records = questions.map((item) => ({
+                    number: answers[item.id] === item.correctAnswer,
+                    response_time: reactionTimes[item.id],
+                }));
+
+                const output: TestOutput = {
+                    answered: answeredCount,
+                    correct: correctCount,
+                    total: totalCount,
+                    accuracy: percentCorrect,
+                    elapsed_seconds: elapsedSeconds,
+                    records,
+                };
+
+                const isEfficiencyTest = testType === "number_comparison" || testType === "dot_matching";
+
+                if (isEfficiencyTest) {
+                    const correctReactionTimes = correctItems
+                        .map((item) => reactionTimes[item.id])
+                        .filter((value) => Number.isFinite(value));
+                    const medianReactionTime = getMedian(correctReactionTimes as number[]);
+                    const proportionCorrect = totalCount ? correctCount / totalCount : 0;
+                    const efficiencyScore = proportionCorrect > 0 ? medianReactionTime / proportionCorrect : 0;
+
+                    output.efficiency_score = efficiencyScore;
+                }
+
 				const response = await fetch(
 					`/api/test/classroom/${classroomId}/student/${studentId}`,
 					{
@@ -21,6 +163,7 @@ export function createTestAPI() {
 						body: JSON.stringify({
 							test_type: testType,
 							payload: output,
+							test_result_id: testResultId
 						}),
 					}
 				);
@@ -31,25 +174,10 @@ export function createTestAPI() {
 					return handleReturnError(result.error || "Failed to save test results");
 				}
 
-				return { success: true, data: result.data };
+				return { success: true, data: { ...result.data, result: output } };
 			} catch (error) {
 				return handleReturnError(error);
 			}
 		},
 	};
 }
-
-// type TestResult = {
-//     classification: "TYPICAL" | "AT-RISK" | null;
-//     classroom_id: string | null;
-//     complex_arithmetic: Json;
-//     created_at: string;
-//     dot_matching: Json | null;
-//     id: string;
-//     is_approved: boolean;
-//     number_comparison: Json | null;
-//     number_series: Json | null;
-//     single_addition: Json | null;
-//     single_subtraction: Json | null;
-//     student_id: string | null;
-// }

@@ -9,6 +9,8 @@ export type Student = Database["public"]["Tables"]["students"]["Row"];
 export type StudentInvite = Database["public"]["Tables"]["student_invites"]["Row"]
 export type TestResult = Database["public"]["Tables"]["test_results"]["Row"];
 export type LearningModule = Database["public"]["Tables"]["learning_modules"]["Row"];
+export type AssessmentQuestion = Database["public"]["Tables"]["assessment_questions"]["Row"];
+
 // Enums
 export type Classification = typeof Constants.public.Enums.CLASSIFICATION[number];
 export type Role = typeof Constants.public.Enums.ROLE[number];

@@ -9,16 +9,7 @@ import assessmentsMetadata from "@/data/assessments-metadata.json";
 import type { TestType } from "@/types/test";
 import type { ClassroomWithStudentCount } from "@/types";
 import { createClassroomAPI } from "@/hooks/use-classroom";
-
-const assessmentTests = [
-  {
-    id: "initial-test",
-    title: "Initial Assessment Test",
-    description:
-      "Start here to establish your current numeracy level and unlock your learning path.",
-    tag: "Assessment",
-  },
-];
+import { createTestAPI, type UnifiedAssessment } from "@/hooks/use-test";
 
 const testTypeOrder: TestType[] = [
   "number_comparison",
@@ -46,6 +37,7 @@ const classroomAPI = createClassroomAPI();
 
 export default function ClassroomLearningPathPage() {
   const router = useRouter();
+  const testAPI = createTestAPI();
 
   const params = useParams<{
     studentId: string;
@@ -58,36 +50,43 @@ export default function ClassroomLearningPathPage() {
   const [classroom, setClassroom] = useState<ClassroomWithStudentCount | null>(
     null
   );
+  const [assessments, setAssessments] = useState<UnifiedAssessment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    const loadClassroom = async () => {
+    const loadData = async () => {
       setIsLoading(true);
       setLoadError(null);
 
-      const result = await classroomAPI.getClassroomById(classroomId);
+      const [classroomResult, testResult] = await Promise.all([
+         classroomAPI.getClassroomById(classroomId),
+         testAPI.getAllTest(classroomId, studentId)
+      ]);
 
       if (!isMounted) return;
 
-      if (!result.success) {
-        setLoadError(result.error || "Failed to load classroom");
-        setIsLoading(false);
-        return;
+      if (!classroomResult.success) {
+        setLoadError(classroomResult.error || "Failed to load classroom");
+      } else {
+        setClassroom(classroomResult.data);
       }
 
-      setClassroom(result.data);
+      if (testResult.success && testResult.data) {
+        setAssessments(testResult.data);
+      }
+
       setIsLoading(false);
     };
 
-    loadClassroom();
+    loadData();
 
     return () => {
       isMounted = false;
     };
-  }, [classroomId]);
+  }, [classroomId, studentId]);
 
   if (isLoading) {
     return (
@@ -181,7 +180,7 @@ export default function ClassroomLearningPathPage() {
 
             {!activeTestId && (
               <div className="grid gap-6 md:grid-cols-2">
-                {assessmentTests.map((test) => (
+                {assessments.map((test) => (
                   <button
                     key={test.id}
                     type="button"
@@ -190,7 +189,7 @@ export default function ClassroomLearningPathPage() {
                   >
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#C5C5C5]">
-                        {test.tag}
+                        {test.isInitial ? "Initial Assessment" : "Custom Assessment"}
                       </p>
                       <h3 className="mt-3 text-2xl font-extrabold text-[#7A7A7A] transition group-hover:text-[#2F855A]">
                         {test.title}
@@ -209,47 +208,57 @@ export default function ClassroomLearningPathPage() {
 
             {activeTestId && (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {testTypeCards.map((testType) => (
-                  <button
-                    key={testType.id}
-                    type="button"
-                    onClick={() =>
-                      router.push(
-                        `/student/${studentId}/classrooms/${classroomId}/test?testID=${encodeURIComponent(
-                          activeTestId
-                        )}&testtype=${encodeURIComponent(testType.id)}`
-                      )
-                    }
-                    className="group relative overflow-hidden rounded-2xl border border-white/60 px-6 py-6 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
-                    style={{
-                      background: testType.background,
-                      boxShadow: `0 10px 30px ${testType.ring}`,
-                    }}
-                  >
-                    <div className="relative z-10">
-                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5B5B5B]/70">
-                        Test Type
-                      </p>
-                      <h3 className="mt-3 text-2xl font-extrabold text-[#2F2F2F]">
-                        {testType.title}
-                      </h3>
-                      <p className="mt-3 text-sm font-semibold text-[#4F4F4F]/80">
-                        {testType.description}
-                      </p>
-                    </div>
+                {testTypeCards.map((testType) => {
+                  const activeAssessment = assessments.find((a) => a.id === activeTestId);
+                  const isDone = activeAssessment?.results && activeAssessment.results[testType.id] !== null;
 
-                    <div
-                      className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-40"
-                      style={{ backgroundColor: testType.accent }}
-                    />
-                    <div
-                      className="absolute bottom-5 right-6 rounded-full px-4 py-1 text-xs font-semibold text-white"
-                      style={{ backgroundColor: testType.accent }}
+                  return (
+                    <button
+                      key={testType.id}
+                      type="button"
+                      disabled={isDone}
+                      onClick={() =>
+                        !isDone && router.push(
+                          `/student/${studentId}/classrooms/${classroomId}/test?testID=${encodeURIComponent(
+                            activeTestId
+                          )}&testtype=${encodeURIComponent(testType.id)}`
+                        )
+                      }
+                      className={`group relative overflow-hidden rounded-2xl border px-6 py-6 text-left shadow-sm transition duration-300 ${
+                        isDone
+                          ? "cursor-not-allowed border-gray-200 opacity-60"
+                          : "border-white/60 hover:-translate-y-1 hover:shadow-lg"
+                      }`}
+                      style={{
+                        background: isDone ? "#f0f0f0" : testType.background,
+                        boxShadow: isDone ? "none" : `0 10px 30px ${testType.ring}`,
+                      }}
                     >
-                      Start
-                    </div>
-                  </button>
-                ))}
+                      <div className="relative z-10">
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5B5B5B]/70">
+                          Test Type
+                        </p>
+                        <h3 className="mt-3 text-2xl font-extrabold text-[#2F2F2F]">
+                          {testType.title}
+                        </h3>
+                        <p className="mt-3 text-sm font-semibold text-[#4F4F4F]/80">
+                          {isDone ? "Completed" : testType.description}
+                        </p>
+                      </div>
+
+                      <div
+                        className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-40"
+                        style={{ backgroundColor: isDone ? "#ccc" : testType.accent }}
+                      />
+                      <div
+                        className="absolute bottom-5 right-6 rounded-full px-4 py-1 text-xs font-semibold text-white"
+                        style={{ backgroundColor: isDone ? "#999" : testType.accent }}
+                      >
+                        {isDone ? "Done" : "Start"}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
