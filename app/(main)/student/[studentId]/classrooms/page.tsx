@@ -6,12 +6,6 @@ import { createStudentAPI } from "@/hooks/use-students";
 import { toast } from "sonner";
 import { ClassroomListItem } from "@/types";
 
-type Props = {
-  params: Promise<{
-    studentId: string;
-  }>;
-};
-
 const PATH_COLORS = [
   { accentColor: "#EF4444", textColor: "text-[#B5AA3D]" },
   { accentColor: "#29A177", textColor: "text-[#55AF55]" },
@@ -32,7 +26,7 @@ function formatDuration(joinedAt: string) {
   }
 }
 
-export default function StudentClassroomPage({ params }: Props) {
+export default function StudentClassroomPage({ params } : { params: Promise<{studentId: string}> }) {
   const { studentId } = use(params);
   const [classrooms, setClassrooms] = useState<ClassroomListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);

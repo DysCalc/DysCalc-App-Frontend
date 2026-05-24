@@ -1,0 +1,26 @@
+{
+    "number_comparison": {
+        "title": "Number Comparison",
+        "question_prompt": "Which number is bigger?"
+    },
+    "dot_matching": {
+        "title": "Digit-Dot Matching",
+        "question_prompt": "Does the dots match each other?"
+    },
+    "number_series": {
+        "title": "Number Series",
+        "question_prompt": "Which number fits the blank?"
+    },
+    "single_addition": {
+        "title": "Single-Digit Addition",
+        "question_prompt": "What is the total of the two numbers?"
+    },
+    "single_subtraction": {
+        "title": "Single-Digit Subtraction",
+        "question_prompt": "What is the difference between the two numbers?"
+    },
+    "complex_arithmetic": {
+        "title": "Multi-Digit Addition and Subtraction",
+        "question_prompt": "What is the answer?"
+    }
+}

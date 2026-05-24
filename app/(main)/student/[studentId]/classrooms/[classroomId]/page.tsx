@@ -276,7 +276,7 @@ export default function ClassroomLearningPathPage() {
 
                       const pointColor =
                         classroom.analytics.pointColors[
-                          index % classroom.analytics.pointColors.length
+                        index % classroom.analytics.pointColors.length
                         ];
 
                       return (
