@@ -5,30 +5,30 @@ import initialAssessmentData from "@/data/initial-assessment-questions.json";
 
 function getMedian(values: number[]) {
 	if (!values.length) return 0;
-  
+
 	const sorted = [...values].sort((a, b) => a - b);
 	const midpoint = Math.floor(sorted.length / 2);
-  
+
 	if (sorted.length % 2 === 0) {
-	  return (sorted[midpoint - 1] + sorted[midpoint]) / 2;
+		return (sorted[midpoint - 1] + sorted[midpoint]) / 2;
 	}
-  
+
 	return sorted[midpoint];
 }
 
 export type CalcQuestion = {
-    id: string;
-    correctAnswer: string;
+	id: string;
+	correctAnswer: string;
 };
 
 export type UnifiedAssessment = {
-    id: string;
-    testResultId?: string;
-    title: string;
-    description: string;
-    isInitial: boolean;
-    questions: Record<string, any>;
-    results: any;
+	id: string;
+	testResultId?: string;
+	title: string;
+	description: string;
+	isInitial: boolean;
+	questions: Record<string, any>;
+	results: any;
 };
 
 export function createTestAPI() {
@@ -56,39 +56,39 @@ export function createTestAPI() {
 				let foundInitial = false;
 
 				const unifiedAssessments: UnifiedAssessment[] = dbResults.map((row: any) => {
-                    const isInitial = !row.assessment_questions || (Array.isArray(row.assessment_questions) && row.assessment_questions.length === 0) || Object.keys(row.assessment_questions).length === 0;
+					const isInitial = !row.assessment_questions || (Array.isArray(row.assessment_questions) && row.assessment_questions.length === 0) || Object.keys(row.assessment_questions).length === 0;
 
-                    if (isInitial) {
+					if (isInitial) {
 						foundInitial = true;
-                        return {
-                            id: "initial-assessment",
-                            testResultId: row.id,
-                            title: "Initial Assessment",
-                            description: "Standard initial assessment questions",
-                            isInitial: true,
-                            questions: initialAssessmentData,
-                            results: row
-                        };
-                    } else {
-                        const aq = Array.isArray(row.assessment_questions) ? row.assessment_questions[0] : row.assessment_questions;
-                        return {
-                            id: aq.test_result_id,
-                            testResultId: row.id,
-                            title: aq.title,
-                            description: aq.description || "",
-                            isInitial: false,
-                            questions: {
-                                number_comparison: aq.number_comparison,
-                                dot_matching: aq.dot_matching,
-                                number_series: aq.number_series,
-                                single_addition: aq.single_addition,
-                                single_subtraction: aq.single_subtraction,
-                                complex_arithmetic: aq.complex_arithmetic
-                            },
-                            results: row
-                        };
-                    }
-                });
+						return {
+							id: "initial-assessment",
+							testResultId: row.id,
+							title: "Initial Assessment",
+							description: "Standard initial assessment questions",
+							isInitial: true,
+							questions: initialAssessmentData,
+							results: row
+						};
+					} else {
+						const aq = Array.isArray(row.assessment_questions) ? row.assessment_questions[0] : row.assessment_questions;
+						return {
+							id: aq.test_result_id,
+							testResultId: row.id,
+							title: aq.title,
+							description: aq.description || "",
+							isInitial: false,
+							questions: {
+								number_comparison: aq.number_comparison,
+								dot_matching: aq.dot_matching,
+								number_series: aq.number_series,
+								single_addition: aq.single_addition,
+								single_subtraction: aq.single_subtraction,
+								complex_arithmetic: aq.complex_arithmetic
+							},
+							results: row
+						};
+					}
+				});
 
 				if (!foundInitial) {
 					unifiedAssessments.unshift({
@@ -108,9 +108,9 @@ export function createTestAPI() {
 			}
 		},
 		async recordTest(
-			classroomId: Classroom['id'], 
-			studentId: Student['id'], 
-			testType: TestType, 
+			classroomId: Classroom['id'],
+			studentId: Student['id'],
+			testType: TestType,
 			testResultId: string,
 			answers: Record<string, string>,
 			reactionTimes: Record<string, number>,
@@ -119,39 +119,42 @@ export function createTestAPI() {
 		): Promise<ApiResult<{ id: string; created_at: string; result: any }>> {
 			try {
 				const totalCount = questions.length;
-                const correctItems = questions.filter(
-                    (item) => answers[item.id] === item.correctAnswer
-                );
-                const correctCount = correctItems.length;
-                const percentCorrect = totalCount ? (correctCount / totalCount) * 100 : 0;
-                const answeredCount = Object.keys(answers).length;
+				const correctItems = questions.filter(
+					(item) => answers[item.id] === item.correctAnswer
+				);
+				const correctCount = correctItems.length;
+				const percentCorrect = totalCount ? (correctCount / totalCount) * 100 : 0;
+				const answeredCount = Object.keys(answers).length;
 
-                const records = questions.map((item) => ({
-                    number: answers[item.id] === item.correctAnswer,
-                    response_time: reactionTimes[item.id],
-                }));
+				const records = questions.map((item) => ({
+					number: answers[item.id] === item.correctAnswer,
+					response_time: reactionTimes[item.id],
+				}));
 
-                const output: TestOutput = {
-                    answered: answeredCount,
-                    correct: correctCount,
-                    total: totalCount,
-                    accuracy: percentCorrect,
-                    elapsed_seconds: elapsedSeconds,
-                    records,
-                };
+				const output: TestOutput = {
+					answered: answeredCount,
+					correct: correctCount,
+					total: totalCount,
+					accuracy: percentCorrect,
+					elapsed_seconds: elapsedSeconds,
+					records,
+				};
 
-                const isEfficiencyTest = testType === "number_comparison" || testType === "dot_matching";
+				const isEfficiencyTest = testType === "number_comparison" || testType === "dot_matching";
 
-                if (isEfficiencyTest) {
-                    const correctReactionTimes = correctItems
-                        .map((item) => reactionTimes[item.id])
-                        .filter((value) => Number.isFinite(value));
-                    const medianReactionTime = getMedian(correctReactionTimes as number[]);
-                    const proportionCorrect = totalCount ? correctCount / totalCount : 0;
-                    const efficiencyScore = proportionCorrect > 0 ? medianReactionTime / proportionCorrect : 0;
+				if (isEfficiencyTest) {
+					const correctReactionTimes = correctItems.map((item) => reactionTimes[item.id])
+						.filter((value): value is number => Number.isFinite(value));
 
-                    output.efficiency_score = efficiencyScore;
-                }
+					const medianReactionTime = getMedian(correctReactionTimes);
+					const accuracyScore = totalCount > 0 ? correctCount / totalCount : 0;
+
+					const efficiencyScore = accuracyScore > 0 && Number.isFinite(medianReactionTime)
+						? medianReactionTime / accuracyScore
+						: undefined;
+
+					output.efficiency_score = efficiencyScore;
+				}
 
 				const response = await fetch(
 					`/api/test/classroom/${classroomId}/student/${studentId}`,

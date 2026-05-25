@@ -1,17 +1,22 @@
 "use client";
 
-import {
-  ArrowDownTrayIcon,
-  DocumentPlusIcon,
-} from "@heroicons/react/24/outline";
-
+import { useState } from "react";
+import { ArrowDownTrayIcon, DocumentPlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import type { Classification } from "@/types";
+import type { UnifiedAssessment } from "@/hooks/use-test";
+import { createClassificationAPI } from "@/hooks/use-classification";
+import { toast } from "sonner";
+import { generateClassificationPDF } from "@/utils/pdf-generator";
+import type { Json } from "@/database.types";
 
-type ScoreRow = {
-  key: string;
-  label: string;
-  score: number | null;
-};
+const TEST_FIELDS = [
+  { key: "dot_matching", label: "Dot Matching" },
+  { key: "number_comparison", label: "Number Comparison" },
+  { key: "number_series", label: "Number Series" },
+  { key: "single_addition", label: "Single Digit Addition" },
+  { key: "single_subtraction", label: "Single Digit Subtraction" },
+  { key: "complex_arithmetic", label: "Multi-Digit Addition and Subtraction" },
+];
 
 type Props = {
   student?: {
@@ -29,186 +34,310 @@ type Props = {
   classId?: string;
   studentId?: string;
 
-  screening: {
-    classification: Classification | null;
-    created_at: string | null;
-    scores: ScoreRow[];
-    averageScore: number | null;
-  };
+  screening: any; // Keep for backward compatibility if needed
+  assessments?: UnifiedAssessment[];
 
   onGenerateLearningPath?: () => void;
 };
 
-function formatDate(value: string | null): string {
-  if (!value) return "No screening date available";
+function extractScoreOrCount(value: Json | undefined, key: string): { display: string; efficiency?: number; correct?: number } {
+  if (!value) return { display: "N/A" };
 
-  const parsed = new Date(value);
+  if (typeof value === "object" && value !== null) {
+    const item = value as Record<string, any>;
 
-  if (Number.isNaN(parsed.getTime())) {
-    return "No screening date available";
+    let display = "0";
+    if (item.correct !== undefined && item.total !== undefined) {
+      display = `${item.correct} / ${item.total}`;
+    } else if (item.score !== undefined) {
+      display = `${item.score}%`;
+    }
+
+    return {
+      display,
+      efficiency: typeof item.efficiency_score === "number" ? item.efficiency_score : undefined,
+      correct: typeof item.correct === "number" ? item.correct : undefined,
+    };
   }
-
-  return parsed.toLocaleString("en-PH", {
-    dateStyle: "long",
-    timeStyle: "medium",
-  });
+  return { display: "N/A" };
 }
 
-export default function Performance({
+export default function ScreeningInformation({
   student,
-  screening,
+  assessments = [],
   onGenerateLearningPath,
 }: Props) {
+  const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(
+    assessments.length > 0 ? assessments[0].id : null
+  );
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [classificationResult, setClassificationResult] = useState<any>(null); // To store freshly generated class
+
   const studentName = student?.name ?? "Student";
-  const hasResults = screening.scores.length > 0;
-  const isAtRisk = screening.classification === "AT-RISK";
+  const activeAssessment = assessments.find((a) => a.id === activeAssessmentId);
+  const results = activeAssessment?.results || {};
+
+  const fetchedPaths = Array.isArray(results.learning_modules)
+    ? results.learning_modules[0]?.paths
+    : results.learning_modules?.paths;
+
+  const effectiveClassification = classificationResult || fetchedPaths;
+
+  const isAtRisk =
+    (effectiveClassification?.predicted_class === "1" || effectiveClassification?.predicted_class === "AT-RISK") ||
+    results.classification === "AT-RISK";
+
+  const hasClassification = results.classification || effectiveClassification;
+
+  const isAllTestsCompleted = activeAssessment
+    ? TEST_FIELDS.every((field) => extractScoreOrCount(results[field.key], field.key).display !== "N/A")
+    : false;
+
+  const handleGenerateClassification = async () => {
+    if (!activeAssessment || !activeAssessment.testResultId) return;
+
+    setIsGenerating(true);
+    const classificationAPI = createClassificationAPI();
+
+    // Prepare payload
+    const payload = {
+      test_id: activeAssessment.testResultId,
+    };
+
+    const res = await classificationAPI.generateClassification(payload);
+    setIsGenerating(false);
+
+    if (res.success) {
+      toast.success("Classification generated successfully!");
+      setClassificationResult(res.data);
+      // In a real app, you might want to re-fetch or optimistically update assessments array here
+      // Mutating the active assessment results for optimistic UI
+      results.classification = res.data.predicted_class === "1" ? "AT-RISK" : "TYPICAL";
+    } else {
+      toast.error("Failed to generate classification. " + res.error);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!activeAssessment) return;
+
+    try {
+      const testPerformance = TEST_FIELDS.map((field) => {
+        const data = extractScoreOrCount(results[field.key], field.key);
+        return {
+          label: field.label,
+          display: data.display,
+          efficiency: data.efficiency,
+        };
+      });
+
+      generateClassificationPDF({
+        studentName,
+        assessmentTitle: activeAssessment.title,
+        isAtRisk,
+        confidence: effectiveClassification?.confidence,
+        decisionPathReadable: effectiveClassification?.decision_path_readable,
+        domainSeverityScores: effectiveClassification?.domain_severity_scores,
+        testPerformance,
+      });
+
+      toast.success("PDF downloaded successfully!");
+    } catch (e) {
+      console.error("PDF Generation Error:", e);
+      toast.error("Failed to generate PDF. See console for details.");
+    }
+  };
 
   return (
-    <section className="flex min-h-full w-full flex-col bg-[#F7F7F7] px-8 py-4">
+    <section id="classification-report" className="flex min-h-full w-full flex-col bg-[#F7F7F7] px-8 py-4">
       {/* Header */}
       <div className="shrink-0 border-t border-l border-r border-[#E7E7E7] bg-white px-8 py-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[#29A177]">
-            Personalized Learning Path
+            Screening &amp; Assessment Information
           </p>
-
           <h1 className="mt-2 text-4xl font-extrabold leading-none text-[#5C5E64]">
-            {studentName}&apos;s Performance
+            {studentName}&apos;s Profile
           </h1>
-
-          <p className="max-w-3xl text-base leading-7 text-[#8A8A8A]">
-            A consolidated view of the learner&apos;s current numeracy
-            performance, screening result, and recommended next learning action.
-          </p>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex w-full flex-1 gap-2 border border-[#E7E7E7] bg-white p-6">
-        {/* LEFT CARD */}
-        <div className="flex min-h-[520px] basis-[32%] flex-col border border-[#EDEDED] bg-[#F9F9F9]">
-          {/* Screening Findings */}
-          <div
-            className={`flex min-h-[240px] px-10 py-10 text-start ${
-              isAtRisk ? "bg-[#FFF0F0]" : "bg-[#ECF9F4]"
-            }`}
-          >
-            <div className="flex max-w-md flex-col gap-3">
-              <p className="text-lg font-semibold uppercase text-zinc-600">
-                Screening Findings
-              </p>
+      {/* 3-Column Content */}
+      <div className="flex w-full flex-1 gap-4 border border-[#E7E7E7] bg-white p-6 overflow-hidden">
 
-              <p
-                className={`mt-3 text-4xl font-semibold leading-tight ${
-                  isAtRisk ? "text-red-500" : "text-[#29A177]"
-                }`}
-              >
-                {screening.classification === null
-                  ? "No classification yet"
-                  : screening.classification === "AT-RISK"
-                  ? "At-Risk"
-                  : "Typical"}
-              </p>
-
-              <div className="mt-2 flex flex-col text-sm text-[#5C5E64]">
-                <span className="font-medium">Average Score:</span>
-                <span className="font-light">
-                  {screening.averageScore === null
-                    ? "No score data"
-                    : `${screening.averageScore}%`}
-                </span>
-              </div>
-
-              <div className="mt-4 flex flex-col text-sm leading-none text-[#5C5E64]">
-                <span className="font-medium">Event Time Indication:</span>
-                <span className="mt-2 font-light">
-                  {formatDate(screening.created_at)}
-                </span>
-              </div>
-            </div>
+        {/* COLUMN 1: All Assessments */}
+        <div className="flex w-1/4 min-w-[250px] flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
+          <div className="bg-[#ECECEC] px-6 py-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Tests Taken</h2>
           </div>
-
-          {/* Results */}
-          <div className="flex flex-1 px-10 py-10 text-start">
-            <div className="flex w-full max-w-md flex-col gap-3">
-              <p className="text-lg font-semibold uppercase text-zinc-600">
-                Screening Examination Results
-              </p>
-
-              <button
-                type="button"
-                className="group flex h-14 w-72 items-center justify-center gap-3 rounded-lg bg-zinc-600 text-white shadow-sm transition-all duration-200 hover:bg-zinc-700 active:scale-[0.98]"
-              >
-                <ArrowDownTrayIcon className="h-5 w-5 transition-transform group-hover:translate-y-[1px]" />
-                <span className="text-base font-semibold">
-                  Download Result
-                </span>
-              </button>
-
-              <div className="mt-2 space-y-2">
-                {hasResults ? (
-                  screening.scores.map((score) => (
-                    <div
-                      key={score.key}
-                      className="flex items-center justify-between rounded-md border border-[#ECECEC] bg-white px-3 py-2 text-sm"
-                    >
-                      <span className="text-[#5C5E64]">{score.label}</span>
-
-                      <span className="font-semibold text-[#29A177]">
-                        {score.score === null ? "-" : `${score.score}%`}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-[#7A7A7A]">
-                    No screening result yet.
-                  </p>
-                )}
-              </div>
-            </div>
+          <div className="flex flex-col gap-2 p-4">
+            {assessments.length === 0 ? (
+              <p className="text-sm text-zinc-500">No tests available.</p>
+            ) : (
+              assessments.map((assessment) => {
+                const isActive = activeAssessmentId === assessment.id;
+                return (
+                  <button
+                    key={assessment.id}
+                    onClick={() => {
+                      setActiveAssessmentId(assessment.id);
+                      setClassificationResult(null); // Reset local generated result on switch
+                    }}
+                    className={`flex flex-col items-start rounded-md border p-3 text-left transition-all ${isActive
+                      ? "border-[#29A177] bg-[#ECF9F4]"
+                      : "border-[#ECECEC] bg-white hover:border-[#29A177]/50"
+                      }`}
+                  >
+                    <span className={`text-sm font-bold ${isActive ? "text-[#29A177]" : "text-zinc-700"}`}>
+                      {assessment.title}
+                    </span>
+                    <span className="text-xs font-medium text-zinc-500 mt-1">
+                      {assessment.isInitial ? "Initial Assessment" : "Custom Test"}
+                    </span>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* RIGHT CARD */}
-        <div className="flex min-h-[520px] basis-[68%] flex-col gap-5 border border-[#EDEDED] bg-[#F9F9F9] px-10">
-          <div className="pt-10 text-lg font-semibold uppercase text-zinc-600">
-            Description
+        {/* COLUMN 2: Selected Test Performance */}
+        <div className="flex w-1/3 min-w-[300px] flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
+          <div className="bg-[#ECECEC] px-6 py-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Test Performance</h2>
           </div>
-
-          <div className="text-lg font-light leading-snug text-[#5C5E64]">
-            {screening.classification === null ? (
+          <div className="flex flex-col p-6 gap-4">
+            {activeAssessment ? (
               <>
-                No classifier description has been generated yet for this
-                student. Once screening is complete, DysCalc will provide
-                diagnostic guidance and a recommended support approach.
-              </>
-            ) : isAtRisk ? (
-              <>
-                The screening result indicates that {studentName} may need
-                additional support in foundational numeracy skills. A
-                personalized learning path can help provide targeted practice
-                based on the student&apos;s screening performance.
+                <p className="text-xl font-extrabold text-[#5C5E64]">{activeAssessment.title}</p>
+                <div className="space-y-3 mt-4">
+                  {TEST_FIELDS.map((field) => {
+                    const data = extractScoreOrCount(results[field.key], field.key);
+                    return (
+                      <div key={field.key} className="flex flex-col rounded-md border border-[#ECECEC] bg-white px-4 py-3 shadow-sm">
+                        <span className="text-sm font-semibold text-[#5C5E64] mb-1">{field.label}</span>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-zinc-500">Score / Correct:</span>
+                          <span className="font-bold text-[#29A177]">{data.display}</span>
+                        </div>
+                        {data.efficiency !== undefined && (
+                          <div className="flex justify-between items-center text-xs mt-1">
+                            <span className="text-zinc-400">Efficiency Score:</span>
+                            <span className="font-medium text-zinc-600">{data.efficiency.toFixed(2)}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </>
             ) : (
-              <>
-                The screening result indicates that {studentName} is currently
-                performing within the expected range. DysCalc may still provide
-                enrichment activities to strengthen confidence and consistency.
-              </>
+              <p className="text-sm text-zinc-500">Select a test to view details.</p>
+            )}
+          </div>
+        </div>
+
+        {/* COLUMN 3: Classification Info */}
+        <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
+          <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Classification Report</h2>
+            {hasClassification && (
+              <button
+                onClick={handleDownloadPDF}
+                className="group flex items-center gap-2 rounded bg-zinc-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-zinc-700"
+              >
+                <ArrowDownTrayIcon className="h-4 w-4" />
+                Download PDF
+              </button>
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={onGenerateLearningPath}
-            className="group mb-10 mt-auto flex h-14 w-72 items-center justify-center gap-3 rounded-lg bg-[#29A177] text-white shadow-sm transition-all duration-200 hover:bg-[#17815C] active:scale-[0.98]"
-          >
-            <DocumentPlusIcon className="h-5 w-5 transition-transform group-hover:translate-y-[1px]" />
-            <span className="text-base font-semibold">
-              Generate Learning Path
-            </span>
-          </button>
+          <div className="flex flex-col p-6 h-full">
+            {!hasClassification ? (
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <SparklesIcon className="h-16 w-16 text-[#D4D4D4] mb-4" />
+                <h3 className="text-xl font-bold text-[#5C5E64]">No Classification Yet</h3>
+                <p className="mt-2 max-w-sm text-sm text-zinc-500">
+                  Generate a diagnostic classification based on the student's performance metrics for this test.
+                </p>
+                <button
+                  onClick={handleGenerateClassification}
+                  disabled={isGenerating || !activeAssessment || !isAllTestsCompleted}
+                  className="mt-6 flex h-12 items-center gap-2 rounded-lg bg-[#29A177] px-6 text-sm font-bold text-white transition hover:bg-[#17815C] disabled:cursor-not-allowed disabled:opacity-50"
+                  title={!isAllTestsCompleted ? "All test types must be completed before generating a classification" : undefined}
+                >
+                  {isGenerating ? "Analyzing..." : "Generate Classification"}
+                </button>
+                {!isAllTestsCompleted && (
+                  <p className="mt-4 text-xs font-semibold text-red-500">
+                    Cannot generate classification: Not all tests are completed.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {/* Result Header */}
+                <div className={`flex flex-col items-center justify-center rounded-xl p-8 text-center ${isAtRisk ? "bg-[#FFF0F0] border border-red-100" : "bg-[#ECF9F4] border border-green-100"}`}>
+                  <p className="text-sm font-bold uppercase tracking-widest text-zinc-500">Status</p>
+                  <h2 className={`mt-2 text-4xl font-black ${isAtRisk ? "text-red-500" : "text-[#29A177]"}`}>
+                    {isAtRisk ? "AT-RISK" : "TYPICAL"}
+                  </h2>
+                  {effectiveClassification?.confidence && (
+                    <p className="mt-3 text-sm font-medium text-zinc-600">
+                      Confidence: {(effectiveClassification.confidence * 100).toFixed(1)}%
+                    </p>
+                  )}
+                </div>
+
+                {/* Additional Generated Metrics (Show if available) */}
+                {effectiveClassification && (
+                  <>
+                    <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm">
+                      <h3 className="text-sm font-bold uppercase text-zinc-600 border-b pb-2 mb-3">Decision Path</h3>
+                      <p className="text-sm text-zinc-700 font-mono bg-zinc-50 p-3 rounded">
+                        {effectiveClassification.decision_path_readable}
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm">
+                      <h3 className="text-sm font-bold uppercase text-zinc-600 border-b pb-2 mb-3">Domain Severity Scores</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                        {Object.entries(effectiveClassification.domain_severity_scores || {}).map(([domain, score]) => {
+                          const numScore = score as number;
+                          if (numScore === 0) return null; // Hide 0 scores to keep it clean
+                          return (
+                            <div key={domain} className="flex flex-col gap-1">
+                              <span className="text-xs font-semibold text-zinc-500 truncate">{domain}</span>
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 w-full rounded-full bg-zinc-100 overflow-hidden">
+                                  <div className="h-full bg-blue-500" style={{ width: `${Math.min(numScore * 100, 100)}%` }} />
+                                </div>
+                                <span className="text-xs font-bold text-zinc-700">{numScore.toFixed(3)}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div className="mt-auto pt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={onGenerateLearningPath}
+                    className="group flex h-12 w-full max-w-sm items-center justify-center gap-3 rounded-lg bg-[#29A177] text-white shadow-sm transition-all duration-200 hover:bg-[#17815C] active:scale-[0.98]"
+                  >
+                    <DocumentPlusIcon className="h-5 w-5" />
+                    <span className="text-sm font-bold">Action Learning Path</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
       </div>
     </section>
   );

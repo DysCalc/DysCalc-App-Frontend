@@ -46,7 +46,8 @@ export async function GET(
             .from("test_results")
             .select(`
                 *,
-                assessment_questions (*)
+                assessment_questions (*),
+                learning_modules (*)
             `)
             .eq("classroom_id", classroom_id)
             .eq("student_id", student_id)

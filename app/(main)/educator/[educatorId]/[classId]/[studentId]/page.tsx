@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI } from "@/hooks/use-students";
+import { createTestAPI, type UnifiedAssessment } from "@/hooks/use-test";
 import type { Json } from "@/database.types";
 import { toast } from "sonner";
 import ScreeningInformation from "./tabs/ScreeningInformation";
@@ -108,6 +109,7 @@ export default function StudentDetailPage() {
   const [student, setStudent] = useState<StudentSummary | null>(null);
   const [classroom, setClassroom] = useState<ClassroomVariant | null>(null);
   const [screening, setScreening] = useState<ScreeningDetails | null>(null);
+  const [assessments, setAssessments] = useState<UnifiedAssessment[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -115,10 +117,12 @@ export default function StudentDetailPage() {
     const getData = async () => {
       setIsLoading(true);
 
+      const testAPI = createTestAPI();
+
       const [classroomResult, studentResult, testResult] = await Promise.all([
         classroomAPI.getClassroomById(classId),
         studentAPI.getClassroomStudent(classId, studentId),
-        studentAPI.getLatestInitialTestResult(classId, studentId),
+        testAPI.getAllTest(classId, studentId),
       ]);
 
       if (!isMounted) return;
@@ -129,13 +133,19 @@ export default function StudentDetailPage() {
         return;
       }
 
-      const classification: Classification | null = testResult.data?.classification ?? null;
+      const assessmentsData = testResult.data || [];
+      setAssessments(assessmentsData);
 
-      const scores: ScoreRow[] = testResult.data
+      const initialAssessment = assessmentsData.find(a => a.isInitial) || assessmentsData[0];
+      const initialResults = initialAssessment?.results;
+
+      const classification: Classification | null = initialResults?.classification ?? null;
+
+      const scores: ScoreRow[] = initialResults
         ? TEST_FIELDS.map((field) => ({
           key: field.key,
           label: field.label,
-          score: scoreFromJson((testResult.data as Record<string, Json>)[field.key]),
+          score: scoreFromJson((initialResults as Record<string, Json>)[field.key]),
         }))
         : [];
 
@@ -254,6 +264,7 @@ export default function StudentDetailPage() {
             classId={classId}
             studentId={student.id}
             screening={screening}
+            assessments={assessments}
             onGenerateLearningPath={() => setActiveTab("learning")}
           />
         )}
