@@ -20,6 +20,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           dot_matching: Json | null
+          is_generating: boolean | null
           metadata: Json | null
           number_comparison: Json | null
           number_series: Json | null
@@ -34,6 +35,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           dot_matching?: Json | null
+          is_generating?: boolean | null
           metadata?: Json | null
           number_comparison?: Json | null
           number_series?: Json | null
@@ -48,6 +50,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           dot_matching?: Json | null
+          is_generating?: boolean | null
           metadata?: Json | null
           number_comparison?: Json | null
           number_series?: Json | null
@@ -132,6 +135,7 @@ export type Database = {
       learning_modules: {
         Row: {
           created_at: string
+          is_generating: boolean | null
           modules: Json | null
           paths: Json | null
           prompt: string | null
@@ -139,6 +143,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          is_generating?: boolean | null
           modules?: Json | null
           paths?: Json | null
           prompt?: string | null
@@ -146,6 +151,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          is_generating?: boolean | null
           modules?: Json | null
           paths?: Json | null
           prompt?: string | null

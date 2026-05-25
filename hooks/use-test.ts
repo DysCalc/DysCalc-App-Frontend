@@ -27,6 +27,7 @@ export type UnifiedAssessment = {
 	title: string;
 	description: string;
 	isInitial: boolean;
+	isGenerating?: boolean;
 	questions: Record<string, any>;
 	results: any;
 };
@@ -81,6 +82,7 @@ export function createTestAPI() {
 							title: aq.title,
 							description: aq.description || "",
 							isInitial: false,
+							isGenerating: aq.is_generating || false,
 							questions: {
 								number_comparison: aq.number_comparison,
 								dot_matching: aq.dot_matching,

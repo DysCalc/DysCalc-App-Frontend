@@ -6,9 +6,7 @@ import type { UnifiedAssessment } from "@/hooks/use-test";
 import { createLearningPathAPI, type LearningModuleResponse } from "@/hooks/use-learning-path";
 import { toast } from "sonner";
 
-// Keep track of which tests are currently generating globally
-// so the button stays disabled if the user switches tabs and comes back
-const generatingTests = new Set<string>();
+// removed global generatingTests set
 
 type Props = {
   student: { id: string; name: string };
@@ -24,13 +22,9 @@ export default function LearningPath({ student, classId, studentId, assessments 
     assessments.length > 0 ? assessments[0].id : null
   );
 
-  const [isGenerating, setIsGenerating] = useState(
-    activeAssessmentId ? generatingTests.has(`${studentId}-${activeAssessmentId}`) : false
-  );
-  
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // Local state for the module to support instant UI updates and editing
   const [localModules, setLocalModules] = useState<Record<string, LearningModuleResponse | null>>({});
 
@@ -54,8 +48,12 @@ export default function LearningPath({ student, classId, studentId, assessments 
     ? results.learning_modules[0]?.modules
     : results.learning_modules?.modules;
 
-  const currentModule = activeAssessmentId && localModules[activeAssessmentId] !== undefined 
-    ? localModules[activeAssessmentId] 
+  const isGeneratingDb = Array.isArray(results.learning_modules)
+    ? results.learning_modules[0]?.is_generating
+    : results.learning_modules?.is_generating;
+
+  const currentModule = activeAssessmentId && localModules[activeAssessmentId] !== undefined
+    ? localModules[activeAssessmentId]
     : dbModules as LearningModuleResponse | null;
 
   // We can only generate a learning path if there's an existing classification/diagnostic path
@@ -66,13 +64,10 @@ export default function LearningPath({ student, classId, studentId, assessments 
   const handleGenerate = async () => {
     if (!activeAssessment || !activeAssessment.testResultId) return;
 
-    const generatingKey = `${studentId}-${activeAssessment.id}`;
-    generatingTests.add(generatingKey);
-    setIsGenerating(true);
     const learningPathAPI = createLearningPathAPI();
 
     const res = await learningPathAPI.generateLearningPath(activeAssessment.testResultId);
-    
+
     if (!res.success) {
       toast.error("Failed to generate learning path. " + res.error);
     } else {
@@ -81,13 +76,8 @@ export default function LearningPath({ student, classId, studentId, assessments 
         setLocalModules(prev => ({ ...prev, [activeAssessment.id]: res.data! }));
       } else {
         toast.success("Learning Path generation started in the background! Please check back later.");
+        window.location.reload();
       }
-    }
-    
-    generatingTests.delete(generatingKey);
-    // Only update local state if we are still on the same assessment
-    if (activeAssessmentId === activeAssessment.id) {
-      setIsGenerating(false);
     }
   };
 
@@ -98,14 +88,14 @@ export default function LearningPath({ student, classId, studentId, assessments 
     const learningPathAPI = createLearningPathAPI();
 
     const res = await learningPathAPI.updateLearningPath(activeAssessment.testResultId, currentModule);
-    
+
     if (!res.success) {
       toast.error("Failed to save learning path. " + res.error);
     } else {
       toast.success("Learning Path updated successfully!");
       setIsEditing(false);
     }
-    
+
     setIsSaving(false);
   };
 
@@ -151,7 +141,6 @@ export default function LearningPath({ student, classId, studentId, assessments 
                     key={assessment.id}
                     onClick={() => {
                       setActiveAssessmentId(assessment.id);
-                      setIsGenerating(generatingTests.has(`${studentId}-${assessment.id}`));
                       setIsEditing(false);
                     }}
                     className={`flex flex-col items-start rounded-md border p-3 text-left transition-all ${isActive
@@ -173,7 +162,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
         </div>
 
         {/* COLUMN 2: Module Content */}
-          <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
+        <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
           <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
             <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Generated Module</h2>
             {currentModule && !isEditing && (
@@ -195,7 +184,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
               </button>
             )}
           </div>
-          
+
           <div className="flex flex-col p-6 h-full">
             {!activeAssessment ? (
               <div className="flex h-full items-center justify-center text-zinc-500">
@@ -207,11 +196,11 @@ export default function LearningPath({ student, classId, studentId, assessments 
                 {hasClassificationData ? (
                   <button
                     onClick={handleGenerate}
-                    disabled={isGenerating}
+                    disabled={isGeneratingDb}
                     className="flex items-center gap-2 rounded-md bg-[#29A177] px-6 py-3 font-bold text-white transition hover:bg-[#20825f] disabled:opacity-50"
                   >
                     <SparklesIcon className="h-5 w-5" />
-                    {isGenerating ? "Generating Module..." : "Generate Learning Path"}
+                    {isGeneratingDb ? "Generating Module..." : "Generate Learning Path"}
                   </button>
                 ) : (
                   <p className="text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded border border-amber-200">
@@ -229,7 +218,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
                       Status: {currentModule.status}
                     </span>
                   </div>
-                  
+
                   {isEditing ? (
                     <div className="space-y-4">
                       <label className="block">
@@ -261,12 +250,12 @@ export default function LearningPath({ student, classId, studentId, assessments 
 
                 {/* Diagnostic Modules List */}
                 <div className="space-y-6">
-                  <h3 className="text-lg font-bold text-zinc-700 border-b border-zinc-200 pb-2">Targeted Domains</h3>
-                  
+                  <h3 className="text-lg font-bold text-zinc-700 border-b border-zinc-200 pb-2">Targeted Domains (Top 3)</h3>
+
                   {currentModule.diagnostic_modules?.map((mod, index) => (
                     <div key={index} className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
                       <h4 className="text-md font-bold text-[#29A177] mb-2">{mod.domain_name}</h4>
-                      
+
                       <div className="space-y-4 text-sm mt-4">
                         <div className="bg-zinc-50 p-3 rounded-md border border-zinc-100">
                           <p className="font-bold text-zinc-700 mb-1">Clinical Explanation</p>
@@ -279,12 +268,12 @@ export default function LearningPath({ student, classId, studentId, assessments 
                             {mod.learning_objectives.map((obj, i) => <li key={i}>{obj}</li>)}
                           </ul>
                         </div>
-                        
+
                         <div>
                           <p className="font-bold text-zinc-700 mb-1">Teaching Strategy</p>
                           <p className="text-zinc-600">{mod.teaching_strategy}</p>
                         </div>
-                        
+
                         <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
                           <p className="font-bold text-blue-900 mb-2">Worked Example</p>
                           <p className="font-medium text-blue-800 mb-2">Problem: {mod.worked_example.problem}</p>

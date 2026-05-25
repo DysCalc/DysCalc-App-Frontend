@@ -76,8 +76,9 @@ export default function ScreeningInformation({
     assessments.length > 0 ? assessments[0].id : null
   );
 
-  const [isGeneratingRetest, setIsGeneratingRetest] = useState(false);
   const router = useRouter();
+
+  const isGeneratingDb = assessments.some(a => a.isGenerating);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [classificationResult, setClassificationResult] = useState<any>(null); // To store freshly generated class
@@ -116,10 +117,19 @@ export default function ScreeningInformation({
     ? !!latestAssessment?.results?.learning_modules[0]?.modules
     : !!latestAssessment?.results?.learning_modules?.modules;
 
-  const handleGenerateRetest = async () => {
-    setIsGeneratingRetest(true);
+  const handleGenerateRetest = async (isRegenerating = false) => {
+    if (isRegenerating && activeAssessment) {
+      const retestAPI = createRetestAPI();
+      const res = await retestAPI.deleteRetest(activeAssessment.id);
+      if (!res.success) {
+        toast.error("Failed to clean up old retest: " + res.error);
+        return;
+      }
+    }
 
-    const sortedAssessments = [...assessments].sort((a, b) => {
+    const validAssessments = isRegenerating ? assessments.filter(a => a.id !== activeAssessment?.id) : assessments;
+
+    const sortedAssessments = [...validAssessments].sort((a, b) => {
       return new Date(a.results?.created_at).getTime() - new Date(b.results?.created_at).getTime();
     });
 
@@ -173,15 +183,15 @@ export default function ScreeningInformation({
       toast.success("Retest generated successfully!");
       window.location.reload();
     }
-
-    setIsGeneratingRetest(false);
   };
 
-  const handleApproveRetest = async (updatedQuestions: any) => {
+  const handleApproveRetest = async (updatedQuestions: any, newTitle: string, newDescription: string) => {
     if (!activeAssessment) return;
     const retestAPI = createRetestAPI();
 
     const res1 = await retestAPI.updateAssessmentQuestions(activeAssessment.id, {
+      title: newTitle,
+      description: newDescription,
       dot_matching: updatedQuestions.dot_matching,
       number_comparison: updatedQuestions.number_comparison,
       number_series: updatedQuestions.number_series,
@@ -298,11 +308,11 @@ export default function ScreeningInformation({
             {hasLearningPath && (
               !hasUnapprovedRetest ? (
                 <button
-                  onClick={handleGenerateRetest}
-                  disabled={isGeneratingRetest}
+                  onClick={() => handleGenerateRetest(false)}
+                  disabled={isGeneratingDb}
                   className="w-full rounded bg-[#29A177] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#20825f] disabled:opacity-50"
                 >
-                  {isGeneratingRetest ? "Generating..." : "Generate Retest"}
+                  {isGeneratingDb ? "Generating..." : "Generate Retest"}
                 </button>
               ) : (
                 <button
@@ -354,6 +364,7 @@ export default function ScreeningInformation({
             TEST_FIELDS={TEST_FIELDS}
             onApprove={handleApproveRetest}
             onDelete={handleDeleteRetest}
+            onRegenerate={() => handleGenerateRetest(true)}
           />
         ) : (
           <>
@@ -582,16 +593,23 @@ function RetestEditor({
   assessment,
   TEST_FIELDS,
   onApprove,
-  onDelete
+  onDelete,
+  onRegenerate
 }: {
   assessment: any,
   TEST_FIELDS: any[],
-  onApprove: (updatedQuestions: any) => Promise<void>,
-  onDelete: () => Promise<void>
+  onApprove: (updatedQuestions: any, newTitle: string, newDescription: string) => Promise<void>,
+  onDelete: () => Promise<void>,
+  onRegenerate: () => Promise<void>
 }) {
   const [editedQuestions, setEditedQuestions] = useState(assessment.questions || {});
+  const [editedTitle, setEditedTitle] = useState(assessment.title || "");
+  const [editedDescription, setEditedDescription] = useState(assessment.description || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  const hasFailed = assessment.description === "Generation failed.";
 
   const handleFieldChange = (fieldKey: string, newTests: any[]) => {
     setEditedQuestions((prev: any) => ({
@@ -605,7 +623,7 @@ function RetestEditor({
 
   const handleSave = async () => {
     setIsSaving(true);
-    await onApprove(editedQuestions);
+    await onApprove(editedQuestions, editedTitle, editedDescription);
     setIsSaving(false);
   };
 
@@ -615,8 +633,23 @@ function RetestEditor({
     setIsDeleting(false);
   };
 
+  const handleRegenerate = async () => {
+    setIsRegenerating(true);
+    await onRegenerate();
+    setIsRegenerating(false);
+  };
+
   return (
-    <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
+    <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto relative">
+      {assessment.isGenerating && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <SparklesIcon className="h-12 w-12 text-[#29A177] animate-pulse mb-4" />
+          <h3 className="text-lg font-bold text-zinc-700">Generating Retest Questions...</h3>
+          <p className="text-sm text-zinc-500 mt-2 max-w-sm text-center">
+            Our AI is analyzing the student's history to create a targeted retest. This may take a minute or two.
+          </p>
+        </div>
+      )}
       <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
         <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Retest Editor</h2>
         <div className="flex gap-2">
@@ -628,24 +661,66 @@ function RetestEditor({
             <TrashIcon className="h-4 w-4" />
             {isDeleting ? "Deleting..." : "Delete"}
           </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving || isDeleting}
-            className="flex items-center gap-2 rounded bg-[#29A177] px-4 py-1 text-xs font-semibold text-white transition hover:bg-[#20825f] disabled:opacity-50"
-          >
-            <CheckIcon className="h-4 w-4" />
-            {isSaving ? "Approving..." : "Save & Approve Retest"}
-          </button>
+          {hasFailed ? (
+            <button
+              onClick={handleRegenerate}
+              disabled={isDeleting || isRegenerating}
+              className="flex items-center gap-2 rounded bg-blue-600 px-4 py-1 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+            >
+              <SparklesIcon className="h-4 w-4" />
+              {isRegenerating ? "Regenerating..." : "Regenerate Retest"}
+            </button>
+          ) : (
+            <button
+              onClick={handleSave}
+              disabled={isSaving || isDeleting}
+              className="flex items-center gap-2 rounded bg-[#29A177] px-4 py-1 text-xs font-semibold text-white transition hover:bg-[#20825f] disabled:opacity-50"
+            >
+              <CheckIcon className="h-4 w-4" />
+              {isSaving ? "Approving..." : "Save & Approve Retest"}
+            </button>
+          )}
         </div>
       </div>
 
       <div className="flex flex-col p-6 h-full space-y-6">
-        <p className="text-sm text-zinc-600 mb-4">
-          Review the dynamically generated retest below. You can edit the questions and correct answers.
-          When satisfied, click <strong>Save & Approve Retest</strong>.
-        </p>
+        {hasFailed ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8 text-zinc-500">
+            <SparklesIcon className="h-12 w-12 text-zinc-300 mb-4" />
+            <h3 className="text-xl font-bold text-zinc-700">Generation Failed</h3>
+            <p className="mt-2 text-sm max-w-sm">
+              We encountered an issue while generating the questions for this retest. Please try regenerating it.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-4 mb-4">
+              <label className="block">
+                <span className="text-sm font-bold text-zinc-600">Retest Title</span>
+                <input
+                  type="text"
+                  className="mt-1 w-full rounded-md border border-zinc-300 p-2 text-sm text-zinc-700 font-bold"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-bold text-zinc-600">Description / Rationale</span>
+                <textarea
+                  className="mt-1 w-full rounded-md border border-zinc-300 p-2 text-sm text-zinc-700"
+                  rows={2}
+                  value={editedDescription}
+                  onChange={(e) => setEditedDescription(e.target.value)}
+                />
+              </label>
+            </div>
 
-        {TEST_FIELDS.map((field) => {
+            <p className="text-sm text-zinc-600 mb-4">
+              Review the dynamically generated retest below. You can edit the questions and correct answers.
+              When satisfied, click <strong>Save & Approve Retest</strong>.
+            </p>
+
+            {TEST_FIELDS.map((field) => {
           const fieldData = editedQuestions[field.key];
           const tests = Array.isArray(fieldData) ? fieldData : (fieldData?.tests || []);
           const rationale = fieldData?.rationale;
@@ -780,6 +855,8 @@ function RetestEditor({
             </div>
           );
         })}
+        </>
+        )}
       </div>
     </div>
   );

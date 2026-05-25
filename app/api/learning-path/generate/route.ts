@@ -48,6 +48,9 @@ export async function POST(request: Request) {
       }
     };
 
+    // 2.5. Set is_generating to true immediately
+    await supabase.from("learning_modules").update({ is_generating: true }).eq("result_id", testId);
+
     // 3. Call the Python backend in the background to avoid timeouts
     const baseUrl = process.env.BACKEND_URL || "http://127.0.0.1:5000";
     const modelUrl = `${baseUrl}/generate_module`;
@@ -76,6 +79,7 @@ export async function POST(request: Request) {
       res.on("end", async () => {
         if (res.statusCode !== 200) {
           console.error("[generate-module] Background generation failed:", responseBody);
+          await supabase.from("learning_modules").update({ is_generating: false }).eq("result_id", testId);
           return;
         }
         
@@ -84,7 +88,7 @@ export async function POST(request: Request) {
           // 4. Save the generated module back into learning_modules (upsert)
           const { error: updateError } = await supabase
             .from("learning_modules")
-            .update({ modules: generatedModule })
+            .update({ modules: generatedModule, is_generating: false })
             .eq("result_id", testId);
 
           if (updateError) {
@@ -94,12 +98,14 @@ export async function POST(request: Request) {
           }
         } catch (err) {
           console.error("[generate-module] Failed to parse backend response:", err);
+          await supabase.from("learning_modules").update({ is_generating: false }).eq("result_id", testId);
         }
       });
     });
 
-    req.on("error", (e: any) => {
+    req.on("error", async (e: any) => {
       console.error("[generate-module] Request error in background:", e);
+      await supabase.from("learning_modules").update({ is_generating: false }).eq("result_id", testId);
     });
 
     req.write(postData);
