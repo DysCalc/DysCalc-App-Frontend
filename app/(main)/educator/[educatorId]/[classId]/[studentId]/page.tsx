@@ -141,13 +141,25 @@ export default function StudentDetailPage() {
 
       const classification: Classification | null = initialResults?.classification ?? null;
 
-      const scores: ScoreRow[] = initialResults
-        ? TEST_FIELDS.map((field) => ({
+      const scores: ScoreRow[] = TEST_FIELDS.map((field) => {
+        let totalScore = 0;
+        let count = 0;
+
+        assessmentsData.forEach(assessment => {
+          if (!assessment.results) return;
+          const score = scoreFromJson((assessment.results as Record<string, Json>)[field.key]);
+          if (score !== null) {
+            totalScore += score;
+            count += 1;
+          }
+        });
+
+        return {
           key: field.key,
           label: field.label,
-          score: scoreFromJson((initialResults as Record<string, Json>)[field.key]),
-        }))
-        : [];
+          score: count > 0 ? Number((totalScore / count).toFixed(1)) : null,
+        };
+      });
 
       const availableScores = scores
         .map((score) => score.score)

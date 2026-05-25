@@ -17,8 +17,9 @@ export type TestMetadata = {
 }
 
 export type TestRecord = {
-    number: boolean
-    response_time?: number
+    id?: string;
+    number: boolean;
+    response_time?: number;
 }
 
 export type TestOutput = {

@@ -74,9 +74,9 @@ export default function ScreeningInformation({
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [classificationResult, setClassificationResult] = useState<any>(null); // To store freshly generated class
-  const [selectedFieldModal, setSelectedFieldModal] = useState<{ 
-    fieldKey: string, 
-    fieldLabel: string, 
+  const [selectedFieldModal, setSelectedFieldModal] = useState<{
+    fieldKey: string,
+    fieldLabel: string,
     rawData: any,
     questionsList: any[]
   } | null>(null);
@@ -176,7 +176,7 @@ export default function ScreeningInformation({
         {/* COLUMN 1: All Assessments */}
         <div className="flex w-1/4 min-w-[250px] flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
           <div className="bg-[#ECECEC] px-6 py-4">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Tests Taken</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Assessments</h2>
           </div>
           <div className="flex flex-col gap-2 p-4">
             {assessments.length === 0 ? (
@@ -222,15 +222,15 @@ export default function ScreeningInformation({
                   {TEST_FIELDS.map((field) => {
                     const data = extractScoreOrCount(results[field.key], field.key);
                     return (
-                      <div 
-                        key={field.key} 
+                      <div
+                        key={field.key}
                         onClick={() => {
                           const subTestData = activeAssessment?.questions?.[field.key];
                           const questionsList = Array.isArray(subTestData) ? subTestData : (subTestData?.tests || []);
-                          
-                          setSelectedFieldModal({ 
-                            fieldKey: field.key, 
-                            fieldLabel: field.label, 
+
+                          setSelectedFieldModal({
+                            fieldKey: field.key,
+                            fieldLabel: field.label,
                             rawData: results[field.key],
                             questionsList
                           });
@@ -385,14 +385,17 @@ export default function ScreeningInformation({
                     <p className="font-bold text-zinc-700">{Math.round(data.accuracy ?? 0)}%</p>
                   </div>
                 </div>
-                
+
                 <h4 className="font-bold text-sm text-zinc-700 border-b pb-2">Item Breakdown</h4>
                 <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
                   {data.records.map((record: any, index: number) => {
-                    const questionObj = selectedFieldModal.questionsList[index];
+                    const questionObj = record.id
+                      ? selectedFieldModal.questionsList.find((q: any) => q.id === record.id)
+                      : selectedFieldModal.questionsList[index];
+
                     const questionText = questionObj?.question || questionObj?.prompt || `Item ${index + 1}`;
                     const correctAnswer = questionObj?.correct || questionObj?.correctAnswer || questionObj?.expected_answer;
-                    
+
                     return (
                       <div key={index} className="flex flex-col p-3 rounded border border-zinc-100 bg-white shadow-sm gap-2">
                         <div className="flex justify-between items-start">

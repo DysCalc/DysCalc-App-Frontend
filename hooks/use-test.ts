@@ -127,6 +127,7 @@ export function createTestAPI() {
 				const answeredCount = Object.keys(answers).length;
 
 				const records = questions.map((item) => ({
+					id: item.id,
 					number: answers[item.id] === item.correctAnswer,
 					response_time: reactionTimes[item.id],
 				}));
