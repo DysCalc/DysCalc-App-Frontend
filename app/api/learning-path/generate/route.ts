@@ -48,47 +48,65 @@ export async function POST(request: Request) {
       }
     };
 
-    // 3. Call the Python backend
+    // 3. Call the Python backend in the background to avoid timeouts
     const baseUrl = process.env.BACKEND_URL || "http://127.0.0.1:5000";
     const modelUrl = `${baseUrl}/generate_module`;
-    let generatedModule: any;
+    
+    // We import http dynamically to keep edge compatibility if needed, though this is a node route
+    const http = require("http");
+    const https = require("https");
+    const client = modelUrl.startsWith("https") ? https : http;
 
-    try {
-      // AbortController is not needed here as Node fetch will wait for the server response by default.
-      // maxDuration is set to 300s to ensure Next.js doesn't drop the connection.
-      const response = await fetch(modelUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const postData = JSON.stringify(payload);
+    const parsedUrl = new URL(modelUrl);
 
-      if (!response.ok) {
-        let errorMessage = "Failed to fetch from module API";
-        try {
-          const errData = await response.json();
-          if (errData.error) errorMessage = errData.error;
-        } catch (e) {
-          // Ignore json parse error if the response isn't JSON
+    const req = client.request({
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port,
+      path: parsedUrl.pathname + parsedUrl.search,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(postData)
+      },
+      timeout: 0 // Disable socket timeout completely
+    }, (res: any) => {
+      let responseBody = "";
+      res.on("data", (chunk: any) => { responseBody += chunk; });
+      res.on("end", async () => {
+        if (res.statusCode !== 200) {
+          console.error("[generate-module] Background generation failed:", responseBody);
+          return;
         }
-        throw new Error(errorMessage);
-      }
-      generatedModule = await response.json();
-    } catch (error: any) {
-      console.error("Module generation API failed", error);
-      return NextResponse.json({ success: false, error: error.message || "Failed to generate module." }, { status: 500 });
-    }
+        
+        try {
+          const generatedModule = JSON.parse(responseBody);
+          // 4. Save the generated module back into learning_modules (upsert)
+          const { error: updateError } = await supabase
+            .from("learning_modules")
+            .update({ modules: generatedModule })
+            .eq("result_id", testId);
 
-    // 4. Save the generated module back into learning_modules (upsert)
-    const { error: updateError } = await supabase
-      .from("learning_modules")
-      .update({ modules: generatedModule })
-      .eq("result_id", testId);
+          if (updateError) {
+            console.error("[generate-module] Failed to save background generated module:", updateError);
+          } else {
+            console.log("[generate-module] Successfully generated and saved module in background for test_id:", testId);
+          }
+        } catch (err) {
+          console.error("[generate-module] Failed to parse backend response:", err);
+        }
+      });
+    });
 
-    if (updateError) {
-      return NextResponse.json({ success: false, error: "Failed to save the generated module." }, { status: 500 });
-    }
+    req.on("error", (e: any) => {
+      console.error("[generate-module] Request error in background:", e);
+    });
 
-    return NextResponse.json({ success: true, data: generatedModule });
+    req.write(postData);
+    req.end();
+
+    // 5. Return immediately so the client doesn't time out
+    return NextResponse.json({ success: true, message: "Module generation started in the background." });
 
   } catch (error) {
     console.error("Generate module error:", error);

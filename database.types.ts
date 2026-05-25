@@ -20,6 +20,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           dot_matching: Json | null
+          metadata: Json | null
           number_comparison: Json | null
           number_series: Json | null
           single_addition: Json | null
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           dot_matching?: Json | null
+          metadata?: Json | null
           number_comparison?: Json | null
           number_series?: Json | null
           single_addition?: Json | null
@@ -46,6 +48,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           dot_matching?: Json | null
+          metadata?: Json | null
           number_comparison?: Json | null
           number_series?: Json | null
           single_addition?: Json | null

@@ -19,7 +19,7 @@ type Props = {
   assessments?: UnifiedAssessment[];
 };
 
-export default function LearningPath({ student, studentId, assessments = [] }: Props) {
+export default function LearningPath({ student, classId, studentId, assessments = [] }: Props) {
   const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(
     assessments.length > 0 ? assessments[0].id : null
   );
@@ -37,6 +37,17 @@ export default function LearningPath({ student, studentId, assessments = [] }: P
   const studentName = student?.name ?? "Student";
   const activeAssessment = assessments.find((a) => a.id === activeAssessmentId);
   const results = activeAssessment?.results || {};
+
+  const TEST_FIELDS = [
+    { key: "dot_matching", label: "Dot Matching" },
+    { key: "number_comparison", label: "Number Comparison" },
+    { key: "number_series", label: "Number Series" },
+    { key: "single_addition", label: "Single Digit Addition" },
+    { key: "single_subtraction", label: "Single Digit Subtraction" },
+    { key: "complex_arithmetic", label: "Multi-Digit Addition and Subtraction" },
+  ];
+
+
 
   // Fetch the module either from our local state (if just generated/edited) or from the DB props
   const dbModules = Array.isArray(results.learning_modules)
@@ -65,8 +76,12 @@ export default function LearningPath({ student, studentId, assessments = [] }: P
     if (!res.success) {
       toast.error("Failed to generate learning path. " + res.error);
     } else {
-      toast.success("Learning Path generated successfully!");
-      setLocalModules(prev => ({ ...prev, [activeAssessment.id]: res.data! }));
+      if (res.data) {
+        toast.success("Learning Path generated successfully!");
+        setLocalModules(prev => ({ ...prev, [activeAssessment.id]: res.data! }));
+      } else {
+        toast.success("Learning Path generation started in the background! Please check back later.");
+      }
     }
     
     generatingTests.delete(generatingKey);
@@ -122,7 +137,7 @@ export default function LearningPath({ student, studentId, assessments = [] }: P
       <div className="flex w-full flex-1 gap-4 border border-[#E7E7E7] bg-white p-6 overflow-hidden">
         {/* COLUMN 1: All Assessments */}
         <div className="flex w-1/4 min-w-[250px] flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
-          <div className="bg-[#ECECEC] px-6 py-4">
+          <div className="bg-[#ECECEC] px-6 py-4 flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Assessments</h2>
           </div>
           <div className="flex flex-col gap-2 p-4">
@@ -158,7 +173,7 @@ export default function LearningPath({ student, studentId, assessments = [] }: P
         </div>
 
         {/* COLUMN 2: Module Content */}
-        <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
+          <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
           <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
             <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Generated Module</h2>
             {currentModule && !isEditing && (

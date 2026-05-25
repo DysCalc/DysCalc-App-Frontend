@@ -54,25 +54,29 @@ export function createTestAPI() {
 				const dbResults = result.data || [];
 
 				let foundInitial = false;
+				const unifiedAssessments: UnifiedAssessment[] = [];
 
-				const unifiedAssessments: UnifiedAssessment[] = dbResults.map((row: any) => {
-					const isInitial = !row.assessment_questions || (Array.isArray(row.assessment_questions) && row.assessment_questions.length === 0) || Object.keys(row.assessment_questions).length === 0;
+				for (const row of dbResults) {
+					const isMissingQuestions = !row.assessment_questions || (Array.isArray(row.assessment_questions) && row.assessment_questions.length === 0) || Object.keys(row.assessment_questions).length === 0;
 
-					if (isInitial) {
-						foundInitial = true;
-						return {
-							id: "initial-assessment",
-							testResultId: row.id,
-							title: "Initial Assessment",
-							description: "Standard initial assessment questions",
-							isInitial: true,
-							questions: initialAssessmentData,
-							results: row
-						};
+					if (isMissingQuestions) {
+						if (!foundInitial) {
+							foundInitial = true;
+							unifiedAssessments.push({
+								id: row.id, // Use row.id for absolute uniqueness
+								testResultId: row.id,
+								title: "Initial Assessment",
+								description: "Standard initial assessment questions",
+								isInitial: true,
+								questions: initialAssessmentData,
+								results: row
+							});
+						}
+						// Otherwise, it's an orphaned retest where assessment_questions was deleted manually. Skip it.
 					} else {
 						const aq = Array.isArray(row.assessment_questions) ? row.assessment_questions[0] : row.assessment_questions;
-						return {
-							id: aq.test_result_id,
+						unifiedAssessments.push({
+							id: row.id, // Use row.id for consistency and uniqueness
 							testResultId: row.id,
 							title: aq.title,
 							description: aq.description || "",
@@ -86,9 +90,9 @@ export function createTestAPI() {
 								complex_arithmetic: aq.complex_arithmetic
 							},
 							results: row
-						};
+						});
 					}
-				});
+				}
 
 				if (!foundInitial) {
 					unifiedAssessments.unshift({
