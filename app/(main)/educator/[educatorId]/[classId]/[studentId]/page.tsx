@@ -176,7 +176,7 @@ export default function StudentDetailPage() {
 
       setScreening({
         classification,
-        created_at: testResult.data?.created_at ?? null,
+        created_at: initialResults?.created_at ?? null,
         scores,
         averageScore,
       });
@@ -276,6 +276,7 @@ export default function StudentDetailPage() {
             classId={classId}
             studentId={student.id}
             screening={screening}
+            assessments={assessments}
           />
         )}
 

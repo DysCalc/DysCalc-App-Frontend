@@ -1,1040 +1,326 @@
 "use client";
 
 import { useState } from "react";
-import {
-  CheckCircleIcon,
-  ClipboardDocumentCheckIcon,
-  Cog6ToothIcon,
-  EyeIcon,
-  PencilSquareIcon,
-  RocketLaunchIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
-import type { Classification } from "@/types";
+import { SparklesIcon, CheckCircleIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import type { UnifiedAssessment } from "@/hooks/use-test";
+import { createLearningPathAPI, type LearningModuleResponse } from "@/hooks/use-learning-path";
+import { toast } from "sonner";
 
-type BuilderStep = "settings" | "questions" | "approval" | "preview" | "deploy";
-
-type QuestionType =
-  | "number-comparison"
-  | "digit-dot-matching"
-  | "number-series"
-  | "single-digit-addition"
-  | "single-digit-subtraction"
-  | "multi-digit-calculation";
-
-type GenerationQuestionType = QuestionType | "random";
-
-type GeneratedQuestion = {
-  id: number;
-  type: QuestionType;
-  prompt: string;
-  display?: string;
-  choices: string[];
-  correctAnswer: string;
-  approved: boolean;
-};
-
-type ScoreRow = {
-  key: string;
-  label: string;
-  score: number | null;
-};
+// Keep track of which tests are currently generating globally
+// so the button stays disabled if the user switches tabs and comes back
+const generatingTests = new Set<string>();
 
 type Props = {
-  student: {
-    id: string;
-    name: string;
-  };
-  classroom: {
-    id: string;
-    name: string;
-    student_count: number;
-    variant: "yellow" | "green" | "blue" | "gray";
-  };
+  student: { id: string; name: string };
+  classroom: { id: string; name: string; student_count: number; variant: string };
   classId: string;
   studentId: string;
-  screening: {
-    classification: Classification | null;
-    created_at: string | null;
-    scores: ScoreRow[];
-    averageScore: number | null;
-  };
+  screening: any;
+  assessments?: UnifiedAssessment[];
 };
 
-const steps = [
-  {
-    id: "settings" as BuilderStep,
-    label: "Generation Settings",
-    description: "Set coverage, item count, and difficulty.",
-    icon: Cog6ToothIcon,
-  },
-  {
-    id: "questions" as BuilderStep,
-    label: "Generated Questions",
-    description: "Edit prompts, choices, and answers.",
-    icon: PencilSquareIcon,
-  },
-  {
-    id: "approval" as BuilderStep,
-    label: "Review & Approval",
-    description: "Approve generated items before publishing.",
-    icon: ClipboardDocumentCheckIcon,
-  },
-  {
-    id: "preview" as BuilderStep,
-    label: "Preview",
-    description: "See the student-facing test view.",
-    icon: EyeIcon,
-  },
-  {
-    id: "deploy" as BuilderStep,
-    label: "Deploy",
-    description: "Formally assign this assessment to the student.",
-    icon: RocketLaunchIcon,
-  },
-];
-
-const questionTypes: GenerationQuestionType[] = [
-  "random",
-  "number-comparison",
-  "digit-dot-matching",
-  "number-series",
-  "single-digit-addition",
-  "single-digit-subtraction",
-  "multi-digit-calculation",
-];
-
-const initialQuestions: GeneratedQuestion[] = [
-  {
-    id: 1,
-    type: "number-comparison",
-    prompt: "Which number is bigger?",
-    display: "",
-    choices: ["4", "5", "6", "7"],
-    correctAnswer: "7",
-    approved: false,
-  },
-  {
-    id: 2,
-    type: "digit-dot-matching",
-    prompt: "How many dots are shown?",
-    display: "● ● ● ● ●",
-    choices: ["4", "5", "6", "7"],
-    correctAnswer: "5",
-    approved: false,
-  },
-  {
-    id: 3,
-    type: "single-digit-addition",
-    prompt: "What is the answer?",
-    display: "3 + 2 = ?",
-    choices: ["4", "5", "6", "7"],
-    correctAnswer: "5",
-    approved: false,
-  },
-];
-
-function getQuestionTypeLabel(type: GenerationQuestionType) {
-  if (type === "random") return "Random";
-  if (type === "number-comparison") return "Number Comparison";
-  if (type === "digit-dot-matching") return "Digit-Dot Matching";
-  if (type === "number-series") return "Number Series";
-  if (type === "single-digit-addition") return "Single-Digit Addition";
-  if (type === "single-digit-subtraction") return "Single-Digit Subtraction";
-  return "Multi-Digit Calculation";
-}
-
-function buildMockQuestion(id: number, type: QuestionType): GeneratedQuestion {
-  if (type === "number-comparison") {
-    return {
-      id,
-      type,
-      prompt: "Which number is bigger?",
-      display: "",
-      choices: ["4", "5", "6", "7"],
-      correctAnswer: "7",
-      approved: false,
-    };
-  }
-
-  if (type === "digit-dot-matching") {
-    return {
-      id,
-      type,
-      prompt: "How many dots are shown?",
-      display: "● ● ● ● ●",
-      choices: ["4", "5", "6", "7"],
-      correctAnswer: "5",
-      approved: false,
-    };
-  }
-
-  if (type === "number-series") {
-    return {
-      id,
-      type,
-      prompt: "What number comes next?",
-      display: "2, 4, 6, 8, ?",
-      choices: ["9", "10", "11", "12"],
-      correctAnswer: "10",
-      approved: false,
-    };
-  }
-
-  if (type === "single-digit-addition") {
-    return {
-      id,
-      type,
-      prompt: "What is the answer?",
-      display: "3 + 2 = ?",
-      choices: ["4", "5", "6", "7"],
-      correctAnswer: "5",
-      approved: false,
-    };
-  }
-
-  if (type === "single-digit-subtraction") {
-    return {
-      id,
-      type,
-      prompt: "What is the answer?",
-      display: "8 - 3 = ?",
-      choices: ["3", "4", "5", "6"],
-      correctAnswer: "5",
-      approved: false,
-    };
-  }
-
-  return {
-    id,
-    type,
-    prompt: "What is the answer?",
-    display: "12 + 5 = ?",
-    choices: ["15", "16", "17", "18"],
-    correctAnswer: "17",
-    approved: false,
-  };
-}
-
-function QuestionNumberBoxes({
-  questions,
-  selectedQuestionId,
-  onSelectQuestion,
-}: {
-  questions: GeneratedQuestion[];
-  selectedQuestionId: number;
-  onSelectQuestion: (questionId: number) => void;
-}) {
-  return (
-    <div className="">
-      <div className="grid grid-cols-5 gap-2 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-20">
-        {questions.map((question) => {
-          const isActive = question.id === selectedQuestionId;
-
-          return (
-            <button
-              key={question.id}
-              type="button"
-              onClick={() => onSelectQuestion(question.id)}
-              className={`flex h-10 items-center justify-center border text-sm font-extrabold transition-all duration-300 ${
-                question.approved
-                  ? "border-[#FFCC00] bg-[#FFCC00] text-white hover:bg-[#EAB300]"
-                  : "border-[#E4E4E4] bg-white text-[#777] hover:border-[#29A177] hover:text-[#29A177]"
-              } ${
-                isActive
-                  ? "ring-2 ring-[#29A177] ring-offset-2"
-                  : "ring-0 ring-transparent"
-              }`}
-            >
-              {question.id}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+export default function LearningPath({ student, studentId, assessments = [] }: Props) {
+  const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(
+    assessments.length > 0 ? assessments[0].id : null
   );
-}
 
-export default function LearningPath({
-  student,
-  classroom,
-  classId,
-  studentId,
-  screening,
-}: Props) {
-  const [activeStep, setActiveStep] = useState<BuilderStep>("settings");
-  const [selectedQuestionId, setSelectedQuestionId] = useState(1);
+  const [isGenerating, setIsGenerating] = useState(
+    activeAssessmentId ? generatingTests.has(`${studentId}-${activeAssessmentId}`) : false
+  );
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Local state for the module to support instant UI updates and editing
+  const [localModules, setLocalModules] = useState<Record<string, LearningModuleResponse | null>>({});
 
-  const [selectedType, setSelectedType] =
-    useState<GenerationQuestionType>("random");
+  const studentName = student?.name ?? "Student";
+  const activeAssessment = assessments.find((a) => a.id === activeAssessmentId);
+  const results = activeAssessment?.results || {};
 
-  const [itemCount, setItemCount] = useState(20);
-  const [difficulty, setDifficulty] = useState("Beginner");
+  // Fetch the module either from our local state (if just generated/edited) or from the DB props
+  const dbModules = Array.isArray(results.learning_modules)
+    ? results.learning_modules[0]?.modules
+    : results.learning_modules?.modules;
 
-  const [questions, setQuestions] =
-    useState<GeneratedQuestion[]>(initialQuestions);
+  const currentModule = activeAssessmentId && localModules[activeAssessmentId] !== undefined 
+    ? localModules[activeAssessmentId] 
+    : dbModules as LearningModuleResponse | null;
 
-  const [isDeployed, setIsDeployed] = useState(false);
-  const [deployedAt, setDeployedAt] = useState<string | null>(null);
+  // We can only generate a learning path if there's an existing classification/diagnostic path
+  const hasClassificationData = Array.isArray(results.learning_modules)
+    ? !!results.learning_modules[0]?.paths
+    : !!results.learning_modules?.paths;
 
-  const selectedQuestion =
-    questions.find((question) => question.id === selectedQuestionId) ??
-    questions[0];
+  const handleGenerate = async () => {
+    if (!activeAssessment || !activeAssessment.testResultId) return;
 
-  const approvedCount = questions.filter((question) => question.approved).length;
-  const isReadyToDeploy =
-    questions.length > 0 && approvedCount === questions.length;
+    const generatingKey = `${studentId}-${activeAssessment.id}`;
+    generatingTests.add(generatingKey);
+    setIsGenerating(true);
+    const learningPathAPI = createLearningPathAPI();
 
-  const updateQuestion = (
-    questionId: number,
-    updates: Partial<GeneratedQuestion>
-  ) => {
-    setQuestions((prev) =>
-      prev.map((question) =>
-        question.id === questionId ? { ...question, ...updates } : question
-      )
-    );
-
-    setIsDeployed(false);
-    setDeployedAt(null);
+    const res = await learningPathAPI.generateLearningPath(activeAssessment.testResultId);
+    
+    if (!res.success) {
+      toast.error("Failed to generate learning path. " + res.error);
+    } else {
+      toast.success("Learning Path generated successfully!");
+      setLocalModules(prev => ({ ...prev, [activeAssessment.id]: res.data! }));
+    }
+    
+    generatingTests.delete(generatingKey);
+    // Only update local state if we are still on the same assessment
+    if (activeAssessmentId === activeAssessment.id) {
+      setIsGenerating(false);
+    }
   };
 
-  const handleGenerate = () => {
-    const actualQuestionTypes = questionTypes.filter(
-      (type): type is QuestionType => type !== "random"
-    );
+  const handleSaveEdits = async () => {
+    if (!activeAssessment || !activeAssessment.testResultId || !currentModule) return;
 
-    const generatedQuestions: GeneratedQuestion[] = Array.from(
-      { length: itemCount },
-      (_, index) => {
-        const id = index + 1;
+    setIsSaving(true);
+    const learningPathAPI = createLearningPathAPI();
 
-        const type: QuestionType =
-          selectedType === "random"
-            ? actualQuestionTypes[index % actualQuestionTypes.length]
-            : selectedType;
+    const res = await learningPathAPI.updateLearningPath(activeAssessment.testResultId, currentModule);
+    
+    if (!res.success) {
+      toast.error("Failed to save learning path. " + res.error);
+    } else {
+      toast.success("Learning Path updated successfully!");
+      setIsEditing(false);
+    }
+    
+    setIsSaving(false);
+  };
 
-        return buildMockQuestion(id, type);
+  const handleModuleEdit = (field: keyof LearningModuleResponse, value: any) => {
+    if (!currentModule || !activeAssessmentId) return;
+    setLocalModules(prev => ({
+      ...prev,
+      [activeAssessmentId]: {
+        ...currentModule,
+        [field]: value
       }
-    );
-
-    setQuestions(generatedQuestions);
-    setSelectedQuestionId(generatedQuestions[0]?.id ?? 1);
-    setIsDeployed(false);
-    setDeployedAt(null);
-    setActiveStep("questions");
-  };
-
-  const handleDeploy = () => {
-    if (!isReadyToDeploy || isDeployed) return;
-
-    setIsDeployed(true);
-    setDeployedAt(new Date().toLocaleString());
+    }));
   };
 
   return (
-    <main className="h-full w-full overflow-y-auto bg-[#F7F7F7] px-8 py-4">
-      <section className="flex min-h-full w-full flex-col">
-        {/* Header */}
-        <div className="shrink-0 border-t border-l border-r border-[#E7E7E7] bg-white px-8 py-6">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[#29A177]">
-              Assessment Builder
-            </p>
+    <section className="flex min-h-full w-full flex-col bg-[#F7F7F7] px-8 py-4">
+      {/* Header */}
+      <div className="shrink-0 border-t border-l border-r border-[#E7E7E7] bg-white px-8 py-6">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#29A177]">
+            Personalized Learning Path
+          </p>
+          <h1 className="mt-2 text-4xl font-extrabold leading-none text-[#5C5E64]">
+            {studentName}&apos;s Plan
+          </h1>
+        </div>
+      </div>
 
-            <h1 className="mt-2 text-4xl font-extrabold leading-none text-[#5C5E64]">
-              Generate Test Questions
-            </h1>
-
-            <p className="max-w-3xl text-base leading-7 text-[#8A8A8A]">
-              Create, edit, approve, and preview DysCalc-aligned assessment
-              questions before assigning them to students.
-            </p>
+      <div className="flex w-full flex-1 gap-4 border border-[#E7E7E7] bg-white p-6 overflow-hidden">
+        {/* COLUMN 1: All Assessments */}
+        <div className="flex w-1/4 min-w-[250px] flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
+          <div className="bg-[#ECECEC] px-6 py-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Assessments</h2>
+          </div>
+          <div className="flex flex-col gap-2 p-4">
+            {assessments.length === 0 ? (
+              <p className="text-sm text-zinc-500">No tests available.</p>
+            ) : (
+              assessments.map((assessment) => {
+                const isActive = activeAssessmentId === assessment.id;
+                return (
+                  <button
+                    key={assessment.id}
+                    onClick={() => {
+                      setActiveAssessmentId(assessment.id);
+                      setIsGenerating(generatingTests.has(`${studentId}-${assessment.id}`));
+                      setIsEditing(false);
+                    }}
+                    className={`flex flex-col items-start rounded-md border p-3 text-left transition-all ${isActive
+                      ? "border-[#29A177] bg-[#ECF9F4]"
+                      : "border-[#ECECEC] bg-white hover:border-[#29A177]/50"
+                      }`}
+                  >
+                    <span className={`text-sm font-bold ${isActive ? "text-[#29A177]" : "text-zinc-700"}`}>
+                      {assessment.title}
+                    </span>
+                    <span className="text-xs font-medium text-zinc-500 mt-1">
+                      {assessment.isInitial ? "Initial Assessment" : "Custom Test"}
+                    </span>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* Builder Body */}
-        <div className="grid min-h-[620px] flex-1 grid-cols-[320px_1fr] overflow-hidden border border-[#E7E7E7] bg-white">
-          {/* Sidebar */}
-          <aside className="max-h-[calc(100vh-220px)] overflow-y-auto border-r border-[#E7E7E7] bg-[#FAFAFA] py-6">
-            <p className="mb-5 px-5 text-xs font-bold uppercase tracking-wide text-[#BDBDBD]">
-              Builder Steps
-            </p>
-
-            <div className="border-t border-[#E7E7E7]">
-              {steps.map((step) => {
-                const Icon = step.icon;
-                const isActive = activeStep === step.id;
-
-                return (
-                  <button
-                    key={step.id}
-                    type="button"
-                    onClick={() => setActiveStep(step.id)}
-                    className={`flex w-full items-start gap-4 border-b border-[#E7E7E7] px-5 py-4 text-left transition-colors duration-300 ${
-                      isActive
-                        ? "bg-[#ECF9F4] text-[#29A177]"
-                        : "bg-[#FAFAFA] text-[#8A8A8A] hover:bg-white hover:text-[#5C5E64]"
-                    }`}
-                  >
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors duration-300 ${
-                        isActive
-                          ? "bg-[#29A177] text-white"
-                          : "bg-[#EFEFEF] text-[#9A9A9A]"
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p
-                        className={`text-lg font-extrabold leading-none ${
-                          isActive ? "text-[#29A177]" : "text-[#6F6F6F]"
-                        }`}
-                      >
-                        {step.label}
-                      </p>
-
-                      <p className="mt-1 text-xs font-normal leading-5 text-[#A0A0A0]">
-                        {step.description}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mx-5 mt-6 grid gap-3">
-              <div className="border border-[#E7E7E7] bg-white px-4 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#BDBDBD]">
-                  Approval Status
-                </p>
-
-                <div className="mt-1 flex items-end justify-between gap-3">
-                  <p className="text-xl font-extrabold leading-none text-[#29A177]">
-                    {approvedCount}/{questions.length}
-                  </p>
-
-                  <p className="text-xs font-medium text-[#9A9A9A]">
-                    Approved
-                  </p>
-                </div>
+        {/* COLUMN 2: Module Content */}
+        <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
+          <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Generated Module</h2>
+            {currentModule && !isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2 rounded bg-zinc-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-zinc-700"
+              >
+                <PencilSquareIcon className="h-4 w-4" />
+                Edit Plan
+              </button>
+            )}
+            {currentModule && isEditing && (
+              <button
+                onClick={handleSaveEdits}
+                disabled={isSaving}
+                className="flex items-center gap-2 rounded bg-[#29A177] px-4 py-1 text-xs font-semibold text-white transition hover:bg-[#20825f] disabled:opacity-50"
+              >
+                {isSaving ? "Saving..." : "Save Edits"}
+              </button>
+            )}
+          </div>
+          
+          <div className="flex flex-col p-6 h-full">
+            {!activeAssessment ? (
+              <div className="flex h-full items-center justify-center text-zinc-500">
+                Select a test to view the learning path.
               </div>
-
-              <div className="border border-[#E7E7E7] bg-white px-4 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#BDBDBD]">
-                  Deployment Status
-                </p>
-
-                <div className="mt-1 flex items-end justify-between gap-3">
-                  <p
-                    className={`text-lg font-extrabold leading-none ${
-                      isDeployed
-                        ? "text-[#FFCC00]"
-                        : isReadyToDeploy
-                        ? "text-[#29A177]"
-                        : "text-[#9A9A9A]"
-                    }`}
-                  >
-                    {isDeployed ? "Deployed" : isReadyToDeploy ? "Ready" : "Not Ready"}
-                  </p>
-
-                  <p className="text-xs font-medium text-[#9A9A9A]">
-                    Assignment
-                  </p>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* Main Content */}
-          <section className="max-h-[calc(100vh-220px)] overflow-y-auto bg-white px-8 py-8">
-            {activeStep === "settings" && (
-              <div className="max-w-5xl">
-                <h2 className="text-3xl font-extrabold text-[#696969]">
-                  Generation Settings
-                </h2>
-
-                <p className="mt-2 text-base leading-7 text-[#9A9A9A]">
-                  Configure how the LLM should generate questions for this
-                  assessment.
-                </p>
-
-                <div className="mt-8 grid gap-6 md:grid-cols-3">
-                  <label className="flex flex-col gap-2">
-                    <span className="text-sm font-bold text-[#777]">
-                      Question Type
-                    </span>
-
-                    <select
-                      value={selectedType}
-                      onChange={(event) =>
-                        setSelectedType(
-                          event.target.value as GenerationQuestionType
-                        )
-                      }
-                      className="h-12 rounded-xl border border-[#E4E4E4] bg-white px-4 text-sm font-medium text-[#777] outline-none transition focus:border-[#29A177]"
-                    >
-                      {questionTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {getQuestionTypeLabel(type)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="flex flex-col gap-2">
-                    <span className="text-sm font-bold text-[#777]">
-                      Number of Items
-                    </span>
-
-                    <input
-                      type="number"
-                      min={1}
-                      max={50}
-                      value={itemCount}
-                      onChange={(event) =>
-                        setItemCount(Number(event.target.value))
-                      }
-                      className="h-12 rounded-xl border border-[#E4E4E4] bg-white px-4 text-sm font-medium text-[#777] outline-none transition focus:border-[#29A177]"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-2">
-                    <span className="text-sm font-bold text-[#777]">
-                      Difficulty
-                    </span>
-
-                    <select
-                      value={difficulty}
-                      onChange={(event) => setDifficulty(event.target.value)}
-                      className="h-12 rounded-xl border border-[#E4E4E4] bg-white px-4 text-sm font-medium text-[#777] outline-none transition focus:border-[#29A177]"
-                    >
-                      <option>Beginner</option>
-                      <option>Intermediate</option>
-                      <option>Advanced</option>
-                    </select>
-                  </label>
-                </div>
-
-                <div className="mt-8 bg-[#F7F7F7] px-6 py-5">
-                  <p className="text-sm font-bold text-[#777]">
-                    LLM Prompt Direction
-                  </p>
-
-                  <p className="mt-2 text-sm leading-6 text-[#9A9A9A]">
-                    Generate child-friendly math questions for dyscalculia
-                    screening. Keep the language simple, use short choices, and
-                    align items with number comparison, dot matching, number
-                    series, addition, and subtraction coverage.
-                  </p>
-
-                  <div className="mt-5 rounded-xl bg-white px-5 py-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-[#BDBDBD]">
-                      Current Generation Request
-                    </p>
-
-                    <p className="mt-2 text-sm font-medium text-[#777]">
-                      Generate{" "}
-                      <span className="font-extrabold text-[#29A177]">
-                        {itemCount}
-                      </span>{" "}
-                      question{itemCount === 1 ? "" : "s"} using{" "}
-                      <span className="font-extrabold text-[#29A177]">
-                        {getQuestionTypeLabel(selectedType)}
-                      </span>{" "}
-                      coverage at{" "}
-                      <span className="font-extrabold text-[#29A177]">
-                        {difficulty}
-                      </span>{" "}
-                      difficulty.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-8 flex justify-end">
+            ) : !currentModule ? (
+              <div className="flex h-full flex-col items-center justify-center text-center gap-4">
+                <p className="text-zinc-500">No learning path generated for this assessment yet.</p>
+                {hasClassificationData ? (
                   <button
-                    type="button"
                     onClick={handleGenerate}
-                    className="flex h-12 min-w-[190px] items-center justify-center gap-2 rounded-xl bg-[#29A177] px-7 text-base font-bold text-white transition-colors duration-300 hover:bg-[#FFCC00] active:bg-[#EAB300]"
+                    disabled={isGenerating}
+                    className="flex items-center gap-2 rounded-md bg-[#29A177] px-6 py-3 font-bold text-white transition hover:bg-[#20825f] disabled:opacity-50"
                   >
                     <SparklesIcon className="h-5 w-5" />
-                    Generate Questions
+                    {isGenerating ? "Generating Module..." : "Generate Learning Path"}
                   </button>
-                </div>
-              </div>
-            )}
-
-            {activeStep === "questions" && selectedQuestion && (
-            <div>
-              <div className="flex items-start justify-between gap-0">
-                <div>
-                  <h2 className="text-3xl font-extrabold text-[#696969]">
-                    Generated Questions
-                  </h2>
-
-                  <p className="mt-2 text-base leading-7 text-[#9A9A9A]">
-                    Edit the generated prompt, visual display, choices, and correct answer
-                    before approval.
+                ) : (
+                  <p className="text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded border border-amber-200">
+                    You must generate a Classification Report first before creating a learning path.
                   </p>
-                </div>
+                )}
               </div>
-
-              <div className="mt-4">
-                <QuestionNumberBoxes
-                  questions={questions}
-                  selectedQuestionId={selectedQuestion.id}
-                  onSelectQuestion={setSelectedQuestionId}
-                />
-              </div>
-
-              <div className="mt-6 border border-[#E7E7E7] px-6 py-6">
-                <div className="mb-6 flex items-center justify-between gap-4 border-b border-[#EFEFEF] pb-2">
-                  <div>
-                    <p className="text-lg font-extrabold text-[#696969]">
-                      Question #{selectedQuestion.id}
-                    </p>
-                    <p className="mt-1 text-sm font-medium text-[#9A9A9A]">
-                      {getQuestionTypeLabel(selectedQuestion.type)}
-                    </p>
+            ) : (
+              <div className="flex flex-col gap-6 pb-10">
+                {/* Overall Summary & Status */}
+                <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-zinc-700">Module Overview</h3>
+                    <span className="rounded-full bg-[#ECF9F4] px-3 py-1 text-xs font-bold text-[#29A177] border border-[#29A177]/20">
+                      Status: {currentModule.status}
+                    </span>
                   </div>
-
-                  {selectedQuestion.approved && (
-                    <div className="flex items-center gap-2 rounded-full bg-[#FFCC00] px-4 py-2 text-sm font-extrabold text-white">
-                      <CheckCircleIcon className="h-5 w-5" />
-                      Approved
+                  
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <label className="block">
+                        <span className="text-sm font-bold text-zinc-600">Overall Summary</span>
+                        <textarea
+                          className="mt-1 w-full rounded-md border border-zinc-300 p-2 text-sm text-zinc-700"
+                          rows={3}
+                          value={currentModule.overall_summary}
+                          onChange={(e) => handleModuleEdit("overall_summary", e.target.value)}
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-bold text-zinc-600">Decision Path Rationale</span>
+                        <textarea
+                          className="mt-1 w-full rounded-md border border-zinc-300 p-2 text-sm text-zinc-700"
+                          rows={2}
+                          value={currentModule.decision_path_rationale}
+                          onChange={(e) => handleModuleEdit("decision_path_rationale", e.target.value)}
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 text-sm text-zinc-600">
+                      <p><strong className="text-zinc-700">Summary:</strong> {currentModule.overall_summary}</p>
+                      <p><strong className="text-zinc-700">Rationale:</strong> {currentModule.decision_path_rationale}</p>
                     </div>
                   )}
                 </div>
 
-                <div className="grid gap-5">
-                  {/* Prompt + Display one line */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="flex flex-col gap-2">
-                      <span className="text-sm font-bold text-[#777]">Prompt</span>
-
-                      <input
-                        value={selectedQuestion.prompt}
-                        onChange={(event) =>
-                          updateQuestion(selectedQuestion.id, {
-                            prompt: event.target.value,
-                          })
-                        }
-                        className="h-12 rounded-xl border border-[#E4E4E4] px-4 text-sm font-medium text-[#777] outline-none transition focus:border-[#29A177]"
-                      />
-                    </label>
-
-                    <label className="flex flex-col gap-2">
-                      <span className="text-sm font-bold text-[#777]">
-                        Display / Illustration
-                      </span>
-
-                      <input
-                        value={selectedQuestion.display ?? ""}
-                        onChange={(event) =>
-                          updateQuestion(selectedQuestion.id, {
-                            display: event.target.value,
-                          })
-                        }
-                        placeholder="Example: ● ● ●"
-                        className="h-12 rounded-xl border border-[#E4E4E4] px-4 text-sm font-medium text-[#777] outline-none transition focus:border-[#29A177]"
-                      />
-                    </label>
-                  </div>
-
-                  {/* 4 choices one line */}
-                  <div className="grid gap-4 md:grid-cols-4">
-                    {[0, 1, 2, 3].map((index) => (
-                      <label key={index} className="flex flex-col gap-2">
-                        <span className="text-sm font-bold text-[#777]">
-                          Choice {index + 1}
-                        </span>
-
-                        <input
-                          value={selectedQuestion.choices[index] ?? ""}
-                          onChange={(event) => {
-                            const updatedChoices = [...selectedQuestion.choices];
-
-                            while (updatedChoices.length < 4) {
-                              updatedChoices.push("");
-                            }
-
-                            updatedChoices[index] = event.target.value;
-
-                            updateQuestion(selectedQuestion.id, {
-                              choices: updatedChoices.slice(0, 4),
-                            });
-                          }}
-                          className="h-12 rounded-xl border border-[#E4E4E4] px-4 text-sm font-medium text-[#777] outline-none transition focus:border-[#29A177]"
-                        />
-                      </label>
-                    ))}
-                  </div>
-
-                  {/* Answer one line */}
-                  <label className="flex flex-col gap-2">
-                    <span className="text-sm font-bold text-[#777]">Correct Answer</span>
-
-                    <input
-                      value={selectedQuestion.correctAnswer}
-                      onChange={(event) =>
-                        updateQuestion(selectedQuestion.id, {
-                          correctAnswer: event.target.value,
-                        })
-                      }
-                      className="h-12 rounded-xl border border-[#E4E4E4] px-4 text-sm font-medium text-[#777] outline-none transition focus:border-[#29A177]"
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
-            )}
-
-            {activeStep === "approval" && selectedQuestion && (
-              <div>
-                <h2 className="text-3xl font-extrabold text-[#696969]">
-                  Review & Approval
-                </h2>
-
-                <p className="mt-2 text-base leading-7 text-[#9A9A9A]">
-                  Approve questions that are ready to be assigned to students.
-                </p>
-
-                <div className="mt-4">
-                  <QuestionNumberBoxes
-                    questions={questions}
-                    selectedQuestionId={selectedQuestion.id}
-                    onSelectQuestion={setSelectedQuestionId}
-                  />
-                </div>
-
-                <div className="mt-6 border border-[#E7E7E7] px-6 py-6">
-                  <div className="flex items-start justify-between gap-6">
-                    <div>
-                      <p className="text-lg font-extrabold text-[#696969]">
-                        Question #{selectedQuestion.id}
-                      </p>
-
-                      <p className="mt-1 text-sm font-semibold text-[#29A177]">
-                        {getQuestionTypeLabel(selectedQuestion.type)}
-                      </p>
-
-                      <p className="mt-4 text-base font-bold text-[#696969]">
-                        {selectedQuestion.prompt}
-                      </p>
-
-                      {selectedQuestion.display && (
-                        <p className="mt-4 rounded-xl bg-[#FAFAFA] px-5 py-4 text-3xl font-extrabold tracking-wide text-[#555]">
-                          {selectedQuestion.display}
-                        </p>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateQuestion(selectedQuestion.id, {
-                          approved: !selectedQuestion.approved,
-                        })
-                      }
-                      className={`flex h-11 min-w-[140px] items-center justify-center rounded-xl px-5 text-sm font-bold transition-colors ${
-                        selectedQuestion.approved
-                          ? "bg-[#FFCC00] text-white hover:bg-[#EAB300]"
-                          : "bg-[#29A177] text-white hover:bg-[#FFCC00]"
-                      }`}
-                    >
-                      {selectedQuestion.approved ? "Approved" : "Approve"}
-                    </button>
-                  </div>
-
-                  <div className="mt-6 grid gap-4 sm:grid-cols-4">
-                    {[0, 1, 2, 3].map((index) => {
-                      const choice = selectedQuestion.choices[index] ?? "";
-
-                      return (
-                        <div
-                          key={index}
-                          className={`rounded-xl border px-5 py-4 text-center text-xl font-extrabold ${
-                            choice === selectedQuestion.correctAnswer
-                              ? "border-[#29A177] bg-[#ECF9F4] text-[#29A177]"
-                              : "border-[#E7E7E7] bg-white text-[#777]"
-                          }`}
-                        >
-                          {choice || `Choice ${index + 1}`}
+                {/* Diagnostic Modules List */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-bold text-zinc-700 border-b border-zinc-200 pb-2">Targeted Domains</h3>
+                  
+                  {currentModule.diagnostic_modules?.map((mod, index) => (
+                    <div key={index} className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+                      <h4 className="text-md font-bold text-[#29A177] mb-2">{mod.domain_name}</h4>
+                      
+                      <div className="space-y-4 text-sm mt-4">
+                        <div className="bg-zinc-50 p-3 rounded-md border border-zinc-100">
+                          <p className="font-bold text-zinc-700 mb-1">Clinical Explanation</p>
+                          <p className="text-zinc-600">{mod.clinical_explanation}</p>
                         </div>
-                      );
-                    })}
-                  </div>
 
-                  <div className="mt-6 rounded-xl bg-[#FAFAFA] px-5 py-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-[#BDBDBD]">
-                      Correct Answer
-                    </p>
-                    <p className="mt-1 text-lg font-extrabold text-[#29A177]">
-                      {selectedQuestion.correctAnswer}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+                        <div>
+                          <p className="font-bold text-zinc-700 mb-1">Learning Objectives</p>
+                          <ul className="list-disc pl-5 text-zinc-600">
+                            {mod.learning_objectives.map((obj, i) => <li key={i}>{obj}</li>)}
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <p className="font-bold text-zinc-700 mb-1">Teaching Strategy</p>
+                          <p className="text-zinc-600">{mod.teaching_strategy}</p>
+                        </div>
+                        
+                        <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                          <p className="font-bold text-blue-900 mb-2">Worked Example</p>
+                          <p className="font-medium text-blue-800 mb-2">Problem: {mod.worked_example.problem}</p>
+                          <ol className="list-decimal pl-5 text-blue-800/80 space-y-1 mb-2">
+                            {mod.worked_example.reasoning_steps.map((step, i) => <li key={i}>{step}</li>)}
+                          </ol>
+                          <p className="font-bold text-blue-900">Answer: {mod.worked_example.final_answer}</p>
+                        </div>
 
-            {activeStep === "preview" && selectedQuestion && (
-              <div>
-                <h2 className="text-3xl font-extrabold text-[#696969]">
-                  Student Preview
-                </h2>
-
-                <p className="mt-2 text-base leading-7 text-[#9A9A9A]">
-                  Preview how students will see the selected question.
-                </p>
-
-                <div className="mt-4 flex items-center justify-center rounded-2xl bg-[#FAFAFA] px-8 py-10">
-                  <div className="w-full max-w-3xl border border-[#E9E9E9] bg-white px-10 py-5 shadow-[0_18px_50px_rgba(0,0,0,0.04)]">
-                    <div className="flex items-center justify-between gap-5">
-                      <div>
-                        <p className="text-base font-bold uppercase tracking-wide text-[#BDBDBD]">
-                          Question #{selectedQuestion.id}
-                        </p>
-
-                        <p className="mt-1 text-lg font-semibold text-[#29A177]">
-                          {getQuestionTypeLabel(selectedQuestion.type)}
-                        </p>
-                      </div>
-
-                      <div className="rounded-full bg-[#DFF5EC] px-4 py-1 text-sm font-bold text-[#29A177]">
-                        Preview
-                      </div>
-                    </div>
-
-                    <h2 className="mt-7 text-center text-4xl font-bold leading-tight text-[#666]">
-                      {selectedQuestion.prompt}
-                    </h2>
-
-                    {selectedQuestion.display && (
-                      <div className="mt-8 text-center text-5xl font-extrabold tracking-wide text-[#555]">
-                        {selectedQuestion.display}
-                      </div>
-                    )}
-
-                    <div className="mt-10 grid gap-5 sm:grid-cols-4">
-                      {[0, 1, 2, 3].map((index) => {
-                        const choice = selectedQuestion.choices[index] ?? "";
-
-                        return (
-                          <div
-                            key={index}
-                            className="flex h-20 items-center justify-center rounded-2xl border border-[#E5E5E5] bg-white text-4xl font-bold text-[#777]"
-                          >
-                            {choice}
+                        <div>
+                          <p className="font-bold text-zinc-700 mb-2">Practice Set</p>
+                          <div className="space-y-2">
+                            {mod.practice_set.map((practice, pIndex) => (
+                              <div key={pIndex} className="flex flex-col gap-1 rounded border border-zinc-200 p-3 bg-white">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium text-zinc-700">{practice.problem}</span>
+                                  <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">Ans: {practice.expected_answer}</span>
+                                </div>
+                                <span className="text-xs text-zinc-500 italic">Hint: {practice.hint}</span>
+                              </div>
+                            ))}
                           </div>
-                        );
-                      })}
+                        </div>
+
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Formative Assessment */}
+                {currentModule.formative_assessment && currentModule.formative_assessment.length > 0 && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm mt-4">
+                    <h3 className="text-md font-bold text-amber-800 mb-3 flex items-center gap-2">
+                      <CheckCircleIcon className="h-5 w-5" />
+                      Formative Assessment
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {currentModule.formative_assessment.map((fa, index) => (
+                        <div key={index} className="bg-white p-3 rounded border border-amber-100 shadow-sm flex justify-between items-center">
+                          <span className="text-sm font-medium text-zinc-700">{fa.question}</span>
+                          <span className="text-sm font-bold text-amber-700">{fa.expected_answer}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
-
-            {activeStep === "deploy" && (
-              <div>
-                <h2 className="text-3xl font-extrabold text-[#696969]">
-                  Deploy Assessment
-                </h2>
-
-                <p className="mt-2 text-base leading-7 text-[#9A9A9A]">
-                  Formally assign this approved assessment to the selected
-                  student.
-                </p>
-
-                <div className="mt-4 grid gap-2 lg:grid-cols-[1fr_360px]">
-                  <div className="border border-[#E7E7E7] bg-white px-6 py-6">
-                    <p className="text-sm font-bold uppercase tracking-wide text-[#BDBDBD]">
-                      Deployment Summary
-                    </p>
-
-                    <div className="mt-3 grid gap-2">
-                      <div className="flex items-center justify-between border-b border-[#EFEFEF] pb-2">
-                        <span className="text-sm font-bold text-[#777]">
-                          Student
-                        </span>
-                        <span className="text-sm font-extrabold text-[#696969]">
-                          {student.name}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-[#EFEFEF] pb-2">
-                        <span className="text-sm font-bold text-[#777]">
-                          Student ID
-                        </span>
-                        <span className="text-sm font-extrabold text-[#696969]">
-                          {studentId}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-[#EFEFEF] pb-2">
-                        <span className="text-sm font-bold text-[#777]">
-                          Classroom
-                        </span>
-                        <span className="text-sm font-extrabold text-[#696969]">
-                          {classroom.name}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-[#EFEFEF] pb-2">
-                        <span className="text-sm font-bold text-[#777]">
-                          Class ID
-                        </span>
-                        <span className="text-sm font-extrabold text-[#696969]">
-                          {classId}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-[#EFEFEF] pb-2">
-                        <span className="text-sm font-bold text-[#777]">
-                          Screening Classification
-                        </span>
-                        <span className="text-sm font-extrabold text-[#696969]">
-                          {screening.classification ?? "Not Available"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-[#EFEFEF] pb-2">
-                        <span className="text-sm font-bold text-[#777]">
-                          Total Questions
-                        </span>
-                        <span className="text-sm font-extrabold text-[#696969]">
-                          {questions.length}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-[#EFEFEF] pb-2">
-                        <span className="text-sm font-bold text-[#777]">
-                          Approved Questions
-                        </span>
-                        <span className="text-sm font-extrabold text-[#29A177]">
-                          {approvedCount}/{questions.length}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-[#777]">
-                          Status
-                        </span>
-
-                        <span
-                          className={`rounded-full px-4 py-1 text-sm font-extrabold ${
-                            isDeployed
-                              ? "bg-[#FFCC00] text-white"
-                              : isReadyToDeploy
-                              ? "bg-[#DFF5EC] text-[#29A177]"
-                              : "bg-[#F3F3F3] text-[#999]"
-                          }`}
-                        >
-                          {isDeployed
-                            ? "Deployed"
-                            : isReadyToDeploy
-                            ? "Ready to Deploy"
-                            : "Not Ready"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {deployedAt && (
-                      <div className="mt-6 rounded-xl bg-[#FAFAFA] px-5 py-4">
-                        <p className="text-xs font-bold uppercase tracking-wide text-[#BDBDBD]">
-                          Deployed At
-                        </p>
-                        <p className="mt-1 text-sm font-extrabold text-[#696969]">
-                          {deployedAt}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="border border-[#E7E7E7] bg-[#FAFAFA] px-6 py-6">
-                    <p className="text-lg font-extrabold text-[#696969]">
-                      Final Check
-                    </p>
-
-                    <div className="mt-5 space-y-4">
-                      <div className="flex items-start gap-3">
-                        <CheckCircleIcon
-                          className={`mt-0.5 h-5 w-5 ${
-                            questions.length > 0
-                              ? "text-[#29A177]"
-                              : "text-[#BDBDBD]"
-                          }`}
-                        />
-                        <p className="text-sm font-medium leading-6 text-[#777]">
-                          Questions have been generated.
-                        </p>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <CheckCircleIcon
-                          className={`mt-0.5 h-5 w-5 ${
-                            isReadyToDeploy
-                              ? "text-[#29A177]"
-                              : "text-[#BDBDBD]"
-                          }`}
-                        />
-                        <p className="text-sm font-medium leading-6 text-[#777]">
-                          All questions are reviewed and approved.
-                        </p>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <CheckCircleIcon
-                          className={`mt-0.5 h-5 w-5 ${
-                            isDeployed
-                              ? "text-[#FFCC00]"
-                              : "text-[#BDBDBD]"
-                          }`}
-                        />
-                        <p className="text-sm font-medium leading-6 text-[#777]">
-                          Assessment is formally assigned to the student.
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleDeploy}
-                      disabled={!isReadyToDeploy || isDeployed}
-                      className={`mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-xl px-6 text-base font-bold transition-colors ${
-                        isDeployed
-                          ? "cursor-not-allowed bg-[#FFCC00] text-white"
-                          : isReadyToDeploy
-                          ? "bg-[#29A177] text-white hover:bg-[#FFCC00]"
-                          : "cursor-not-allowed bg-[#E5E5E5] text-[#999]"
-                      }`}
-                    >
-                      <RocketLaunchIcon className="h-5 w-5" />
-                      {isDeployed
-                        ? "Assessment Deployed"
-                        : "Deploy Assessment"}
-                    </button>
-
-                    {!isReadyToDeploy && (
-                      <p className="mt-4 text-center text-xs font-medium leading-5 text-[#999]">
-                        All questions must be approved before deployment.
-                      </p>
-                    )}
-
-                    {isDeployed && (
-                      <p className="mt-4 text-center text-xs font-medium leading-5 text-[#777]">
-                        This assessment has been formally assigned to the
-                        student.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
+          </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }

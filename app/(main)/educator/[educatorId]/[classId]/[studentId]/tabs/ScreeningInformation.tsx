@@ -8,6 +8,7 @@ import { createClassificationAPI } from "@/hooks/use-classification";
 import { toast } from "sonner";
 import { generateClassificationPDF } from "@/utils/pdf-generator";
 import type { Json } from "@/database.types";
+import AlertModal from "@/components/shared/AlertModal";
 
 const TEST_FIELDS = [
   { key: "dot_matching", label: "Dot Matching" },
@@ -73,6 +74,12 @@ export default function ScreeningInformation({
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [classificationResult, setClassificationResult] = useState<any>(null); // To store freshly generated class
+  const [selectedFieldModal, setSelectedFieldModal] = useState<{ 
+    fieldKey: string, 
+    fieldLabel: string, 
+    rawData: any,
+    questionsList: any[]
+  } | null>(null);
 
   const studentName = student?.name ?? "Student";
   const activeAssessment = assessments.find((a) => a.id === activeAssessmentId);
@@ -215,7 +222,21 @@ export default function ScreeningInformation({
                   {TEST_FIELDS.map((field) => {
                     const data = extractScoreOrCount(results[field.key], field.key);
                     return (
-                      <div key={field.key} className="flex flex-col rounded-md border border-[#ECECEC] bg-white px-4 py-3 shadow-sm">
+                      <div 
+                        key={field.key} 
+                        onClick={() => {
+                          const subTestData = activeAssessment?.questions?.[field.key];
+                          const questionsList = Array.isArray(subTestData) ? subTestData : (subTestData?.tests || []);
+                          
+                          setSelectedFieldModal({ 
+                            fieldKey: field.key, 
+                            fieldLabel: field.label, 
+                            rawData: results[field.key],
+                            questionsList
+                          });
+                        }}
+                        className="flex flex-col rounded-md border border-[#ECECEC] bg-white px-4 py-3 shadow-sm cursor-pointer hover:border-[#29A177]/50 hover:shadow-md transition-all"
+                      >
                         <span className="text-sm font-semibold text-[#5C5E64] mb-1">{field.label}</span>
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-zinc-500">Score / Correct:</span>
@@ -339,6 +360,68 @@ export default function ScreeningInformation({
         </div>
 
       </div>
+
+      {selectedFieldModal && (
+        <AlertModal
+          isOpen={true}
+          title={`${selectedFieldModal.fieldLabel} Details`}
+          onClose={() => setSelectedFieldModal(null)}
+          maxWidth="md"
+        >
+          {(() => {
+            const data = selectedFieldModal.rawData;
+            if (!data || !data.records || !Array.isArray(data.records)) {
+              return <p className="text-sm text-zinc-500">No detailed records available for this test.</p>;
+            }
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-zinc-50 p-3 rounded border border-zinc-100">
+                    <p className="text-xs text-zinc-500 font-semibold uppercase">Total Time</p>
+                    <p className="font-bold text-zinc-700">{data.elapsed_seconds ?? 0}s</p>
+                  </div>
+                  <div className="bg-zinc-50 p-3 rounded border border-zinc-100">
+                    <p className="text-xs text-zinc-500 font-semibold uppercase">Accuracy</p>
+                    <p className="font-bold text-zinc-700">{Math.round(data.accuracy ?? 0)}%</p>
+                  </div>
+                </div>
+                
+                <h4 className="font-bold text-sm text-zinc-700 border-b pb-2">Item Breakdown</h4>
+                <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
+                  {data.records.map((record: any, index: number) => {
+                    const questionObj = selectedFieldModal.questionsList[index];
+                    const questionText = questionObj?.question || questionObj?.prompt || `Item ${index + 1}`;
+                    const correctAnswer = questionObj?.correct || questionObj?.correctAnswer || questionObj?.expected_answer;
+                    
+                    return (
+                      <div key={index} className="flex flex-col p-3 rounded border border-zinc-100 bg-white shadow-sm gap-2">
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-medium text-zinc-700">{questionText}</span>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-xs font-mono text-zinc-500 bg-zinc-50 px-2 py-1 rounded border border-zinc-100">
+                              {record.response_time} ms
+                            </span>
+                            {record.number ? (
+                              <span className="text-xs font-bold bg-[#ECF9F4] text-[#29A177] px-2 py-1 rounded w-16 text-center">Correct</span>
+                            ) : (
+                              <span className="text-xs font-bold bg-red-50 text-red-600 px-2 py-1 rounded w-16 text-center">Wrong</span>
+                            )}
+                          </div>
+                        </div>
+                        {correctAnswer !== undefined && (
+                          <div className="text-xs text-zinc-500 bg-zinc-50/50 rounded px-2 py-1 inline-block self-start border border-zinc-50">
+                            Correct Answer: <span className="font-semibold text-zinc-700">{String(correctAnswer)}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+        </AlertModal>
+      )}
     </section>
   );
 }
