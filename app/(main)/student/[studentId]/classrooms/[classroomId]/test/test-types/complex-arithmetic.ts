@@ -73,5 +73,5 @@ export function buildComplexArithmeticQuestions(
         choices: buildComplexArithmeticChoices(test.correct as number, test.id),
       };
     })
-    .filter((item): item is Question => Boolean(item));
+    .filter(Boolean) as Question[];
 }

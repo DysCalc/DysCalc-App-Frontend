@@ -184,9 +184,9 @@ export default function Setup() {
         throw new Error("Workplace address is required.");
       }
 
-      const parsedLicenseId = Number(licenseId);
-      if (!licenseId || !Number.isInteger(parsedLicenseId) || parsedLicenseId <= 0) {
-        throw new Error("License ID must be a positive whole number.");
+      const trimmedLicenseId = licenseId.trim();
+      if (!trimmedLicenseId) {
+        throw new Error("License ID is required.");
       }
 
       const undergradPayload = toEducationPayload(undergrad, "Undergraduate education");
@@ -200,7 +200,7 @@ export default function Setup() {
       const { error } = await supabase.from("educator").upsert(
         {
           id: user.id,
-          license_id: parsedLicenseId,
+          license_id: trimmedLicenseId,
           undergrad: undergradPayload,
           masters: mastersPayload,
           doctorate: doctoratePayload,
@@ -301,9 +301,7 @@ export default function Setup() {
               <div>
                 <label className="block text-sm font-medium mb-2">License ID</label>
                 <input
-                  type="number"
-                  min="1"
-                  step="1"
+                  type="text"
                   value={licenseId}
                   onChange={(e) => setLicenseId(e.target.value)}
                   className="w-full p-3 border rounded"

@@ -23,5 +23,5 @@ export function buildNumberComparisonQuestions(
         choices: [String(pair[0]), String(pair[1])],
       };
     })
-    .filter((item): item is Question => Boolean(item));
+    .filter(Boolean) as Question[];
 }

@@ -101,7 +101,7 @@ export type Database = {
         Row: {
           doctorate: Json | null
           id: string
-          license_id: number
+          license_id: string
           masters: Json | null
           undergrad: Json
           workplace_address: string
@@ -110,7 +110,7 @@ export type Database = {
         Insert: {
           doctorate?: Json | null
           id?: string
-          license_id: number
+          license_id: string
           masters?: Json | null
           undergrad: Json
           workplace_address: string
@@ -119,7 +119,7 @@ export type Database = {
         Update: {
           doctorate?: Json | null
           id?: string
-          license_id?: number
+          license_id?: string
           masters?: Json | null
           undergrad?: Json
           workplace_address?: string

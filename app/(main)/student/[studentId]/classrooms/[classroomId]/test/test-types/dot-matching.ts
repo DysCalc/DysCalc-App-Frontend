@@ -35,5 +35,5 @@ export function buildDotMatchingQuestions(
         choices: ["True", "False"],
       };
     })
-    .filter((item): item is Question => Boolean(item));
+    .filter(Boolean) as Question[];
 }

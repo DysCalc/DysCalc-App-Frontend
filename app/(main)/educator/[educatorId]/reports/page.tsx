@@ -309,7 +309,7 @@ export default function EducatorReportsDashboard() {
                   <Tooltip 
                     cursor={{ fill: '#F3F4F6' }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                    formatter={(value: number) => [`${value}%`, 'Average Score']}
+                    formatter={(value: any) => [`${value}%`, 'Average Score']}
                   />
                   <Bar dataKey="average" fill="#29A177" radius={[4, 4, 0, 0]} barSize={40}>
                     {skillGapsData.map((entry, index) => (

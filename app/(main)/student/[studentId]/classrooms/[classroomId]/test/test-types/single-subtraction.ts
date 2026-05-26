@@ -18,8 +18,8 @@ export function buildSingleSubtractionQuestions(
         prompt,
         display: test.question ?? "",
         correctAnswer: String(test.correct),
-        choices: buildChoices(test.correct, test.id),
+        choices: buildChoices(test.correct as number, test.id),
       };
     })
-    .filter((item): item is Question => Boolean(item));
+    .filter(Boolean) as Question[];
 }

@@ -56,6 +56,14 @@ export type EducatorRow = {
   classroom_count: number;
 };
 
+export type StudentProfile = {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url: string;
+  nickname: string | null;
+};
+
 export type EducatorEducation = {
   program: string;
   school: string;

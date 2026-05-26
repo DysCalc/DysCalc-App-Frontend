@@ -123,14 +123,7 @@ export default function Sidebar() {
 
   const navigations = getNavigations();
 
-  const profileContext =
-    currentRoute === "student" ||
-    currentRoute === "educator" ||
-    currentRoute === "admin"
-      ? currentRoute
-      : userRole.toLowerCase();
-
-  const profileHref = `/${profileContext}/${validRouteId}/profile`;
+  const profileHref = `/${userRole.toLowerCase()}/${user.id}/profile`;
 
   return (
     <aside

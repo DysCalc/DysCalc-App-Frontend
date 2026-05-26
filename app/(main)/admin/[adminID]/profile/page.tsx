@@ -12,17 +12,16 @@ import AlertModal from "@/components/shared/AlertModal";
 
 function getHighQualityGoogleAvatar(url: string | null) {
   if (!url) return null;
-
   return url
     .replace(/=s\d+-c$/, "=s512-c")
     .replace(/=s\d+$/, "=s512")
     .replace(/=w\d+-h\d+-p$/, "=s512-c");
 }
 
-export default function StudentProfilePage() {
+export default function AdminProfilePage() {
   const router = useRouter();
-  const params = useParams<{ studentId: string }>();
-  const { studentId } = params;
+  const params = useParams<{ adminID: string }>();
+  const { adminID } = params;
   const { user, profile: authProfile, loading, logout } = useAuth();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +37,7 @@ export default function StudentProfilePage() {
     let mounted = true;
     async function fetchProfile() {
       if (!user) return;
-      const data = await getUserProfile(studentId);
+      const data = await getUserProfile(adminID);
       if (mounted && data) {
         setNickname(data.nickname || "");
         setDateOfBirth(data.date_of_birth ? data.date_of_birth.split('T')[0] : "");
@@ -49,12 +48,12 @@ export default function StudentProfilePage() {
 
     if (!loading) fetchProfile();
     return () => { mounted = false; };
-  }, [user, loading, studentId]);
+  }, [user, loading, adminID]);
 
   if (loading || isLoading) {
     return (
       <main className="h-full w-full bg-[#F7F7F7]">
-        <section className="flex h-full w-full items-center justify-center bg-[#DED84E]">
+        <section className="flex h-full w-full items-center justify-center bg-neutral-800">
           <p className="text-2xl font-bold text-white">Loading profile...</p>
         </section>
       </main>
@@ -64,7 +63,7 @@ export default function StudentProfilePage() {
   if (!user) {
     return (
       <main className="h-full w-full bg-[#F7F7F7]">
-        <section className="flex h-full w-full items-center justify-center bg-[#DED84E]">
+        <section className="flex h-full w-full items-center justify-center bg-neutral-800">
           <p className="text-2xl font-bold text-white">No user found.</p>
         </section>
       </main>
@@ -77,7 +76,7 @@ export default function StudentProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    const result = await updateUserProfile(studentId, {
+    const result = await updateUserProfile(adminID, {
       nickname,
       date_of_birth: dateOfBirth,
       sex
@@ -92,7 +91,7 @@ export default function StudentProfilePage() {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const result = await deleteUserProfile(studentId);
+    const result = await deleteUserProfile(adminID);
     if (result.success) {
       toast.success("Account deleted permanently.");
       logout();
@@ -106,11 +105,11 @@ export default function StudentProfilePage() {
 
   return (
     <main className="h-full w-full overflow-y-auto bg-[#F7F7F7]">
-      <section className="relative flex min-h-[40vh] w-full flex-col overflow-hidden bg-[#DED84E] px-6 py-10">
+      <section className="relative flex min-h-[40vh] w-full flex-col overflow-hidden bg-neutral-800 px-6 py-10">
         <div className="shrink-0">
           <Link
-            href={`/student/${studentId}/dashboard`}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-[#29A177]"
+            href={`/admin/${adminID}/dashboard`}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-neutral-300"
           >
             <ArrowLeft size={18} />
             Back to Dashboard
@@ -140,7 +139,7 @@ export default function StudentProfilePage() {
 
           <div className="mt-6 text-center">
             <h1 className="text-4xl font-extrabold text-white">{name}</h1>
-            <p className="mt-2 text-xl font-semibold text-white/90">Student</p>
+            <p className="mt-2 text-xl font-semibold text-white/90">Administrator</p>
           </div>
         </div>
       </section>
@@ -188,7 +187,7 @@ export default function StudentProfilePage() {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="rounded-md bg-[#29A177] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#238B67] disabled:opacity-50"
+                className="rounded-md bg-neutral-800 px-6 py-2.5 font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50"
               >
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>
@@ -200,7 +199,6 @@ export default function StudentProfilePage() {
           <h2 className="text-xl font-bold text-red-600">Danger Zone</h2>
           <p className="mt-2 text-sm text-neutral-500">
             Permanently delete your account. This action cannot be undone.
-            However, your anonymous test scores will be retained for algorithm improvements.
           </p>
           <div className="mt-6">
             <button
