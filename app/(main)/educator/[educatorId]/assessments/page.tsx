@@ -95,7 +95,7 @@ export default function EducatorAssessmentsHub() {
   }, [assessments, searchQuery, statusFilter, classFilter, sortField, sortOrder]);
 
   const handleRowClick = (assessment: EducatorAssessmentRow) => {
-    router.push(`/educator/${educatorId}/${assessment.classroom_id}/${assessment.student_id}`);
+    router.push(`/educator/${educatorId}/${assessment.classroom_id}/${assessment.student_id}?assessmentId=${assessment.id}`);
   };
 
   const toggleSort = (field: "date" | "student") => {
@@ -231,6 +231,9 @@ export default function EducatorAssessmentsHub() {
                       <ChevronUpDownIcon className={`h-4 w-4 ${sortField === 'date' ? 'text-[#29A177]' : 'text-zinc-400 group-hover:text-zinc-600'}`} />
                     </div>
                   </th>
+                  <th className="p-4 text-xs font-bold uppercase tracking-wider text-zinc-500 text-right">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -275,6 +278,28 @@ export default function EducatorAssessmentsHub() {
                          Typical
                        </span>
                      );
+                  }
+
+                  // Determine Action Button
+                  let actionButton = null;
+                  if (a.is_generating) {
+                    actionButton = (
+                      <button disabled className="px-3 py-1 text-xs font-bold text-blue-400 bg-blue-50/50 rounded border border-transparent cursor-not-allowed">
+                        Processing...
+                      </button>
+                    );
+                  } else if (!a.is_initial && !a.is_approved) {
+                    actionButton = (
+                      <button className="px-3 py-1 text-xs font-bold text-white bg-amber-600 rounded hover:bg-amber-700 transition shadow-sm">
+                        Review
+                      </button>
+                    );
+                  } else {
+                    actionButton = (
+                      <button className="px-3 py-1 text-xs font-bold text-[#29A177] bg-[#ECF9F4] rounded border border-[#29A177]/20 hover:bg-[#D9F4EA] transition">
+                        View
+                      </button>
+                    );
                   }
 
                   return (
@@ -329,11 +354,31 @@ export default function EducatorAssessmentsHub() {
                           })}
                         </span>
                       </td>
+                      <td className="p-4 text-right">
+                        {actionButton}
+                      </td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-4 flex flex-wrap items-center gap-x-8 gap-y-3 mt-4">
+          <span className="text-sm font-bold text-zinc-700">Legend:</span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">Needs Approval</span>
+            <span className="text-sm text-zinc-500">Awaiting your review before results are saved</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-[#ECF9F4] px-2 py-0.5 text-xs font-bold text-[#29A177] border border-[#29A177]/20">Ready</span>
+            <span className="text-sm text-zinc-500">Results available</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700 border border-red-100">At-Risk</span>
+            <span className="text-sm text-zinc-500">Student may need intervention</span>
           </div>
         </div>
 

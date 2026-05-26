@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowDownTrayIcon, DocumentPlusIcon, SparklesIcon, TrashIcon, CheckIcon } from "@heroicons/react/24/outline";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createRetestAPI } from "@/hooks/use-retest";
 import type { Classification } from "@/types";
 import type { UnifiedAssessment } from "@/hooks/use-test";
@@ -72,11 +72,23 @@ export default function ScreeningInformation({
   assessments = [],
   onGenerateLearningPath,
 }: Props) {
-  const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(
-    assessments.length > 0 ? assessments[0].id : null
-  );
-
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const assessmentIdFromUrl = searchParams.get("assessmentId");
+
+  const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(() => {
+    if (assessmentIdFromUrl && assessments.some(a => a.id === assessmentIdFromUrl)) {
+      return assessmentIdFromUrl;
+    }
+    return assessments.length > 0 ? assessments[0].id : null;
+  });
+
+  // Update if URL changes
+  useEffect(() => {
+    if (assessmentIdFromUrl && assessments.some(a => a.id === assessmentIdFromUrl)) {
+      setActiveAssessmentId(assessmentIdFromUrl);
+    }
+  }, [assessmentIdFromUrl, assessments]);
 
   const isGeneratingDb = assessments.some(a => a.isGenerating);
 
@@ -93,6 +105,7 @@ export default function ScreeningInformation({
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
   const [isSavingMetadata, setIsSavingMetadata] = useState(false);
+  const [showSaveMetadataConfirm, setShowSaveMetadataConfirm] = useState(false);
 
   const studentName = student?.name ?? "Student";
   const activeAssessment = assessments.find((a) => a.id === activeAssessmentId);
@@ -370,15 +383,27 @@ export default function ScreeningInformation({
                     onClick={() => {
                       setActiveAssessmentId(assessment.id);
                       setClassificationResult(null); // Reset local generated result on switch
+                      // Clear query param so it doesn't force the old assessment on reload
+                      router.replace(window.location.pathname, { scroll: false });
                     }}
                     className={`flex flex-col items-start rounded-md border p-3 text-left transition-all ${isActive
                       ? "border-[#29A177] bg-[#ECF9F4]"
                       : "border-[#ECECEC] bg-white hover:border-[#29A177]/50"
                       }`}
                   >
-                    <span className={`text-sm font-bold ${isActive ? "text-[#29A177]" : "text-zinc-700"}`}>
-                      {assessment.title}
-                    </span>
+                    <div className="flex w-full items-center justify-between gap-2">
+                      <span className={`text-sm font-bold truncate ${isActive ? "text-[#29A177]" : "text-zinc-700"}`}>
+                        {assessment.title}
+                      </span>
+                      {(() => {
+                        if (assessment.isGenerating) {
+                          return <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200"><SparklesIcon className="h-2 w-2" /> Gen</span>;
+                        } else if (!assessment.isInitial && assessment.results?.is_approved === false) {
+                          return <span className="shrink-0 inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">Needs Approval</span>;
+                        }
+                        return <span className="shrink-0 inline-flex items-center rounded-full bg-[#ECF9F4] px-1.5 py-0.5 text-[10px] font-bold text-[#29A177] border border-[#29A177]/20">Ready</span>;
+                      })()}
+                    </div>
                     <span className="text-xs font-medium text-zinc-500 mt-1">
                       {assessment.isInitial ? "Initial Assessment" : "Custom Test"}
                     </span>
@@ -453,7 +478,7 @@ export default function ScreeningInformation({
                             Cancel
                           </button>
                           <button
-                            onClick={handleSaveMetadata}
+                            onClick={() => setShowSaveMetadataConfirm(true)}
                             disabled={isSavingMetadata}
                             className="rounded bg-[#29A177] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#20825f] disabled:opacity-50 transition flex items-center gap-2"
                           >
@@ -548,10 +573,20 @@ export default function ScreeningInformation({
                       <h2 className={`mt-2 text-4xl font-black ${isAtRisk ? "text-red-500" : "text-[#29A177]"}`}>
                         {isAtRisk ? "AT-RISK" : "TYPICAL"}
                       </h2>
-                      {effectiveClassification?.confidence && (
-                        <p className="mt-3 text-sm font-medium text-zinc-600">
-                          Confidence: {(effectiveClassification.confidence * 100).toFixed(1)}%
+                      {isAtRisk && (
+                        <p className="mt-3 text-sm text-red-700 bg-red-50 p-3 rounded border border-red-100 font-medium">
+                          This student shows patterns associated with dyscalculia. Consider scheduling a targeted intervention. Always apply your own professional judgment.
                         </p>
+                      )}
+                      {effectiveClassification?.confidence && (
+                        <div className="mt-4 flex flex-col items-center">
+                          <p className="text-sm font-bold text-zinc-700">
+                            Model Confidence: {(effectiveClassification.confidence * 100).toFixed(1)}%
+                          </p>
+                          <p className="text-xs text-zinc-500 max-w-xs mt-1">
+                            Confidence means how certain the AI model is in its classification, not the student's test score.
+                          </p>
+                        </div>
                       )}
                     </div>
 
@@ -560,25 +595,41 @@ export default function ScreeningInformation({
                       <>
                         <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm">
                           <h3 className="text-sm font-bold uppercase text-zinc-600 border-b pb-2 mb-3">Decision Path</h3>
-                          <p className="text-sm text-zinc-700 font-mono bg-zinc-50 p-3 rounded">
-                            {effectiveClassification.decision_path_readable}
+                          <p className="text-sm text-zinc-700 mb-3 font-medium">
+                            Flagged because scores in key areas fell below typical thresholds for this age group.
                           </p>
+                          <details className="group">
+                            <summary className="text-xs font-semibold text-[#29A177] cursor-pointer hover:underline outline-none">
+                              Show technical details
+                            </summary>
+                            <p className="mt-2 text-xs text-zinc-700 font-mono bg-zinc-50 p-3 rounded border border-zinc-100 overflow-x-auto whitespace-pre-wrap">
+                              {effectiveClassification.decision_path_readable}
+                            </p>
+                          </details>
                         </div>
 
                         <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm">
-                          <h3 className="text-sm font-bold uppercase text-zinc-600 border-b pb-2 mb-3">Domain Severity Scores</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                          <h3 className="text-sm font-bold uppercase text-zinc-600 border-b pb-2 mb-2">Domain Severity Scores</h3>
+                          <p className="text-xs text-zinc-500 mb-4">Higher score = greater area of concern. Scores above 0.15 are recommended for intervention.</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
                             {Object.entries(effectiveClassification.domain_severity_scores || {}).map(([domain, score]) => {
                               const numScore = score as number;
-                              if (numScore === 0) return null; // Hide 0 scores to keep it clean
+                              if (numScore === 0) return null;
+                              const isCritical = numScore > 0.15;
+                              const barColor = isCritical ? "bg-amber-500" : "bg-blue-500";
                               return (
                                 <div key={domain} className="flex flex-col gap-1">
-                                  <span className="text-xs font-semibold text-zinc-500 truncate">{domain}</span>
+                                  <div className="flex justify-between items-end">
+                                    <span className="text-xs font-semibold text-zinc-600 truncate">{domain}</span>
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isCritical ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                                      {isCritical ? "Monitor" : "Typical"}
+                                    </span>
+                                  </div>
                                   <div className="flex items-center gap-2">
                                     <div className="h-2 w-full rounded-full bg-zinc-100 overflow-hidden">
-                                      <div className="h-full bg-blue-500" style={{ width: `${Math.min(numScore * 100, 100)}%` }} />
+                                      <div className={`h-full ${barColor}`} style={{ width: `${Math.min(numScore * 100, 100)}%` }} />
                                     </div>
-                                    <span className="text-xs font-bold text-zinc-700">{numScore.toFixed(3)}</span>
+                                    <span className="text-xs font-bold text-zinc-700 w-8 text-right">{numScore.toFixed(3)}</span>
                                   </div>
                                 </div>
                               );
@@ -588,10 +639,20 @@ export default function ScreeningInformation({
                       </>
                     )}
 
-                    <div className="mt-auto pt-6 flex justify-center">
+                    <div className="mt-auto pt-6 flex flex-col items-center">
+                      <p className="text-xs text-zinc-500 mb-3 text-center max-w-sm">
+                        Based on this student's results, a personalized learning path has been suggested. Click below to review and activate it.
+                      </p>
                       <button
                         type="button"
-                        onClick={onGenerateLearningPath}
+                        onClick={() => {
+                          if (activeAssessmentId) {
+                            const newUrl = new URL(window.location.href);
+                            newUrl.searchParams.set("assessmentId", activeAssessmentId);
+                            router.push(`${newUrl.pathname}?${newUrl.searchParams.toString()}`);
+                          }
+                          if (onGenerateLearningPath) onGenerateLearningPath();
+                        }}
                         className="group flex h-12 w-full max-w-sm items-center justify-center gap-3 rounded-lg bg-[#29A177] text-white shadow-sm transition-all duration-200 hover:bg-[#17815C] active:scale-[0.98]"
                       >
                         <DocumentPlusIcon className="h-5 w-5" />
@@ -670,6 +731,24 @@ export default function ScreeningInformation({
           })()}
         </AlertModal>
       )}
+
+      <AlertModal
+        isOpen={showSaveMetadataConfirm}
+        onClose={() => setShowSaveMetadataConfirm(false)}
+        title="Save Changes"
+        description="Are you sure you want to save the updated test title and description?"
+        primaryAction={{
+          label: "Save Changes",
+          onClick: () => {
+            setShowSaveMetadataConfirm(false);
+            handleSaveMetadata();
+          }
+        }}
+        secondaryAction={{
+          label: "Cancel",
+          onClick: () => setShowSaveMetadataConfirm(false)
+        }}
+      />
     </section>
   );
 }
@@ -693,6 +772,8 @@ function RetestEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
   const hasFailed = assessment.description === "Generation failed.";
 
@@ -727,11 +808,11 @@ function RetestEditor({
   return (
     <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] relative overflow-hidden">
       {assessment.isGenerating && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
           <SparklesIcon className="h-12 w-12 text-[#29A177] animate-pulse mb-4" />
           <h3 className="text-lg font-bold text-zinc-700">Generating Retest Questions...</h3>
           <p className="text-sm text-zinc-500 mt-2 max-w-sm text-center">
-            Our AI is analyzing the student's history to create a targeted retest. This may take a minute or two. You can refresh to check again.
+            Our AI is analyzing the student's history to create a targeted retest. This runs in the background and is safe to leave. You can refresh the page later to see if it's done.
           </p>
         </div>
       )}
@@ -741,7 +822,7 @@ function RetestEditor({
           <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Retest Editor</h2>
           <div className="flex gap-2">
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={isDeleting || isSaving}
               className="flex items-center gap-2 rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
             >
@@ -759,7 +840,7 @@ function RetestEditor({
               </button>
             ) : (
               <button
-                onClick={handleSave}
+                onClick={() => setShowSaveConfirm(true)}
                 disabled={isSaving || isDeleting}
                 className="flex items-center gap-2 rounded bg-[#29A177] px-4 py-1 text-xs font-semibold text-white transition hover:bg-[#20825f] disabled:opacity-50"
               >
@@ -946,6 +1027,43 @@ function RetestEditor({
           )}
         </div>
       </div>
+
+      <AlertModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Retest"
+        description="Are you sure you want to delete this targeted retest? This action cannot be undone."
+        primaryAction={{
+          label: "Delete",
+          variant: "danger",
+          onClick: () => {
+            setShowDeleteConfirm(false);
+            handleDelete();
+          }
+        }}
+        secondaryAction={{
+          label: "Cancel",
+          onClick: () => setShowDeleteConfirm(false)
+        }}
+      />
+
+      <AlertModal
+        isOpen={showSaveConfirm}
+        onClose={() => setShowSaveConfirm(false)}
+        title="Approve Retest"
+        description="Are you sure you want to save and approve these retest questions? Once approved, the student will be able to take this test."
+        primaryAction={{
+          label: "Approve",
+          onClick: () => {
+            setShowSaveConfirm(false);
+            handleSave();
+          }
+        }}
+        secondaryAction={{
+          label: "Cancel",
+          onClick: () => setShowSaveConfirm(false)
+        }}
+      />
     </div>
   );
 }

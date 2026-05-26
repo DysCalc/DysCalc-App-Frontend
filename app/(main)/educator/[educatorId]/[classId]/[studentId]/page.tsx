@@ -255,16 +255,6 @@ export default function StudentDetailPage() {
               Performance
             </button>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button className="flex h-10 w-10 items-center justify-center rounded-md text-[#7A7A7A] transition hover:bg-[#F1F1F1]">
-              <EnvelopeIcon className="h-5 w-5" />
-            </button>
-
-            <button className="flex h-10 w-10 items-center justify-center rounded-md text-[#7A7A7A] transition hover:bg-[#F1F1F1]">
-              <EllipsisVerticalIcon className="h-5 w-5" />
-            </button>
-          </div>
         </div>
       </div>
 

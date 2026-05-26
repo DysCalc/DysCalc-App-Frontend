@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SparklesIcon, CheckCircleIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { useSearchParams, useRouter } from "next/navigation";
 import type { UnifiedAssessment } from "@/hooks/use-test";
 import { createLearningPathAPI, type LearningModuleResponse } from "@/hooks/use-learning-path";
 import { toast } from "sonner";
+import AlertModal from "@/components/shared/AlertModal";
 
 // removed global generatingTests set
 
@@ -18,12 +20,27 @@ type Props = {
 };
 
 export default function LearningPath({ student, classId, studentId, assessments = [] }: Props) {
-  const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(
-    assessments.length > 0 ? assessments[0].id : null
-  );
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const assessmentIdFromUrl = searchParams.get("assessmentId");
+
+  const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(() => {
+    if (assessmentIdFromUrl && assessments.some(a => a.id === assessmentIdFromUrl)) {
+      return assessmentIdFromUrl;
+    }
+    return assessments.length > 0 ? assessments[0].id : null;
+  });
+
+  // Also update if URL changes after mount
+  useEffect(() => {
+    if (assessmentIdFromUrl && assessments.some(a => a.id === assessmentIdFromUrl)) {
+      setActiveAssessmentId(assessmentIdFromUrl);
+    }
+  }, [assessmentIdFromUrl, assessments]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
   // Local state for the module to support instant UI updates and editing
   const [localModules, setLocalModules] = useState<Record<string, LearningModuleResponse | null>>({});
@@ -142,6 +159,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
                     onClick={() => {
                       setActiveAssessmentId(assessment.id);
                       setIsEditing(false);
+                      router.replace(window.location.pathname, { scroll: false });
                     }}
                     className={`flex flex-col items-start rounded-md border p-3 text-left transition-all ${isActive
                       ? "border-[#29A177] bg-[#ECF9F4]"
@@ -176,7 +194,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
             )}
             {currentModule && isEditing && (
               <button
-                onClick={handleSaveEdits}
+                onClick={() => setShowSaveConfirm(true)}
                 disabled={isSaving}
                 className="flex items-center gap-2 rounded bg-[#29A177] px-4 py-1 text-xs font-semibold text-white transition hover:bg-[#20825f] disabled:opacity-50"
               >
@@ -185,12 +203,22 @@ export default function LearningPath({ student, classId, studentId, assessments 
             )}
           </div>
 
-          <div className="flex flex-col p-6 h-full">
+          <div className="flex flex-col p-6 h-full relative">
+            {isGeneratingDb && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#F9F9F9]/90 backdrop-blur-sm">
+                <SparklesIcon className="h-12 w-12 text-[#29A177] animate-pulse mb-4" />
+                <h3 className="text-lg font-bold text-zinc-700">Generating Learning Path...</h3>
+                <p className="text-sm text-zinc-500 mt-2 max-w-sm text-center">
+                  Our AI is analyzing the classification report to create a personalized learning module. This runs in the background and is safe to leave. You can refresh the page later to see if it's done.
+                </p>
+              </div>
+            )}
+
             {!activeAssessment ? (
               <div className="flex h-full items-center justify-center text-zinc-500">
                 Select a test to view the learning path.
               </div>
-            ) : !currentModule ? (
+            ) : !currentModule && !isGeneratingDb ? (
               <div className="flex h-full flex-col items-center justify-center text-center gap-4">
                 <p className="text-zinc-500">No learning path generated for this assessment yet.</p>
                 {hasClassificationData ? (
@@ -208,7 +236,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
                   </p>
                 )}
               </div>
-            ) : (
+            ) : currentModule ? (
               <div className="flex flex-col gap-6 pb-10">
                 {/* Overall Summary & Status */}
                 <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -321,10 +349,28 @@ export default function LearningPath({ student, classId, studentId, assessments 
                   </div>
                 )}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
+
+      <AlertModal
+        isOpen={showSaveConfirm}
+        onClose={() => setShowSaveConfirm(false)}
+        title="Save Learning Path"
+        description="Are you sure you want to save these changes to the personalized learning path?"
+        primaryAction={{
+          label: "Save Edits",
+          onClick: () => {
+            setShowSaveConfirm(false);
+            handleSaveEdits();
+          }
+        }}
+        secondaryAction={{
+          label: "Cancel",
+          onClick: () => setShowSaveConfirm(false)
+        }}
+      />
     </section>
   );
 }
