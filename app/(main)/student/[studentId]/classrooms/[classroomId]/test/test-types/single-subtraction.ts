@@ -10,9 +10,9 @@ export function buildSingleSubtractionQuestions(
 ): Question[] {
   return tests
     .map((test) => {
-        if (test.correct == null) return null; 
-        if (!Number.isFinite(test.correct)) return null;
-      
+      if (test.correct == null) return null;
+      if (!Number.isFinite(test.correct)) return null;
+
       return {
         id: test.id,
         prompt,

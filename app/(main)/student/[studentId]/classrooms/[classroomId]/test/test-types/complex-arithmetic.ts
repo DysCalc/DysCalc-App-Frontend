@@ -14,18 +14,18 @@ export function buildComplexArithmeticChoices(correct: number, seedKey?: string)
     }
     return Math.abs(hash);
   };
-  
-  const randomVal1 = seedKey ? 
-    (Math.sin(hashString(seedKey)) * 10000 - Math.floor(Math.sin(hashString(seedKey)) * 10000)) : 
+
+  const randomVal1 = seedKey ?
+    (Math.sin(hashString(seedKey)) * 10000 - Math.floor(Math.sin(hashString(seedKey)) * 10000)) :
     Math.random();
 
-  const randomVal2 = seedKey ? 
-    (Math.sin(hashString(seedKey + "_step")) * 10000 - Math.floor(Math.sin(hashString(seedKey + "_step")) * 10000)) : 
+  const randomVal2 = seedKey ?
+    (Math.sin(hashString(seedKey + "_step")) * 10000 - Math.floor(Math.sin(hashString(seedKey + "_step")) * 10000)) :
     Math.random();
 
   const offsetIndex = Math.floor(randomVal1 * 2) + 1; // 1 or 2
   const step = Math.floor(randomVal2 * 5) + 1; // 1 to 5
-  
+
   let choices = [
     correct - (step * offsetIndex),
     correct - (step * (offsetIndex - 1)),

@@ -552,35 +552,32 @@ export default function StudentAssessmentPage() {
                 return (
                   <div
                     key={topic.id}
-                    className={`group flex min-h-[260px] flex-col border px-7 py-5 text-left transition-all duration-300 ${
-                      isCompleted
+                    className={`group flex min-h-[260px] flex-col border px-7 py-5 text-left transition-all duration-300 ${isCompleted
                         ? "border-[#29A177] bg-[#ECF9F4] text-[#29A177]"
                         : isUnlocked
-                        ? "border-[#E7E7E7] bg-white text-[#5C5E64] hover:border-[#B5B5B5]"
-                        : "border-[#E7E7E7] bg-[#F7F7F7] text-[#B8B8B8]"
-                    }`}
+                          ? "border-[#E7E7E7] bg-white text-[#5C5E64] hover:border-[#B5B5B5]"
+                          : "border-[#E7E7E7] bg-[#F7F7F7] text-[#B8B8B8]"
+                      }`}
                   >
                     <div className="flex shrink-0 items-center justify-between gap-4">
                       <p
-                        className={`text-sm font-bold uppercase leading-none tracking-[0.25em] ${
-                          isCompleted
+                        className={`text-sm font-bold uppercase leading-none tracking-[0.25em] ${isCompleted
                             ? "text-[#29A177]/70"
                             : isUnlocked
-                            ? "text-[#9A9A9A]"
-                            : "text-[#C7C7C7]"
-                        }`}
+                              ? "text-[#9A9A9A]"
+                              : "text-[#C7C7C7]"
+                          }`}
                       >
                         {topic.subtitle}
                       </p>
 
                       <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                          isCompleted
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isCompleted
                             ? "bg-[#DFF5EC] text-[#29A177]"
                             : isUnlocked
-                            ? "bg-[#ECF9F4] text-[#29A177]"
-                            : "bg-[#ECECEC] text-[#B8B8B8]"
-                        }`}
+                              ? "bg-[#ECF9F4] text-[#29A177]"
+                              : "bg-[#ECECEC] text-[#B8B8B8]"
+                          }`}
                       >
                         {isCompleted ? (
                           <CheckCircle size={22} />
@@ -595,21 +592,19 @@ export default function StudentAssessmentPage() {
                     <div className="mt-3 flex flex-1 flex-col justify-between">
                       <div>
                         <h2
-                          className={`font-extrabold leading-none ${
-                            hasLongTitle ? "text-2xl" : "text-3xl"
-                          }`}
+                          className={`font-extrabold leading-none ${hasLongTitle ? "text-2xl" : "text-3xl"
+                            }`}
                         >
                           {topic.title}
                         </h2>
 
                         <p
-                          className={`mt-2 text-sm font-light leading-5 ${
-                            isCompleted
+                          className={`mt-2 text-sm font-light leading-5 ${isCompleted
                               ? "text-[#5C5E64]"
                               : isUnlocked
-                              ? "text-[#777]"
-                              : "text-[#B8B8B8]"
-                          }`}
+                                ? "text-[#777]"
+                                : "text-[#B8B8B8]"
+                            }`}
                         >
                           {topic.description}
                         </p>
@@ -628,19 +623,18 @@ export default function StudentAssessmentPage() {
                         type="button"
                         onClick={() => handleSelectTopic(topic.id, index)}
                         disabled={!isUnlocked && !isCompleted}
-                        className={`mt-6 flex h-11 w-full items-center justify-center rounded-md text-base font-bold leading-none transition-all duration-300 active:scale-[0.98] ${
-                          isCompleted
+                        className={`mt-6 flex h-11 w-full items-center justify-center rounded-md text-base font-bold leading-none transition-all duration-300 active:scale-[0.98] ${isCompleted
                             ? "bg-[#29A177] text-white hover:bg-[#17815C]"
                             : isUnlocked
-                            ? "bg-[#29A177] text-white hover:bg-[#FFCC00]"
-                            : "cursor-not-allowed bg-[#E7E7E7] text-[#B8B8B8]"
-                        }`}
+                              ? "bg-[#29A177] text-white hover:bg-[#FFCC00]"
+                              : "cursor-not-allowed bg-[#E7E7E7] text-[#B8B8B8]"
+                          }`}
                       >
                         {isCompleted
                           ? "Review Topic"
                           : isUnlocked
-                          ? "Start Topic"
-                          : "Locked"}
+                            ? "Start Topic"
+                            : "Locked"}
                       </button>
                     </div>
                   </div>
@@ -747,11 +741,10 @@ export default function StudentAssessmentPage() {
                     </div>
 
                     <div
-                      className={`rounded-full px-4 py-1 text-sm font-bold ${
-                        selectedAnswer
+                      className={`rounded-full px-4 py-1 text-sm font-bold ${selectedAnswer
                           ? "bg-[#DFF5EC] text-[#29A177]"
                           : "bg-[#F2F2F2] text-[#AAAAAA]"
-                      }`}
+                        }`}
                     >
                       {selectedAnswer ? "Answered" : "Not answered"}
                     </div>
@@ -833,15 +826,13 @@ export default function StudentAssessmentPage() {
                           key={`${currentQuestion.id}-${choice}-${choiceIndex}`}
                           type="button"
                           onClick={() => handleSelectAnswer(choice)}
-                          className={`flex h-20 items-center justify-center rounded-2xl border text-4xl font-bold transition-colors duration-300 ${
-                            isOneLineChoiceQuestion(currentQuestion.type)
+                          className={`flex h-20 items-center justify-center rounded-2xl border text-4xl font-bold transition-colors duration-300 ${isOneLineChoiceQuestion(currentQuestion.type)
                               ? "min-w-[150px] px-8"
                               : ""
-                          } ${
-                            isSelected
+                            } ${isSelected
                               ? "border-[#29A177] bg-[#DFF5EC] text-[#29A177]"
                               : "border-[#E5E5E5] bg-white text-[#777] hover:border-[#29A177] hover:bg-[#DFF5EC] hover:text-[#29A177]"
-                          }`}
+                            }`}
                         >
                           {choice}
                         </button>
@@ -876,10 +867,9 @@ export default function StudentAssessmentPage() {
                     className={`
                       relative flex h-4 w-4 items-center justify-center rounded-full
                       transition-all duration-300 ease-out
-                      ${
-                        isCurrent
-                          ? "scale-110 bg-[#29A177] shadow-[0_0_0_4px_rgba(41,161,119,0.16)]"
-                          : isAnswered
+                      ${isCurrent
+                        ? "scale-110 bg-[#29A177] shadow-[0_0_0_4px_rgba(41,161,119,0.16)]"
+                        : isAnswered
                           ? "bg-[#FFCC00] shadow-[0_4px_10px_rgba(255,204,0,0.25)]"
                           : "bg-[#D9D9D9]"
                       }
@@ -891,10 +881,9 @@ export default function StudentAssessmentPage() {
                       strokeWidth={3}
                       className={`
                         text-white transition-all duration-300 ease-out
-                        ${
-                          isAnswered
-                            ? "scale-100 opacity-100"
-                            : "scale-0 opacity-0"
+                        ${isAnswered
+                          ? "scale-100 opacity-100"
+                          : "scale-0 opacity-0"
                         }
                       `}
                     />

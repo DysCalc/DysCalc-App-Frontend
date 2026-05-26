@@ -189,7 +189,7 @@ export default function ClassroomLearningPathPage() {
                   >
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#C5C5C5]">
-                        {test.isInitial ? "Initial Assessment" : "Custom Assessment"}
+                        {test.isInitial ? "Initial Assessment" : "Retest Assessment"}
                       </p>
                       <h3 className="mt-3 text-2xl font-extrabold text-[#7A7A7A] transition group-hover:text-[#2F855A]">
                         {test.title}

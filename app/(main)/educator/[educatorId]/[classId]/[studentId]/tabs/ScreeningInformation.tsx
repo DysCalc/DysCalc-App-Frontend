@@ -89,6 +89,11 @@ export default function ScreeningInformation({
     questionsList: any[]
   } | null>(null);
 
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
+  const [isSavingMetadata, setIsSavingMetadata] = useState(false);
+
   const studentName = student?.name ?? "Student";
   const activeAssessment = assessments.find((a) => a.id === activeAssessmentId);
   const results = activeAssessment?.results || {};
@@ -254,6 +259,32 @@ export default function ScreeningInformation({
     }
   };
 
+  const startEditingMetadata = () => {
+    if (!activeAssessment) return;
+    setEditedTitle(activeAssessment.title || "");
+    setEditedDescription(activeAssessment.description || "");
+    setIsEditingMetadata(true);
+  };
+
+  const handleSaveMetadata = async () => {
+    if (!activeAssessment) return;
+    setIsSavingMetadata(true);
+    const retestAPI = createRetestAPI();
+    const res = await retestAPI.updateAssessmentQuestions(activeAssessment.id, {
+      title: editedTitle,
+      description: editedDescription,
+    });
+
+    if (res.success) {
+      toast.success("Metadata updated successfully!");
+      setIsEditingMetadata(false);
+      window.location.reload();
+    } else {
+      toast.error("Failed to update: " + res.error);
+    }
+    setIsSavingMetadata(false);
+  };
+
   const handleDownloadPDF = async () => {
     if (!activeAssessment) return;
 
@@ -376,7 +407,61 @@ export default function ScreeningInformation({
               <div className="flex flex-col p-6 gap-4">
                 {activeAssessment ? (
                   <>
-                    <p className="text-xl font-extrabold text-[#5C5E64]">{activeAssessment.title}</p>
+                    {!isEditingMetadata ? (
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-xl font-extrabold text-[#5C5E64]">{activeAssessment.title}</p>
+                          {activeAssessment.description && (
+                            <p className="text-sm text-zinc-500 mt-1">{activeAssessment.description}</p>
+                          )}
+                        </div>
+                        {!activeAssessment.isInitial && (
+                          <button
+                            onClick={startEditingMetadata}
+                            className="text-xs font-semibold text-[#29A177] hover:text-[#20825f] underline underline-offset-2"
+                          >
+                            Edit Details
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-3 rounded-lg border border-[#29A177] p-4 bg-white shadow-sm">
+                        <div>
+                          <label className="text-xs font-bold text-zinc-600 uppercase tracking-wide">Retest Title</label>
+                          <input
+                            type="text"
+                            value={editedTitle}
+                            onChange={(e) => setEditedTitle(e.target.value)}
+                            className="mt-1 w-full rounded border border-zinc-300 p-2 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-zinc-600 uppercase tracking-wide">Description</label>
+                          <textarea
+                            value={editedDescription}
+                            onChange={(e) => setEditedDescription(e.target.value)}
+                            className="mt-1 w-full rounded border border-zinc-300 p-2 text-sm text-zinc-900 focus:border-[#29A177] focus:outline-none"
+                            rows={2}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2 mt-2">
+                          <button
+                            onClick={() => setIsEditingMetadata(false)}
+                            disabled={isSavingMetadata}
+                            className="rounded px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 transition"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveMetadata}
+                            disabled={isSavingMetadata}
+                            className="rounded bg-[#29A177] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#20825f] disabled:opacity-50 transition flex items-center gap-2"
+                          >
+                            {isSavingMetadata ? "Saving..." : "Save Changes"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div className="space-y-3 mt-4">
                       {TEST_FIELDS.map((field) => {
                         const data = extractScoreOrCount(results[field.key], field.key);
@@ -721,141 +806,141 @@ function RetestEditor({
             </p>
 
             {TEST_FIELDS.map((field) => {
-          const fieldData = editedQuestions[field.key];
-          const tests = Array.isArray(fieldData) ? fieldData : (fieldData?.tests || []);
-          const rationale = fieldData?.rationale;
+              const fieldData = editedQuestions[field.key];
+              const tests = Array.isArray(fieldData) ? fieldData : (fieldData?.tests || []);
+              const rationale = fieldData?.rationale;
 
-          return (
-            <div key={field.key} className="border border-zinc-200 bg-white rounded-lg p-4 shadow-sm">
-              <h3 className="text-md font-bold text-zinc-800 mb-2">{field.label}</h3>
-              {rationale && (
-                <p className="text-sm text-amber-700 bg-amber-50 p-2 rounded mb-4">
-                  <strong>Rationale:</strong> {rationale}
-                </p>
-              )}
+              return (
+                <div key={field.key} className="border border-zinc-200 bg-white rounded-lg p-4 shadow-sm">
+                  <h3 className="text-md font-bold text-zinc-800 mb-2">{field.label}</h3>
+                  {rationale && (
+                    <p className="text-sm text-amber-700 bg-amber-50 p-2 rounded mb-4">
+                      <strong>Rationale:</strong> {rationale}
+                    </p>
+                  )}
 
-              <div className="space-y-2">
-                {tests.map((testItem: any, index: number) => {
-                  const qValue = testItem.question || testItem.display || testItem.sequence || testItem.prompt || "";
-                  const aValue = testItem.correct !== undefined ? testItem.correct
-                    : testItem.correctAnswer !== undefined ? testItem.correctAnswer
-                      : testItem.expected_answer !== undefined ? testItem.expected_answer
-                        : testItem.match !== undefined ? String(testItem.match)
-                          : "";
+                  <div className="space-y-2">
+                    {tests.map((testItem: any, index: number) => {
+                      const qValue = testItem.question || testItem.display || testItem.sequence || testItem.prompt || "";
+                      const aValue = testItem.correct !== undefined ? testItem.correct
+                        : testItem.correctAnswer !== undefined ? testItem.correctAnswer
+                          : testItem.expected_answer !== undefined ? testItem.expected_answer
+                            : testItem.match !== undefined ? String(testItem.match)
+                              : "";
 
-                  const handleQuestionChange = (newQValue: string) => {
-                    const newTests = [...tests];
-                    if (testItem.display !== undefined) newTests[index] = { ...testItem, display: newQValue };
-                    else if (testItem.sequence !== undefined) newTests[index] = { ...testItem, sequence: newQValue };
-                    else if (testItem.prompt !== undefined) newTests[index] = { ...testItem, prompt: newQValue };
-                    else newTests[index] = { ...testItem, question: newQValue };
-                    handleFieldChange(field.key, newTests);
-                  };
+                      const handleQuestionChange = (newQValue: string) => {
+                        const newTests = [...tests];
+                        if (testItem.display !== undefined) newTests[index] = { ...testItem, display: newQValue };
+                        else if (testItem.sequence !== undefined) newTests[index] = { ...testItem, sequence: newQValue };
+                        else if (testItem.prompt !== undefined) newTests[index] = { ...testItem, prompt: newQValue };
+                        else newTests[index] = { ...testItem, question: newQValue };
+                        handleFieldChange(field.key, newTests);
+                      };
 
-                  let questionEditor;
-                  if (field.key === "dot_matching" || field.key === "number_comparison") {
-                    const parts = qValue.split("vs").map((s: string) => s.trim());
-                    questionEditor = (
-                      <div className="flex-1 flex items-center gap-2">
-                        <input type="text" value={parts[0] || ""} onChange={e => handleQuestionChange(`${e.target.value} vs ${parts[1] || ""}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
-                        <span className="text-zinc-500 font-medium text-sm">vs</span>
-                        <input type="text" value={parts[1] || ""} onChange={e => handleQuestionChange(`${parts[0] || ""} vs ${e.target.value}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
-                      </div>
-                    );
-                  } else if (field.key === "number_series") {
-                    const allParts = qValue.split(",").map((s: string) => s.trim());
-                    // Disregard the last element since it is always the blank '_'
-                    const editableParts = allParts.length > 1 ? allParts.slice(0, -1) : allParts;
-
-                    questionEditor = (
-                      <div className="flex-1 flex items-center gap-1 flex-wrap">
-                        {editableParts.map((p: string, pIdx: number) => (
-                          <div key={pIdx} className="flex items-center gap-1">
-                            <input type="text" value={p} onChange={e => {
-                              const newParts = [...editableParts];
-                              newParts[pIdx] = e.target.value;
-                              handleQuestionChange([...newParts, "_"].join(", "));
-                            }} className="w-12 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
-                            <span className="text-zinc-500 font-bold text-lg">,</span>
+                      let questionEditor;
+                      if (field.key === "dot_matching" || field.key === "number_comparison") {
+                        const parts = qValue.split("vs").map((s: string) => s.trim());
+                        questionEditor = (
+                          <div className="flex-1 flex items-center gap-2">
+                            <input type="text" value={parts[0] || ""} onChange={e => handleQuestionChange(`${e.target.value} vs ${parts[1] || ""}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                            <span className="text-zinc-500 font-medium text-sm">vs</span>
+                            <input type="text" value={parts[1] || ""} onChange={e => handleQuestionChange(`${parts[0] || ""} vs ${e.target.value}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
                           </div>
-                        ))}
-                        <span className="text-zinc-500 font-bold px-2">_</span>
-                      </div>
-                    );
-                  } else if (field.key === "single_addition" || field.key === "single_subtraction" || field.key === "complex_arithmetic") {
-                    const operator = qValue.includes("+") ? "+" : qValue.includes("-") ? "-" : "";
-                    if (operator) {
-                      const parts = qValue.split(operator).map((s: string) => s.trim());
-                      questionEditor = (
-                        <div className="flex-1 flex items-center gap-2">
-                          <input type="text" value={parts[0] || ""} onChange={e => handleQuestionChange(`${e.target.value} ${operator} ${parts[1] || ""}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
-                          <span className="text-zinc-500 font-bold text-lg">{operator}</span>
-                          <input type="text" value={parts[1] || ""} onChange={e => handleQuestionChange(`${parts[0] || ""} ${operator} ${e.target.value}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                        );
+                      } else if (field.key === "number_series") {
+                        const allParts = qValue.split(",").map((s: string) => s.trim());
+                        // Disregard the last element since it is always the blank '_'
+                        const editableParts = allParts.length > 1 ? allParts.slice(0, -1) : allParts;
+
+                        questionEditor = (
+                          <div className="flex-1 flex items-center gap-1 flex-wrap">
+                            {editableParts.map((p: string, pIdx: number) => (
+                              <div key={pIdx} className="flex items-center gap-1">
+                                <input type="text" value={p} onChange={e => {
+                                  const newParts = [...editableParts];
+                                  newParts[pIdx] = e.target.value;
+                                  handleQuestionChange([...newParts, "_"].join(", "));
+                                }} className="w-12 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                                <span className="text-zinc-500 font-bold text-lg">,</span>
+                              </div>
+                            ))}
+                            <span className="text-zinc-500 font-bold px-2">_</span>
+                          </div>
+                        );
+                      } else if (field.key === "single_addition" || field.key === "single_subtraction" || field.key === "complex_arithmetic") {
+                        const operator = qValue.includes("+") ? "+" : qValue.includes("-") ? "-" : "";
+                        if (operator) {
+                          const parts = qValue.split(operator).map((s: string) => s.trim());
+                          questionEditor = (
+                            <div className="flex-1 flex items-center gap-2">
+                              <input type="text" value={parts[0] || ""} onChange={e => handleQuestionChange(`${e.target.value} ${operator} ${parts[1] || ""}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                              <span className="text-zinc-500 font-bold text-lg">{operator}</span>
+                              <input type="text" value={parts[1] || ""} onChange={e => handleQuestionChange(`${parts[0] || ""} ${operator} ${e.target.value}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                            </div>
+                          );
+                        } else {
+                          questionEditor = <input type="text" className="flex-1 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" value={qValue} onChange={e => handleQuestionChange(e.target.value)} placeholder="Question" />;
+                        }
+                      } else {
+                        questionEditor = <input type="text" className="flex-1 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" value={qValue} onChange={e => handleQuestionChange(e.target.value)} placeholder="Question" />;
+                      }
+
+                      let answerEditor;
+                      if (testItem.match !== undefined || field.key === "dot_matching") {
+                        answerEditor = (
+                          <select
+                            className="w-32 rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none bg-white cursor-pointer"
+                            value={String(aValue)}
+                            onChange={(e) => {
+                              const newTests = [...tests];
+                              newTests[index] = { ...testItem, match: e.target.value === "true" };
+                              handleFieldChange(field.key, newTests);
+                            }}
+                          >
+                            <option value="" disabled>Select...</option>
+                            <option value="true">True</option>
+                            <option value="false">False</option>
+                          </select>
+                        );
+                      } else {
+                        answerEditor = (
+                          <input
+                            type="text"
+                            className="w-32 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300"
+                            value={aValue}
+                            onChange={(e) => {
+                              const newTests = [...tests];
+                              const val = e.target.value;
+                              const numVal = isNaN(Number(val)) || val === "" ? val : Number(val);
+
+                              if (testItem.correctAnswer !== undefined) {
+                                newTests[index] = { ...testItem, correctAnswer: numVal };
+                              } else if (testItem.expected_answer !== undefined) {
+                                newTests[index] = { ...testItem, expected_answer: numVal };
+                              } else {
+                                newTests[index] = { ...testItem, correct: numVal };
+                              }
+
+                              handleFieldChange(field.key, newTests);
+                            }}
+                            placeholder="Answer"
+                          />
+                        );
+                      }
+
+                      return (
+                        <div key={testItem.id || index} className="flex gap-3 items-center">
+                          <span className="text-xs font-medium text-zinc-400 w-6">{index + 1}.</span>
+                          {questionEditor}
+                          {answerEditor}
                         </div>
                       );
-                    } else {
-                      questionEditor = <input type="text" className="flex-1 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" value={qValue} onChange={e => handleQuestionChange(e.target.value)} placeholder="Question" />;
-                    }
-                  } else {
-                    questionEditor = <input type="text" className="flex-1 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" value={qValue} onChange={e => handleQuestionChange(e.target.value)} placeholder="Question" />;
-                  }
-
-                  let answerEditor;
-                  if (testItem.match !== undefined || field.key === "dot_matching") {
-                    answerEditor = (
-                      <select
-                        className="w-32 rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none bg-white cursor-pointer"
-                        value={String(aValue)}
-                        onChange={(e) => {
-                          const newTests = [...tests];
-                          newTests[index] = { ...testItem, match: e.target.value === "true" };
-                          handleFieldChange(field.key, newTests);
-                        }}
-                      >
-                        <option value="" disabled>Select...</option>
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                      </select>
-                    );
-                  } else {
-                    answerEditor = (
-                      <input
-                        type="text"
-                        className="w-32 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300"
-                        value={aValue}
-                        onChange={(e) => {
-                          const newTests = [...tests];
-                          const val = e.target.value;
-                          const numVal = isNaN(Number(val)) || val === "" ? val : Number(val);
-
-                          if (testItem.correctAnswer !== undefined) {
-                            newTests[index] = { ...testItem, correctAnswer: numVal };
-                          } else if (testItem.expected_answer !== undefined) {
-                            newTests[index] = { ...testItem, expected_answer: numVal };
-                          } else {
-                            newTests[index] = { ...testItem, correct: numVal };
-                          }
-
-                          handleFieldChange(field.key, newTests);
-                        }}
-                        placeholder="Answer"
-                      />
-                    );
-                  }
-
-                  return (
-                    <div key={testItem.id || index} className="flex gap-3 items-center">
-                      <span className="text-xs font-medium text-zinc-400 w-6">{index + 1}.</span>
-                      {questionEditor}
-                      {answerEditor}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-        </>
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </>
         )}
       </div>
     </div>

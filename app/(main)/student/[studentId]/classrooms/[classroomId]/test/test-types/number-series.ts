@@ -51,7 +51,7 @@ export function buildNumberSeriesQuestions(
       return {
         id: test.id,
         prompt,
-        display: test.sequence ?? "",
+        display: test.sequence ?? test.question ?? "",
         correctAnswer: String(test.correct),
         choices: buildNumberSeriesChoices(test.correct as number, test.id),
       };

@@ -95,43 +95,11 @@ export async function POST(request: Request) {
 
       classificationData = await response.json();
     } catch (error) {
-      console.warn("Model API unavailable, falling back to mock data", error);
-      // Mocked output as requested in the example
-      classificationData = {
-        confidence: 0.9642857142857143,
-        decision_path: [["NC", 1508.9295343137246, ">"]],
-        decision_path_readable: "NC > 1508.9295",
-        domain_severity_scores: {
-          "Addition vs. Subtraction Asymmetry": 0.06699292094681254,
-          "Basic vs. Complex Arithmetic Contrast": 0.15652395203395456,
-          "Digit-Dot Matching": 0.0,
-          "Multi-Digit Addition and Subtraction": 0.0,
-          "Number Comparison": 0.03614864514513576,
-          "Number Series": 0.0,
-          "Overall Arithmetic Fluency": 0.2553815450184989,
-          "Overall Processing Efficiency": 0.175167350024406,
-          "Processing-Fluency Integration": 0.19878161876668884,
-          "Single-Digit Addition": 0.0,
-          "Single-Digit Subtraction": 0.0,
-          "Symbolic vs. Non-Symbolic Processing Difference": 0.11100396806450342,
-        },
-        leaf_distribution: { "1": 26 },
-        predicted_class: "1",
-        task_importance_scores: {
-          ADD: 0.0,
-          AF: 0.24312220312171876,
-          AS: 0.06377699114072007,
-          BC: 0.14901017243456938,
-          CA: 0.0,
-          DM: 0.0,
-          NC: 0.08241738902004887,
-          NP: 0.16675861229456496,
-          NS: 0.0,
-          PF: 0.18923930110595213,
-          SN: 0.10567533088242577,
-          SUB: 0.0,
-        },
-      };
+      console.error("Model API unavailable:", error);
+      return NextResponse.json(
+        { success: false, error: "Model API unavailable. Please ensure the backend is running." },
+        { status: 503 }
+      );
     }
 
     // predicted_class: "1" for AT-RISK, "0" for TYPICAL
