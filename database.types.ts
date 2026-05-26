@@ -130,6 +130,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "educator_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "student_details"
+            referencedColumns: ["id"]
+          },
         ]
       }
       learning_modules: {
@@ -257,6 +264,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "students_id_fkey"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "student_details"
+            referencedColumns: ["id"]
+          },
         ]
       }
       test_results: {
@@ -317,6 +331,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "initial_test_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_details"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -338,7 +359,26 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "educator_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "student_details"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      student_details: {
+        Row: {
+          avatar_url: string | null
+          date_of_birth: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          nickname: string | null
+          sex: Database["public"]["Enums"]["SEX"] | null
+        }
+        Relationships: []
       }
     }
     Functions: {
