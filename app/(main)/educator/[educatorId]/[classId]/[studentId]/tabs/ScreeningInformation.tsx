@@ -725,223 +725,226 @@ function RetestEditor({
   };
 
   return (
-    <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto relative">
+    <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] relative overflow-hidden">
       {assessment.isGenerating && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
           <SparklesIcon className="h-12 w-12 text-[#29A177] animate-pulse mb-4" />
           <h3 className="text-lg font-bold text-zinc-700">Generating Retest Questions...</h3>
           <p className="text-sm text-zinc-500 mt-2 max-w-sm text-center">
-            Our AI is analyzing the student's history to create a targeted retest. This may take a minute or two.
+            Our AI is analyzing the student's history to create a targeted retest. This may take a minute or two. You can refresh to check again.
           </p>
         </div>
       )}
-      <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Retest Editor</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting || isSaving}
-            className="flex items-center gap-2 rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-          >
-            <TrashIcon className="h-4 w-4" />
-            {isDeleting ? "Deleting..." : "Delete"}
-          </button>
-          {hasFailed ? (
-            <button
-              onClick={handleRegenerate}
-              disabled={isDeleting || isRegenerating}
-              className="flex items-center gap-2 rounded bg-blue-600 px-4 py-1 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
-            >
-              <SparklesIcon className="h-4 w-4" />
-              {isRegenerating ? "Regenerating..." : "Regenerate Retest"}
-            </button>
-          ) : (
-            <button
-              onClick={handleSave}
-              disabled={isSaving || isDeleting}
-              className="flex items-center gap-2 rounded bg-[#29A177] px-4 py-1 text-xs font-semibold text-white transition hover:bg-[#20825f] disabled:opacity-50"
-            >
-              <CheckIcon className="h-4 w-4" />
-              {isSaving ? "Approving..." : "Save & Approve Retest"}
-            </button>
-          )}
-        </div>
-      </div>
 
-      <div className="flex flex-col p-6 h-full space-y-6">
-        {hasFailed ? (
-          <div className="flex flex-col items-center justify-center h-full text-center p-8 text-zinc-500">
-            <SparklesIcon className="h-12 w-12 text-zinc-300 mb-4" />
-            <h3 className="text-xl font-bold text-zinc-700">Generation Failed</h3>
-            <p className="mt-2 text-sm max-w-sm">
-              We encountered an issue while generating the questions for this retest. Please try regenerating it.
-            </p>
+      <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Retest Editor</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting || isSaving}
+              className="flex items-center gap-2 rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+            >
+              <TrashIcon className="h-4 w-4" />
+              {isDeleting ? "Deleting..." : "Delete"}
+            </button>
+            {hasFailed ? (
+              <button
+                onClick={handleRegenerate}
+                disabled={isDeleting || isRegenerating}
+                className="flex items-center gap-2 rounded bg-blue-600 px-4 py-1 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+              >
+                <SparklesIcon className="h-4 w-4" />
+                {isRegenerating ? "Regenerating..." : "Regenerate Retest"}
+              </button>
+            ) : (
+              <button
+                onClick={handleSave}
+                disabled={isSaving || isDeleting}
+                className="flex items-center gap-2 rounded bg-[#29A177] px-4 py-1 text-xs font-semibold text-white transition hover:bg-[#20825f] disabled:opacity-50"
+              >
+                <CheckIcon className="h-4 w-4" />
+                {isSaving ? "Approving..." : "Save & Approve Retest"}
+              </button>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-4 mb-4">
-              <label className="block">
-                <span className="text-sm font-bold text-zinc-600">Retest Title</span>
-                <input
-                  type="text"
-                  className="mt-1 w-full rounded-md border border-zinc-300 p-2 text-sm text-zinc-700 font-bold"
-                  value={editedTitle}
-                  onChange={(e) => setEditedTitle(e.target.value)}
-                />
-              </label>
-              <label className="block">
-                <span className="text-sm font-bold text-zinc-600">Description / Rationale</span>
-                <textarea
-                  className="mt-1 w-full rounded-md border border-zinc-300 p-2 text-sm text-zinc-700"
-                  rows={2}
-                  value={editedDescription}
-                  onChange={(e) => setEditedDescription(e.target.value)}
-                />
-              </label>
+        </div>
+
+        <div className="flex flex-col p-6 h-full space-y-6">
+          {hasFailed ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-8 text-zinc-500">
+              <SparklesIcon className="h-12 w-12 text-zinc-300 mb-4" />
+              <h3 className="text-xl font-bold text-zinc-700">Generation Failed</h3>
+              <p className="mt-2 text-sm max-w-sm">
+                We encountered an issue while generating the questions for this retest. Please try regenerating it.
+              </p>
             </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-4 mb-4">
+                <label className="block">
+                  <span className="text-sm font-bold text-zinc-600">Retest Title</span>
+                  <input
+                    type="text"
+                    className="mt-1 w-full rounded-md border border-zinc-300 p-2 text-sm text-zinc-700 font-bold"
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-bold text-zinc-600">Description / Rationale</span>
+                  <textarea
+                    className="mt-1 w-full rounded-md border border-zinc-300 p-2 text-sm text-zinc-700"
+                    rows={2}
+                    value={editedDescription}
+                    onChange={(e) => setEditedDescription(e.target.value)}
+                  />
+                </label>
+              </div>
 
-            <p className="text-sm text-zinc-600 mb-4">
-              Review the dynamically generated retest below. You can edit the questions and correct answers.
-              When satisfied, click <strong>Save & Approve Retest</strong>.
-            </p>
+              <p className="text-sm text-zinc-600 mb-4">
+                Review the dynamically generated retest below. You can edit the questions and correct answers.
+                When satisfied, click <strong>Save & Approve Retest</strong>.
+              </p>
 
-            {TEST_FIELDS.map((field) => {
-              const fieldData = editedQuestions[field.key];
-              const tests = Array.isArray(fieldData) ? fieldData : (fieldData?.tests || []);
-              const rationale = fieldData?.rationale;
+              {TEST_FIELDS.map((field) => {
+                const fieldData = editedQuestions[field.key];
+                const tests = Array.isArray(fieldData) ? fieldData : (fieldData?.tests || []);
+                const rationale = fieldData?.rationale;
 
-              return (
-                <div key={field.key} className="border border-zinc-200 bg-white rounded-lg p-4 shadow-sm">
-                  <h3 className="text-md font-bold text-zinc-800 mb-2">{field.label}</h3>
-                  {rationale && (
-                    <p className="text-sm text-amber-700 bg-amber-50 p-2 rounded mb-4">
-                      <strong>Rationale:</strong> {rationale}
-                    </p>
-                  )}
+                return (
+                  <div key={field.key} className="border border-zinc-200 bg-white rounded-lg p-4 shadow-sm">
+                    <h3 className="text-md font-bold text-zinc-800 mb-2">{field.label}</h3>
+                    {rationale && (
+                      <p className="text-sm text-amber-700 bg-amber-50 p-2 rounded mb-4">
+                        <strong>Rationale:</strong> {rationale}
+                      </p>
+                    )}
 
-                  <div className="space-y-2">
-                    {tests.map((testItem: any, index: number) => {
-                      const qValue = testItem.question || testItem.display || testItem.sequence || testItem.prompt || "";
-                      const aValue = testItem.correct !== undefined ? testItem.correct
-                        : testItem.correctAnswer !== undefined ? testItem.correctAnswer
-                          : testItem.expected_answer !== undefined ? testItem.expected_answer
-                            : testItem.match !== undefined ? String(testItem.match)
-                              : "";
+                    <div className="space-y-2">
+                      {tests.map((testItem: any, index: number) => {
+                        const qValue = testItem.question || testItem.display || testItem.sequence || testItem.prompt || "";
+                        const aValue = testItem.correct !== undefined ? testItem.correct
+                          : testItem.correctAnswer !== undefined ? testItem.correctAnswer
+                            : testItem.expected_answer !== undefined ? testItem.expected_answer
+                              : testItem.match !== undefined ? String(testItem.match)
+                                : "";
 
-                      const handleQuestionChange = (newQValue: string) => {
-                        const newTests = [...tests];
-                        if (testItem.display !== undefined) newTests[index] = { ...testItem, display: newQValue };
-                        else if (testItem.sequence !== undefined) newTests[index] = { ...testItem, sequence: newQValue };
-                        else if (testItem.prompt !== undefined) newTests[index] = { ...testItem, prompt: newQValue };
-                        else newTests[index] = { ...testItem, question: newQValue };
-                        handleFieldChange(field.key, newTests);
-                      };
+                        const handleQuestionChange = (newQValue: string) => {
+                          const newTests = [...tests];
+                          if (testItem.display !== undefined) newTests[index] = { ...testItem, display: newQValue };
+                          else if (testItem.sequence !== undefined) newTests[index] = { ...testItem, sequence: newQValue };
+                          else if (testItem.prompt !== undefined) newTests[index] = { ...testItem, prompt: newQValue };
+                          else newTests[index] = { ...testItem, question: newQValue };
+                          handleFieldChange(field.key, newTests);
+                        };
 
-                      let questionEditor;
-                      if (field.key === "dot_matching" || field.key === "number_comparison") {
-                        const parts = qValue.split("vs").map((s: string) => s.trim());
-                        questionEditor = (
-                          <div className="flex-1 flex items-center gap-2">
-                            <input type="text" value={parts[0] || ""} onChange={e => handleQuestionChange(`${e.target.value} vs ${parts[1] || ""}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
-                            <span className="text-zinc-500 font-medium text-sm">vs</span>
-                            <input type="text" value={parts[1] || ""} onChange={e => handleQuestionChange(`${parts[0] || ""} vs ${e.target.value}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
-                          </div>
-                        );
-                      } else if (field.key === "number_series") {
-                        const allParts = qValue.split(",").map((s: string) => s.trim());
-                        // Disregard the last element since it is always the blank '_'
-                        const editableParts = allParts.length > 1 ? allParts.slice(0, -1) : allParts;
-
-                        questionEditor = (
-                          <div className="flex-1 flex items-center gap-1 flex-wrap">
-                            {editableParts.map((p: string, pIdx: number) => (
-                              <div key={pIdx} className="flex items-center gap-1">
-                                <input type="text" value={p} onChange={e => {
-                                  const newParts = [...editableParts];
-                                  newParts[pIdx] = e.target.value;
-                                  handleQuestionChange([...newParts, "_"].join(", "));
-                                }} className="w-12 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
-                                <span className="text-zinc-500 font-bold text-lg">,</span>
-                              </div>
-                            ))}
-                            <span className="text-zinc-500 font-bold px-2">_</span>
-                          </div>
-                        );
-                      } else if (field.key === "single_addition" || field.key === "single_subtraction" || field.key === "complex_arithmetic") {
-                        const operator = qValue.includes("+") ? "+" : qValue.includes("-") ? "-" : "";
-                        if (operator) {
-                          const parts = qValue.split(operator).map((s: string) => s.trim());
+                        let questionEditor;
+                        if (field.key === "dot_matching" || field.key === "number_comparison") {
+                          const parts = qValue.split("vs").map((s: string) => s.trim());
                           questionEditor = (
                             <div className="flex-1 flex items-center gap-2">
-                              <input type="text" value={parts[0] || ""} onChange={e => handleQuestionChange(`${e.target.value} ${operator} ${parts[1] || ""}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
-                              <span className="text-zinc-500 font-bold text-lg">{operator}</span>
-                              <input type="text" value={parts[1] || ""} onChange={e => handleQuestionChange(`${parts[0] || ""} ${operator} ${e.target.value}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                              <input type="text" value={parts[0] || ""} onChange={e => handleQuestionChange(`${e.target.value} vs ${parts[1] || ""}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                              <span className="text-zinc-500 font-medium text-sm">vs</span>
+                              <input type="text" value={parts[1] || ""} onChange={e => handleQuestionChange(`${parts[0] || ""} vs ${e.target.value}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
                             </div>
                           );
+                        } else if (field.key === "number_series") {
+                          const allParts = qValue.split(",").map((s: string) => s.trim());
+                          // Disregard the last element since it is always the blank '_'
+                          const editableParts = allParts.length > 1 ? allParts.slice(0, -1) : allParts;
+
+                          questionEditor = (
+                            <div className="flex-1 flex items-center gap-1 flex-wrap">
+                              {editableParts.map((p: string, pIdx: number) => (
+                                <div key={pIdx} className="flex items-center gap-1">
+                                  <input type="text" value={p} onChange={e => {
+                                    const newParts = [...editableParts];
+                                    newParts[pIdx] = e.target.value;
+                                    handleQuestionChange([...newParts, "_"].join(", "));
+                                  }} className="w-12 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                                  <span className="text-zinc-500 font-bold text-lg">,</span>
+                                </div>
+                              ))}
+                              <span className="text-zinc-500 font-bold px-2">_</span>
+                            </div>
+                          );
+                        } else if (field.key === "single_addition" || field.key === "single_subtraction" || field.key === "complex_arithmetic") {
+                          const operator = qValue.includes("+") ? "+" : qValue.includes("-") ? "-" : "";
+                          if (operator) {
+                            const parts = qValue.split(operator).map((s: string) => s.trim());
+                            questionEditor = (
+                              <div className="flex-1 flex items-center gap-2">
+                                <input type="text" value={parts[0] || ""} onChange={e => handleQuestionChange(`${e.target.value} ${operator} ${parts[1] || ""}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                                <span className="text-zinc-500 font-bold text-lg">{operator}</span>
+                                <input type="text" value={parts[1] || ""} onChange={e => handleQuestionChange(`${parts[0] || ""} ${operator} ${e.target.value}`)} className="w-16 text-center rounded border border-zinc-300 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" />
+                              </div>
+                            );
+                          } else {
+                            questionEditor = <input type="text" className="flex-1 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" value={qValue} onChange={e => handleQuestionChange(e.target.value)} placeholder="Question" />;
+                          }
                         } else {
                           questionEditor = <input type="text" className="flex-1 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" value={qValue} onChange={e => handleQuestionChange(e.target.value)} placeholder="Question" />;
                         }
-                      } else {
-                        questionEditor = <input type="text" className="flex-1 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300" value={qValue} onChange={e => handleQuestionChange(e.target.value)} placeholder="Question" />;
-                      }
 
-                      let answerEditor;
-                      if (testItem.match !== undefined || field.key === "dot_matching") {
-                        answerEditor = (
-                          <select
-                            className="w-32 rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none bg-white cursor-pointer"
-                            value={String(aValue)}
-                            onChange={(e) => {
-                              const newTests = [...tests];
-                              newTests[index] = { ...testItem, match: e.target.value === "true" };
-                              handleFieldChange(field.key, newTests);
-                            }}
-                          >
-                            <option value="" disabled>Select...</option>
-                            <option value="true">True</option>
-                            <option value="false">False</option>
-                          </select>
+                        let answerEditor;
+                        if (testItem.match !== undefined || field.key === "dot_matching") {
+                          answerEditor = (
+                            <select
+                              className="w-32 rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none bg-white cursor-pointer"
+                              value={String(aValue)}
+                              onChange={(e) => {
+                                const newTests = [...tests];
+                                newTests[index] = { ...testItem, match: e.target.value === "true" };
+                                handleFieldChange(field.key, newTests);
+                              }}
+                            >
+                              <option value="" disabled>Select...</option>
+                              <option value="true">True</option>
+                              <option value="false">False</option>
+                            </select>
+                          );
+                        } else {
+                          answerEditor = (
+                            <input
+                              type="text"
+                              className="w-32 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300"
+                              value={aValue}
+                              onChange={(e) => {
+                                const newTests = [...tests];
+                                const val = e.target.value;
+                                const numVal = isNaN(Number(val)) || val === "" ? val : Number(val);
+
+                                if (testItem.correctAnswer !== undefined) {
+                                  newTests[index] = { ...testItem, correctAnswer: numVal };
+                                } else if (testItem.expected_answer !== undefined) {
+                                  newTests[index] = { ...testItem, expected_answer: numVal };
+                                } else {
+                                  newTests[index] = { ...testItem, correct: numVal };
+                                }
+
+                                handleFieldChange(field.key, newTests);
+                              }}
+                              placeholder="Answer"
+                            />
+                          );
+                        }
+
+                        return (
+                          <div key={testItem.id || index} className="flex gap-3 items-center">
+                            <span className="text-xs font-medium text-zinc-400 w-6">{index + 1}.</span>
+                            {questionEditor}
+                            {answerEditor}
+                          </div>
                         );
-                      } else {
-                        answerEditor = (
-                          <input
-                            type="text"
-                            className="w-32 rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-900 font-medium focus:border-[#29A177] focus:outline-none placeholder-zinc-300"
-                            value={aValue}
-                            onChange={(e) => {
-                              const newTests = [...tests];
-                              const val = e.target.value;
-                              const numVal = isNaN(Number(val)) || val === "" ? val : Number(val);
-
-                              if (testItem.correctAnswer !== undefined) {
-                                newTests[index] = { ...testItem, correctAnswer: numVal };
-                              } else if (testItem.expected_answer !== undefined) {
-                                newTests[index] = { ...testItem, expected_answer: numVal };
-                              } else {
-                                newTests[index] = { ...testItem, correct: numVal };
-                              }
-
-                              handleFieldChange(field.key, newTests);
-                            }}
-                            placeholder="Answer"
-                          />
-                        );
-                      }
-
-                      return (
-                        <div key={testItem.id || index} className="flex gap-3 items-center">
-                          <span className="text-xs font-medium text-zinc-400 w-6">{index + 1}.</span>
-                          {questionEditor}
-                          {answerEditor}
-                        </div>
-                      );
-                    })}
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </>
-        )}
+                );
+              })}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -28,6 +28,8 @@ export default function ClassroomPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
   const [educatorName, setEducatorName] = useState("Educator");
+  const [studentToRemove, setStudentToRemove] = useState<StudentCardInfo | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const studentAPI = createStudentAPI();
 
@@ -127,6 +129,22 @@ export default function ClassroomPage() {
     toast.error(res.error || "Failed to invite student");
   };
 
+  const handleRemoveStudent = async () => {
+    if (!studentToRemove) return;
+
+    setIsRemoving(true);
+    const res = await studentAPI.removeStudent(classId, studentToRemove.id);
+    setIsRemoving(false);
+
+    if (res.success) {
+      setStudentToRemove(null);
+      setStudents((prev) => prev.filter((s) => s.id !== studentToRemove.id));
+      toast.success("Student removed successfully.");
+    } else {
+      toast.error(res.error || "Failed to remove student");
+    }
+  };
+
   return (
     <div className="flex h-full w-full flex-col">
       <div
@@ -189,7 +207,7 @@ export default function ClassroomPage() {
       <div className="flex flex-1 w-full">
         {activeTab === "students" ? (
           <div className="flex w-full items-center justify-center p-15">
-            
+
             <div className="w-full max-w-3xl flex flex-col gap-3">
               {students.map((student) => {
                 const isOpen = openMenuId === student.id;
@@ -211,6 +229,7 @@ export default function ClassroomPage() {
                           `/educator/${educatorId}/${classId}/${id}`
                         );
                       }}
+                      onRemove={() => setStudentToRemove(student)}
                     />
                   </div>
                 );
@@ -277,6 +296,29 @@ export default function ClassroomPage() {
           />
         </div>
       </AlertModal>
+
+      <AlertModal
+        isOpen={!!studentToRemove}
+        onClose={() => {
+          if (isRemoving) return;
+          setStudentToRemove(null);
+        }}
+        title="Remove Student"
+        description={`Are you sure you want to remove ${studentToRemove?.name} from this classroom? Their test results and assessments will be kept intact.`}
+        primaryAction={{
+          label: isRemoving ? "Removing..." : "Remove",
+          onClick: () => {
+            void handleRemoveStudent();
+          },
+          disabled: isRemoving,
+        }}
+        secondaryAction={{
+          label: "Cancel",
+          onClick: () => setStudentToRemove(null),
+          disabled: isRemoving,
+        }}
+        maxWidth="md"
+      />
     </div>
   );
 }

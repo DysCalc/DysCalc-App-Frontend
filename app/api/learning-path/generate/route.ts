@@ -1,8 +1,6 @@
 import { createServer } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
-export const maxDuration = 300; // 5 minutes
-
 export async function POST(request: Request) {
   try {
     const supabase = await createServer();
@@ -51,67 +49,31 @@ export async function POST(request: Request) {
     // 2.5. Set is_generating to true immediately
     await supabase.from("learning_modules").update({ is_generating: true }).eq("result_id", testId);
 
-    // 3. Call the Python backend in the background to avoid timeouts
+    // 3. Call the Python backend (which now returns 202 immediately and runs in background)
     const baseUrl = process.env.BACKEND_URL || "http://127.0.0.1:5000";
     const modelUrl = `${baseUrl}/generate_module`;
     
-    // We import http dynamically to keep edge compatibility if needed, though this is a node route
-    const http = require("http");
-    const https = require("https");
-    const client = modelUrl.startsWith("https") ? https : http;
-
-    const postData = JSON.stringify(payload);
-    const parsedUrl = new URL(modelUrl);
-
-    const req = client.request({
-      hostname: parsedUrl.hostname,
-      port: parsedUrl.port,
-      path: parsedUrl.pathname + parsedUrl.search,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(postData)
-      },
-      timeout: 0 // Disable socket timeout completely
-    }, (res: any) => {
-      let responseBody = "";
-      res.on("data", (chunk: any) => { responseBody += chunk; });
-      res.on("end", async () => {
-        if (res.statusCode !== 200) {
-          console.error("[generate-module] Background generation failed:", responseBody);
-          await supabase.from("learning_modules").update({ is_generating: false }).eq("result_id", testId);
-          return;
-        }
-        
-        try {
-          const generatedModule = JSON.parse(responseBody);
-          // 4. Save the generated module back into learning_modules (upsert)
-          const { error: updateError } = await supabase
-            .from("learning_modules")
-            .update({ modules: generatedModule, is_generating: false })
-            .eq("result_id", testId);
-
-          if (updateError) {
-            console.error("[generate-module] Failed to save background generated module:", updateError);
-          } else {
-            console.log("[generate-module] Successfully generated and saved module in background for test_id:", testId);
-          }
-        } catch (err) {
-          console.error("[generate-module] Failed to parse backend response:", err);
-          await supabase.from("learning_modules").update({ is_generating: false }).eq("result_id", testId);
-        }
+    try {
+      const response = await fetch(modelUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
       });
-    });
 
-    req.on("error", async (e: any) => {
-      console.error("[generate-module] Request error in background:", e);
+      if (!response.ok) {
+        console.error("[generate-module] Backend request failed with status:", response.status);
+        await supabase.from("learning_modules").update({ is_generating: false }).eq("result_id", testId);
+        return NextResponse.json({ success: false, error: "Backend failed to start generation" }, { status: 500 });
+      }
+    } catch (err) {
+      console.error("[generate-module] Request error to backend:", err);
       await supabase.from("learning_modules").update({ is_generating: false }).eq("result_id", testId);
-    });
+      return NextResponse.json({ success: false, error: "Failed to connect to backend" }, { status: 500 });
+    }
 
-    req.write(postData);
-    req.end();
-
-    // 5. Return immediately so the client doesn't time out
+    // 5. Return immediately (backend handles the DB update asynchronously)
     return NextResponse.json({ success: true, message: "Module generation started in the background." });
 
   } catch (error) {
