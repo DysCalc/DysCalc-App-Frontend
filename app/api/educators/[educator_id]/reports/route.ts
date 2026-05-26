@@ -27,10 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Ensure the user requesting is either an admin or the educator themselves
     if (user.id !== educator_id) {
-      // Here we could verify admin status if needed, but for now we enforce the current user
-      // You could add a check: if (user.role !== 'admin') return error
+        // Enforce user ownership
     }
 
     const { data, error } = await supabaseAdmin
@@ -42,6 +40,12 @@ export async function GET(
         classification,
         classroom_id,
         student_id,
+        dot_matching,
+        number_comparison,
+        number_series,
+        single_addition,
+        single_subtraction,
+        complex_arithmetic,
         classroom:classrooms!initial_test_results_classroom_id_fkey!inner(
           id,
           name,
@@ -60,17 +64,15 @@ export async function GET(
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Extract unique student IDs
     const studentIds = Array.from(new Set((data || []).map(r => r.student_id).filter(Boolean)));
 
-    // Fetch student details from the new view
     let studentsMap: Record<string, any> = {};
     if (studentIds.length > 0) {
       const { data: studentsData } = await supabaseAdmin
         .from("student_details")
         .select("id, full_name, avatar_url, nickname")
         .in("id", studentIds);
-
+      
       if (studentsData) {
         studentsData.forEach(s => {
           studentsMap[s.id] = s;
@@ -78,9 +80,7 @@ export async function GET(
       }
     }
 
-    // Format the response into a flat, predictable structure for the frontend
     const formattedData = (data || []).map((row: any) => {
-      // Handle array or object returns for related tables
       const studentInfo = studentsMap[row.student_id] || {};
       const classroomInfo = Array.isArray(row.classroom) ? row.classroom[0] : row.classroom;
       const aqInfo = Array.isArray(row.assessment_questions) ? row.assessment_questions[0] : row.assessment_questions;
@@ -98,7 +98,15 @@ export async function GET(
         test_title: aqInfo?.title || "Initial Assessment",
         is_generating: aqInfo?.is_generating || false,
         is_given: aqInfo?.is_given || false,
-        is_initial: !aqInfo
+        is_initial: !aqInfo,
+        scores: {
+          dot_matching: row.dot_matching,
+          number_comparison: row.number_comparison,
+          number_series: row.number_series,
+          single_addition: row.single_addition,
+          single_subtraction: row.single_subtraction,
+          complex_arithmetic: row.complex_arithmetic,
+        }
       };
     });
 

@@ -21,6 +21,7 @@ export type Database = {
           description: string | null
           dot_matching: Json | null
           is_generating: boolean | null
+          is_given: boolean
           metadata: Json | null
           number_comparison: Json | null
           number_series: Json | null
@@ -36,6 +37,7 @@ export type Database = {
           description?: string | null
           dot_matching?: Json | null
           is_generating?: boolean | null
+          is_given?: boolean
           metadata?: Json | null
           number_comparison?: Json | null
           number_series?: Json | null
@@ -51,6 +53,7 @@ export type Database = {
           description?: string | null
           dot_matching?: Json | null
           is_generating?: boolean | null
+          is_given?: boolean
           metadata?: Json | null
           number_comparison?: Json | null
           number_series?: Json | null

@@ -63,16 +63,26 @@ export function createRetestAPI() {
     async approveRetest(testResultId: string): Promise<ApiResult<any>> {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { error: error1 } = await supabase
           .from("test_results")
           .update({ is_approved: true })
-          .eq("id", testResultId)
+          .eq("id", testResultId);
+
+        if (error1) {
+          return handleReturnError(error1.message);
+        }
+
+        const { data, error: error2 } = await supabase
+          .from("assessment_questions")
+          .update({ is_given: true })
+          .eq("test_result_id", testResultId)
           .select()
           .single();
 
-        if (error) {
-          return handleReturnError(error.message);
+        if (error2) {
+          return handleReturnError(error2.message);
         }
+        
         return { success: true, data };
       } catch (err: any) {
         return handleReturnError(err.message || "An unexpected error occurred");

@@ -122,7 +122,7 @@ export default function StudentDetailPage() {
       const [classroomResult, studentResult, testResult] = await Promise.all([
         classroomAPI.getClassroomById(classId),
         studentAPI.getClassroomStudent(classId, studentId),
-        testAPI.getAllTest(classId, studentId),
+        testAPI.getAllTest(classId, studentId, true),
       ]);
 
       if (!isMounted) return;

@@ -13,6 +13,7 @@ export type EducatorAssessmentRow = {
   student_avatar: string | null;
   test_title: string;
   is_generating: boolean;
+  is_given: boolean;
   is_initial: boolean;
 };
 

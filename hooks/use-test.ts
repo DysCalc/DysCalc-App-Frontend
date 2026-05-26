@@ -34,7 +34,7 @@ export type UnifiedAssessment = {
 
 export function createTestAPI() {
 	return {
-		async getAllTest(classroomId: Classroom['id'], studentId: Student['id']): Promise<ApiResult<UnifiedAssessment[]>> {
+		async getAllTest(classroomId: Classroom['id'], studentId: Student['id'], includeUnapproved = false): Promise<ApiResult<UnifiedAssessment[]>> {
 			try {
 				const response = await fetch(
 					`/api/test/classroom/${classroomId}/student/${studentId}`,
@@ -76,6 +76,10 @@ export function createTestAPI() {
 						// Otherwise, it's an orphaned retest where assessment_questions was deleted manually. Skip it.
 					} else {
 						const aq = Array.isArray(row.assessment_questions) ? row.assessment_questions[0] : row.assessment_questions;
+						
+						// Skip unapproved/not given retests if includeUnapproved is false
+						if (!aq.is_given && !includeUnapproved) continue;
+
 						unifiedAssessments.push({
 							id: row.id, // Use row.id for consistency and uniqueness
 							testResultId: row.id,
