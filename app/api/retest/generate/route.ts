@@ -1,8 +1,6 @@
 import { createServer } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
-export const maxDuration = 300;
-
 export async function POST(request: Request) {
   try {
     const supabase = await createServer();
@@ -50,114 +48,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Failed to save assessment questions" }, { status: 500 });
     }
 
-    // 3. Call Python backend in background
+    // 3. Call Python backend (which handles generation and DB update asynchronously)
     const baseUrl = process.env.BACKEND_URL || "http://127.0.0.1:5000";
     const modelUrl = `${baseUrl}/generate_retest`;
     
-    const http = require("http");
-    const https = require("https");
-    const client = modelUrl.startsWith("https") ? https : http;
+    const postData = JSON.stringify({ 
+      student_history,
+      test_result_id: testResult.id,
+      missing_tests_fallback 
+    });
 
-    const postData = JSON.stringify({ student_history });
-    const parsedUrl = new URL(modelUrl);
-
-    const req = client.request({
-      hostname: parsedUrl.hostname,
-      port: parsedUrl.port,
-      path: parsedUrl.pathname + parsedUrl.search,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(postData)
-      },
-      timeout: 0
-    }, (res: any) => {
-      let responseBody = "";
-      res.on("data", (chunk: any) => { responseBody += chunk; });
-      res.on("end", async () => {
-        if (res.statusCode !== 200) {
-          console.error("[generate-retest] Background generation failed:", responseBody);
-          await supabase.from("assessment_questions").update({ is_generating: false, description: "Generation failed." }).eq("test_result_id", testResult.id);
-          return;
-        }
-        
-        try {
-          const generatedRetest = JSON.parse(responseBody);
-          
-          if (!generatedRetest.retest_data) {
-             console.error("[generate-retest] Backend returned empty retest data");
-             await supabase.from("assessment_questions").update({ is_generating: false, description: "Generation failed." }).eq("test_result_id", testResult.id);
-             return;
-          }
-
-          const combinedQuestions: Record<string, any> = { ...missing_tests_fallback };
-          const prefixMap: Record<string, string> = {
-            number_comparison: "nc",
-            dot_matching: "dm",
-            number_series: "ns",
-            single_addition: "sa",
-            single_subtraction: "ss",
-            complex_arithmetic: "ca"
-          };
-          
-          for (const [key, value] of Object.entries(generatedRetest.retest_data)) {
-            const typedValue = value as { rationale?: string; tests?: any[] };
-            const prefix = prefixMap[key] || "rt";
-            
-            const processedTests = (typedValue.tests || []).map((t: any, index: number) => ({
-              ...t,
-              id: t.id || `${prefix}_${String(index + 1).padStart(2, '0')}`
-            }));
-            
-            combinedQuestions[key] = {
-              ...typedValue,
-              tests: processedTests
-            };
-          }
-
-          const metadata = {
-            based_on_session: generatedRetest.based_on_session,
-            based_on_session_date: generatedRetest.based_on_session_date,
-            total_sessions_in_history: generatedRetest.total_sessions_in_history,
-            _meta_validation_report: generatedRetest._meta_validation_report,
-            warning: generatedRetest.warning
-          };
-
-          const { error: updateError } = await supabase
-            .from("assessment_questions")
-            .update({
-              is_generating: false,
-              description: "Dynamically generated retest based on student's historical deficit areas.",
-              complex_arithmetic: combinedQuestions.complex_arithmetic || null,
-              dot_matching: combinedQuestions.dot_matching || null,
-              number_comparison: combinedQuestions.number_comparison || null,
-              number_series: combinedQuestions.number_series || null,
-              single_addition: combinedQuestions.single_addition || null,
-              single_subtraction: combinedQuestions.single_subtraction || null,
-              metadata
-            })
-            .eq("test_result_id", testResult.id);
-
-          if (updateError) {
-            console.error("[generate-retest] Failed to update assessment questions:", updateError);
-          } else {
-            console.log("[generate-retest] Successfully generated and saved retest in background for test_id:", testResult.id);
-          }
-
-        } catch (err) {
-          console.error("[generate-retest] Failed to parse backend response:", err);
-          await supabase.from("assessment_questions").update({ is_generating: false, description: "Generation failed." }).eq("test_result_id", testResult.id);
-        }
+    try {
+      const response = await fetch(modelUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: postData
       });
-    });
 
-    req.on("error", async (e: any) => {
-      console.error("[generate-retest] Request error in background:", e);
+      if (!response.ok) {
+        console.error("[generate-retest] Backend request failed with status:", response.status);
+        await supabase.from("assessment_questions").update({ is_generating: false, description: "Generation failed." }).eq("test_result_id", testResult.id);
+        return NextResponse.json({ success: false, error: "Backend failed to start generation" }, { status: 500 });
+      }
+    } catch (err) {
+      console.error("[generate-retest] Request error to backend:", err);
       await supabase.from("assessment_questions").update({ is_generating: false, description: "Generation failed." }).eq("test_result_id", testResult.id);
-    });
-
-    req.write(postData);
-    req.end();
+      return NextResponse.json({ success: false, error: "Failed to connect to backend" }, { status: 500 });
+    }
 
     // 4. Return immediately with the placeholder row so the UI can navigate to it
     return NextResponse.json({

@@ -11,7 +11,8 @@ import {
 
 export type StudentCardInfo = {
   id: Profile['id'],
-  name: string
+  name: string,
+  email?: string
 }
 
 type Props = {
@@ -20,6 +21,7 @@ type Props = {
   onToggle: (id: string) => void;
   onClose: () => void;
   onClick: (id: string) => void;
+  onRemove?: (id: string) => void;
 };
 
 export default function StudentCard({
@@ -28,6 +30,7 @@ export default function StudentCard({
   onToggle,
   onClose,
   onClick,
+  onRemove,
 }: Props) {
   return (
     <div
@@ -61,7 +64,7 @@ export default function StudentCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              console.log(`${student.name} information clicked`);
+              onClick(student.id);
               onClose();
             }}
             className="flex items-center gap-2 px-3 py-2 text-sm text-[#4A4A4A] hover:bg-[#F8F8F8]"
@@ -73,19 +76,7 @@ export default function StudentCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              console.log(`${student.name} performance clicked`);
-              onClose();
-            }}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-[#4A4A4A] hover:bg-[#F8F8F8]"
-          >
-            <ChartBarIcon className="h-4 w-4" />
-            Performance
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log(`${student.name} remove clicked`);
+              if (onRemove) onRemove(student.id);
               onClose();
             }}
             className="flex items-center gap-2 border-t border-[#EEEEEE] px-3 py-2 text-sm text-[#4A4A4A] hover:bg-[#F8F8F8]"
@@ -97,7 +88,11 @@ export default function StudentCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              console.log(`${student.name} email clicked`);
+              if (student.email) {
+                window.location.href = `mailto:${student.email}`;
+              } else {
+                alert("Student does not have an email address");
+              }
               onClose();
             }}
             className="flex items-center gap-2 border-t border-[#EEEEEE] px-3 py-2 text-sm text-[#4A4A4A] hover:bg-[#F8F8F8]"

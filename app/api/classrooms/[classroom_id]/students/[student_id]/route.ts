@@ -67,3 +67,33 @@ export async function GET(req: NextRequest,
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest,
+    { params }: { params: Promise<{ classroom_id: string, student_id: string }> }): Promise<NextResponse> {
+    try {
+        const { classroom_id, student_id } = await params;
+        if (!student_id || !classroom_id) return NextResponse.json({ error: "Missing student_id or classroom_id" }, { status: 400 });
+
+        const supabaseServer = await createServer();
+        const supabaseAdmin = createAdminClient();
+
+        if (!supabaseAdmin) return NextResponse.json({ error: "Server config error" }, { status: 500 });
+
+        const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
+        if (userError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        // Delete the mapping from students table to remove student from classroom
+        const { error: deleteError } = await supabaseAdmin
+            .from("students")
+            .delete()
+            .eq("id", student_id)
+            .eq("classroom_id", classroom_id);
+
+        if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 400 });
+
+        return NextResponse.json({ success: true, data: true }, { status: 200 });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Internal server error";
+        return NextResponse.json({ error: message }, { status: 500 });
+    }
+}

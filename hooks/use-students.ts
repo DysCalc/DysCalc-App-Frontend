@@ -183,6 +183,24 @@ export function createStudentAPI() {
                 return handleReturnError(error);
             }
         },
+        async removeStudent(classroom_id: Classroom['id'], student_id: Student['id']): Promise<ApiResult<boolean>> {
+            try {
+                const response = await fetch(`/api/classrooms/${classroom_id}/students/${student_id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) return handleReturnError(result.error || "Failed to remove student");
+
+                return { success: true, data: true };
+            } catch (error) {
+                return handleReturnError(error);
+            }
+        },
         async getLatestInitialTestResult(classroomId: Classroom['id'], studentId: Student['id']): Promise<ApiResult<TestResult | null>> {
             try {
                 const response = await fetch(`/api/classrooms/${classroomId}/students/${studentId}/tests_results`);
