@@ -128,24 +128,36 @@ export function shuffleQuestions(items: Question[]) {
   return shuffled;
 }
 
-export function buildChoices(correct: number, seedKey?: string, maxOption: number = 10) {
-  const choices = new Set<number>();
-  choices.add(correct);
+export function buildChoices(correct: number, seedKey?: string) {
+  const randomVal1 = seedKey ? seededRandom(hashString(seedKey)) : Math.random();
+  const randomVal2 = seedKey ? seededRandom(hashString(seedKey + "_step")) : Math.random();
 
-  while (choices.size < 4) {
-    const option = Math.floor(Math.random() * maxOption);
-    if (option !== correct) {
-      choices.add(option);
-    }
+  let offsetIndex = Math.floor(randomVal1 * 2) + 1; // 1 or 2
+  const step = Math.floor(randomVal2 * 3) + 1; // 1 to 3 (offset up to 9)
+
+  while (correct - (step * offsetIndex) < 0 && offsetIndex > 0) {
+    offsetIndex--;
   }
 
-  const choiceStrings = Array.from(choices).map(String);
+  const choices = [
+    correct - (step * offsetIndex),
+    correct - (step * (offsetIndex - 1)),
+    correct - (step * (offsetIndex - 2)),
+    correct - (step * (offsetIndex - 3))
+  ];
+
+  const choiceStrings = Array.from(new Set(choices)).map(String);
+
+  while (choiceStrings.length < 4) {
+    let fallback = Math.floor(Math.random() * (correct + 10));
+    choiceStrings.push(String(fallback));
+  }
 
   if (seedKey) {
-    return shuffleWithSeed(choiceStrings, seedKey);
+    return shuffleWithSeed(choiceStrings.slice(0, 4), seedKey);
   }
 
-  return shuffle(choiceStrings);
+  return shuffle(choiceStrings.slice(0, 4));
 }
 
 export function buildPairChoices(left: number, right: number, seedKey?: string) {

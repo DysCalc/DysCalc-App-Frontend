@@ -559,6 +559,11 @@ export default function ScreeningInformation({
                     >
                       {isGenerating ? "Analyzing..." : "Generate Classification"}
                     </button>
+                    {isGenerating && (
+                      <p className="mt-4 max-w-sm text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-4 py-3 rounded-md">
+                        Please wait. The AI is warming up and this may take up to 50 seconds if the backend server was idle.
+                      </p>
+                    )}
                     {!isAllTestsCompleted && (
                       <p className="mt-4 text-xs font-semibold text-red-500">
                         Cannot generate classification: Not all tests are completed.

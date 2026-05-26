@@ -23,31 +23,34 @@ export function buildComplexArithmeticChoices(correct: number, seedKey?: string)
     (Math.sin(hashString(seedKey + "_step")) * 10000 - Math.floor(Math.sin(hashString(seedKey + "_step")) * 10000)) :
     Math.random();
 
-  const offsetIndex = Math.floor(randomVal1 * 2) + 1; // 1 or 2
+  let offsetIndex = Math.floor(randomVal1 * 2) + 1; // 1 or 2
   const step = Math.floor(randomVal2 * 5) + 1; // 1 to 5
 
-  let choices = [
+  // Adjust offsetIndex so we don't go below 0
+  while (correct - (step * offsetIndex) < 0 && offsetIndex > 0) {
+    offsetIndex--;
+  }
+
+  // If correct is within normal range, adjust offsetIndex so we don't go above 1000
+  if (correct <= 1000) {
+    while (correct + (step * (3 - offsetIndex)) > 1000 && offsetIndex < 3) {
+      offsetIndex++;
+    }
+  }
+
+  const choices = [
     correct - (step * offsetIndex),
     correct - (step * (offsetIndex - 1)),
     correct - (step * (offsetIndex - 2)),
     correct - (step * (offsetIndex - 3))
   ];
 
-  if (choices[0] < 0) {
-    const shift = -choices[0];
-    choices = choices.map(c => c + shift);
-  }
-
-  if (choices[3] > 1000) {
-    const shift = choices[3] - 1000;
-    choices = choices.map(c => c - shift);
-  }
-
   const choiceStrings = Array.from(new Set(choices)).map(String);
 
   // If we ended up with fewer than 4 distinct choices (shouldn't happen with step >= 1), fallback
   while (choiceStrings.length < 4) {
-    choiceStrings.push(String(Math.floor(Math.random() * 1000)));
+    let fallback = Math.floor(Math.random() * (correct <= 1000 ? 1000 : correct + 100));
+    choiceStrings.push(String(fallback));
   }
 
   if (seedKey) {
