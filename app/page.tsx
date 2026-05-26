@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useAuth } from "@/contexts/auth-provider";
 import Image from "next/image";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
@@ -71,8 +72,13 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full py-8 text-center text-sm text-zinc-400">
-        &copy; {new Date().getFullYear()} DysCalc. All rights reserved.
+      <footer className="relative z-10 w-full py-8 flex flex-col items-center justify-center gap-2 text-sm text-zinc-400">
+        <div>&copy; {new Date().getFullYear()} DysCalc. All rights reserved.</div>
+        <div className="flex items-center gap-4">
+          <Link href="/privacy" className="hover:text-zinc-600 transition-colors">Privacy Policy</Link>
+          <span>&middot;</span>
+          <Link href="/terms" className="hover:text-zinc-600 transition-colors">Terms of Service</Link>
+        </div>
       </footer>
     </div>
   );
