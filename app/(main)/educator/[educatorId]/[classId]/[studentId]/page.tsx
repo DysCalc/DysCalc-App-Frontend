@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { createClassroomAPI } from "@/hooks/use-classroom";
 import { createStudentAPI } from "@/hooks/use-students";
+import { createTestAPI, type UnifiedAssessment } from "@/hooks/use-test";
 import type { Json } from "@/database.types";
 import { toast } from "sonner";
 import ScreeningInformation from "./tabs/ScreeningInformation";
@@ -108,6 +109,7 @@ export default function StudentDetailPage() {
   const [student, setStudent] = useState<StudentSummary | null>(null);
   const [classroom, setClassroom] = useState<ClassroomVariant | null>(null);
   const [screening, setScreening] = useState<ScreeningDetails | null>(null);
+  const [assessments, setAssessments] = useState<UnifiedAssessment[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -115,10 +117,12 @@ export default function StudentDetailPage() {
     const getData = async () => {
       setIsLoading(true);
 
+      const testAPI = createTestAPI();
+
       const [classroomResult, studentResult, testResult] = await Promise.all([
         classroomAPI.getClassroomById(classId),
         studentAPI.getClassroomStudent(classId, studentId),
-        studentAPI.getLatestInitialTestResult(classId, studentId),
+        testAPI.getAllTest(classId, studentId, true),
       ]);
 
       if (!isMounted) return;
@@ -129,15 +133,33 @@ export default function StudentDetailPage() {
         return;
       }
 
-      const classification: Classification | null = testResult.data?.classification ?? null;
+      const assessmentsData = testResult.data || [];
+      setAssessments(assessmentsData);
 
-      const scores: ScoreRow[] = testResult.data
-        ? TEST_FIELDS.map((field) => ({
+      const initialAssessment = assessmentsData.find(a => a.isInitial) || assessmentsData[0];
+      const initialResults = initialAssessment?.results;
+
+      const classification: Classification | null = initialResults?.classification ?? null;
+
+      const scores: ScoreRow[] = TEST_FIELDS.map((field) => {
+        let totalScore = 0;
+        let count = 0;
+
+        assessmentsData.forEach(assessment => {
+          if (!assessment.results) return;
+          const score = scoreFromJson((assessment.results as Record<string, Json>)[field.key]);
+          if (score !== null) {
+            totalScore += score;
+            count += 1;
+          }
+        });
+
+        return {
           key: field.key,
           label: field.label,
-          score: scoreFromJson((testResult.data as Record<string, Json>)[field.key]),
-        }))
-        : [];
+          score: count > 0 ? Number((totalScore / count).toFixed(1)) : null,
+        };
+      });
 
       const availableScores = scores
         .map((score) => score.score)
@@ -166,7 +188,7 @@ export default function StudentDetailPage() {
 
       setScreening({
         classification,
-        created_at: testResult.data?.created_at ?? null,
+        created_at: initialResults?.created_at ?? null,
         scores,
         averageScore,
       });
@@ -254,6 +276,7 @@ export default function StudentDetailPage() {
             classId={classId}
             studentId={student.id}
             screening={screening}
+            assessments={assessments}
             onGenerateLearningPath={() => setActiveTab("learning")}
           />
         )}
@@ -265,6 +288,7 @@ export default function StudentDetailPage() {
             classId={classId}
             studentId={student.id}
             screening={screening}
+            assessments={assessments}
           />
         )}
 

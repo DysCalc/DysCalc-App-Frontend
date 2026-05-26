@@ -27,3 +27,41 @@ export async function getUserProfile(userId: Profile['id']): Promise<Profile | n
     }
     return data;
 }
+
+export async function updateUserProfile(userId: string, updates: Partial<Profile>) {
+    try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({
+                nickname: updates.nickname,
+                date_of_birth: updates.date_of_birth,
+                sex: updates.sex
+            })
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+        return { success: true, data };
+    } catch (err: any) {
+        return { success: false, error: err.message || "Failed to update profile" };
+    }
+}
+
+export async function deleteUserProfile(userId: string) {
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: "DELETE",
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            return { success: false, error: result.error || "Failed to delete user account" };
+        }
+        return { success: true, data: null };
+    } catch (err: any) {
+        return { success: false, error: err.message || "Failed to delete user account" };
+    }
+}

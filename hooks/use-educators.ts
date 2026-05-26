@@ -1,5 +1,6 @@
 import { handleReturnError, type ApiResult } from "./utils";
 import type { EducatorRow } from "@/types";
+import { createClient } from "@/lib/supabase-client";
 
 export function createEducatorsAPI() {
     return {
@@ -53,19 +54,43 @@ export function createEducatorsAPI() {
                 return handleReturnError(error);
             }
         },
-        async deleteEducator(id: string): Promise<ApiResult<boolean>> {
+        async deleteEducator(educatorId: string): Promise<ApiResult<any>> {
             try {
-                const res = await fetch(`/api/educators/${id}`, {
+                const response = await fetch(`/api/users/${educatorId}`, {
                     method: "DELETE",
                 });
+                const result = await response.json();
+                if (!response.ok) {
+                    return handleReturnError(result.error || "Failed to delete educator");
+                }
+                return { success: true, data: null };
+            } catch (err: any) {
+                return handleReturnError(err.message || "An unexpected error occurred");
+            }
+        },
+        async updateEducatorProfile(educatorId: string, updates: any): Promise<ApiResult<any>> {
+            try {
+                const supabase = createClient();
+                const { data, error } = await supabase
+                    .from("educator")
+                    .update({
+                        license_id: updates.license_id,
+                        workplace_name: updates.workplace_name,
+                        workplace_address: updates.workplace_address,
+                        undergrad: updates.undergrad,
+                        masters: updates.masters,
+                        doctorate: updates.doctorate
+                    })
+                    .eq("id", educatorId)
+                    .select()
+                    .single();
 
-                const json = await res.json();
-
-                if (!res.ok) return handleReturnError(json.error || "Failed to delete educator");
-
-                return { success: true, data: true };
-            } catch (error) {
-                return handleReturnError(error);
+                if (error) {
+                    return handleReturnError(error.message);
+                }
+                return { success: true, data };
+            } catch (err: any) {
+                return handleReturnError(err.message || "An unexpected error occurred");
             }
         },
         async updateEducator(data: Partial<EducatorRow> & { id: string }): Promise<ApiResult<boolean>> {

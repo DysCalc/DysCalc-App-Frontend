@@ -80,17 +80,15 @@ export default function LearningPathCard({
 
       {/* Content */}
       <h2
-        className={`pr-14 text-2xl font-extrabold transition-colors duration-500 md:text-2xl ${
-          hovered ? "text-white" : "text-[#9A9A9A]"
-        }`}
+        className={`pr-14 text-2xl font-extrabold transition-colors duration-500 md:text-2xl ${hovered ? "text-white" : "text-[#9A9A9A]"
+          }`}
       >
         {title}
       </h2>
 
       <p
-        className={`mt-2 text-base font-medium transition-colors duration-500 md:text-base ${
-          hovered ? "text-white/85" : "text-[#9A9A9A]"
-        }`}
+        className={`mt-2 text-base font-medium transition-colors duration-500 md:text-base ${hovered ? "text-white/85" : "text-[#9A9A9A]"
+          }`}
       >
         Duration:{" "}
         <span className={hovered ? "font-semibold text-white" : textColor}>
@@ -103,9 +101,8 @@ export default function LearningPathCard({
         {/* Code + Copy */}
         <div className="flex items-center gap-3">
           <p
-            className={`text-sm font-medium tracking-wide transition-colors duration-500 ${
-              hovered ? "text-white/80" : "text-[#C5C5C5]"
-            }`}
+            className={`text-sm font-medium tracking-wide transition-colors duration-500 ${hovered ? "text-white/80" : "text-[#C5C5C5]"
+              }`}
           >
             {code}
           </p>
@@ -123,18 +120,16 @@ export default function LearningPathCard({
           >
             <Copy
               size={14}
-              className={`absolute transition-all duration-200 ${
-                copied ? "scale-0 opacity-0" : "scale-100 opacity-100"
-              }`}
+              className={`absolute transition-all duration-200 ${copied ? "scale-0 opacity-0" : "scale-100 opacity-100"
+                }`}
             />
 
             <Check
               size={14}
-              className={`absolute transition-all duration-200 ${
-                copied
+              className={`absolute transition-all duration-200 ${copied
                   ? "scale-100 opacity-100 text-[#2FA46F]"
                   : "scale-0 opacity-0"
-              }`}
+                }`}
             />
           </button>
         </div>
@@ -142,9 +137,8 @@ export default function LearningPathCard({
         {/* Actions */}
         <div className="flex items-center overflow-hidden rounded-md">
           <div
-            className={`flex items-center overflow-hidden transition-all duration-300 ease-out ${
-              menuOpen ? "max-w-[150px] opacity-100" : "max-w-0 opacity-0"
-            }`}
+            className={`flex items-center overflow-hidden transition-all duration-300 ease-out ${menuOpen ? "max-w-[150px] opacity-100" : "max-w-0 opacity-0"
+              }`}
           >
             <button
               type="button"

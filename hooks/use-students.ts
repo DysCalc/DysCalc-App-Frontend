@@ -3,7 +3,9 @@ import type {
     TestResult,
     Student,
     StudentClassroomProfile,
-    StudentInvite
+    StudentInvite,
+    ClassroomListItem,
+    StudentProfile
 } from "@/types";
 import { handleReturnError, type ApiResult } from "./utils";
 
@@ -13,6 +15,20 @@ export type PendingInvite = StudentInvite & {
 
 export function createStudentAPI() {
     return {
+        async fetchAllStudents(): Promise<ApiResult<StudentProfile[]>> {
+            try {
+                const response = await fetch("/api/students");
+                const result = await response.json();
+
+                if (!response.ok) {
+                    return handleReturnError(result.error || "Failed to fetch students");
+                }
+
+                return { success: true, data: result.data };
+            } catch (err: any) {
+                return handleReturnError(err.message || "An unexpected error occurred");
+            }
+        },
         // async emailStudent(studentId: Student['id']): Promise<ApiResult<boolean>> {
         //     try {
         //         const reciepient = 
@@ -202,5 +218,18 @@ export function createStudentAPI() {
         //         return handleReturnError(error);
         //     }
         // }
+        async getClassrooms(student_id: Student['id']): Promise<ApiResult<ClassroomListItem[]>> {
+            try {
+                const response = await fetch(`/api/students/${student_id}/classrooms`);
+
+                const result = await response.json();
+
+                if (!response.ok) return handleReturnError(result.error || "Failed to get list of classrooms");
+
+                return { success: true, data: result.data };
+            } catch (error) {
+                return handleReturnError(error);
+            }
+        }
     }
 }

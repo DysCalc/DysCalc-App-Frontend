@@ -41,11 +41,11 @@ export function createMiddlewareClient(request: NextRequest) {
         },
         setAll(setCookies) {
           setCookies.forEach(({ name, value }) => request.cookies.set(name, value))
-          
+
           supabaseResponse = NextResponse.next({
             request,
           })
-          
+
           setCookies.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )

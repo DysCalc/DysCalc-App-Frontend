@@ -3,82 +3,41 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import StudentsClassroomLearningPaths from "@/components/student/StudentsClassroomLearningPaths";
+import { ArrowLeft } from "lucide-react";
 import CopyClassroomCodeButton from "@/components/student/CopyClassroomCodeButton";
+import assessmentsMetadata from "@/data/assessments-metadata.json";
+import type { TestType } from "@/types/test";
+import type { ClassroomWithStudentCount } from "@/types";
+import { createClassroomAPI } from "@/hooks/use-classroom";
+import { createTestAPI, type UnifiedAssessment } from "@/hooks/use-test";
 
-const classroomData = {
-  primary: {
-    title: "Primary Learning Path",
-    description:
-      "This learning plan is designed to introduce the fundamentals of mathematics.",
-    code: "DSLDKNSA678B",
-    accentColor: "#dfdc2f",
-    baselineTestId: "test-examination",
-    baselineAssessmentId: "baseline-assessment",
-    analytics: {
-      averageScore: 75,
-      averageReactionTime: 6.2,
-      pointColors: ["#F7E967", "#E5DD45", "#D6CE2F", "#BFB726", "#A8A020"],
-      points: [
-        { reactionTime: 3.2, score: 90 },
-        { reactionTime: 4.5, score: 85 },
-        { reactionTime: 6.1, score: 75 },
-        { reactionTime: 8.3, score: 62 },
-        { reactionTime: 10.4, score: 48 },
-      ],
-    },
-    learningPaths: [
-      {
-        title: "Primary Learning Path",
-        taskGivenDate: "April 20, 2026",
-        status: "In Progress",
-        moduleId: "test-examination",
-      },
-      {
-        title: "Number System",
-        taskGivenDate: "April 21, 2026",
-        status: "Inactive",
-        moduleId: "number-system",
-      },
-    ],
-  },
+const testTypeOrder: TestType[] = [
+  "number_comparison",
+  "dot_matching",
+  "number_series",
+  "single_addition",
+  "single_subtraction",
+  "complex_arithmetic",
+];
 
-  secondary: {
-    title: "Secondary Learning Path",
-    description:
-      "This learning plan is designed to strengthen mathematical reasoning and problem-solving skills.",
-    code: "DSLDKNSZ924S",
-    accentColor: "#29A177",
-    baselineTestId: "test-examination",
-    baselineAssessmentId: "baseline-assessment",
-    analytics: {
-      averageScore: 68,
-      averageReactionTime: 7.4,
-      pointColors: ["#A7F3D0", "#6EE7B7", "#34D399", "#29A177", "#1F7658"],
-      points: [
-        { reactionTime: 4.1, score: 78 },
-        { reactionTime: 5.8, score: 72 },
-        { reactionTime: 7.0, score: 68 },
-        { reactionTime: 8.9, score: 58 },
-        { reactionTime: 11.2, score: 45 },
-      ],
-    },
-    learningPaths: [
-      {
-        title: "Secondary Learning Path",
-        taskGivenDate: "April 22, 2026",
-        status: "Inactive",
-        moduleId: "test-examination",
-      },
-    ],
-  },
-};
+const testTypeCards = testTypeOrder.map((type: TestType) => {
+  const metadata = assessmentsMetadata[type];
 
-type BaselineStatus = "checking" | "completed" | "needs-assessment";
+  return {
+    id: type,
+    title: metadata.title,
+    description: metadata.description,
+    accent: metadata.accent,
+    background: metadata.background,
+    ring: metadata.ring,
+  };
+});
+
+const classroomAPI = createClassroomAPI();
 
 export default function ClassroomLearningPathPage() {
   const router = useRouter();
+  const testAPI = createTestAPI();
 
   const params = useParams<{
     studentId: string;
@@ -87,104 +46,71 @@ export default function ClassroomLearningPathPage() {
 
   const { studentId, classroomId } = params;
 
-  const classroom = classroomData[classroomId as keyof typeof classroomData];
-
-  const [baselineStatus, setBaselineStatus] =
-    useState<BaselineStatus>("checking");
-  const [secondsLeft, setSecondsLeft] = useState(10);
-
-  useEffect(() => {
-    if (!classroom) return;
-
-    const completed = localStorage.getItem(
-      `baselineAssessmentCompleted:${studentId}:${classroomId}`
-    );
-
-    if (completed === "true") {
-      setBaselineStatus("completed");
-      return;
-    }
-
-    setBaselineStatus("needs-assessment");
-  }, [studentId, classroomId, classroom]);
+  const [activeTestId, setActiveTestId] = useState<string | null>(null);
+  const [classroom, setClassroom] = useState<ClassroomWithStudentCount | null>(
+    null
+  );
+  const [assessments, setAssessments] = useState<UnifiedAssessment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (baselineStatus !== "needs-assessment") return;
-    if (secondsLeft <= 0) return;
+    let isMounted = true;
 
-    const timer = setTimeout(() => {
-      setSecondsLeft((prev) => prev - 1);
-    }, 1000);
+    const loadData = async () => {
+      setIsLoading(true);
+      setLoadError(null);
 
-    return () => clearTimeout(timer);
-  }, [baselineStatus, secondsLeft]);
+      const [classroomResult, testResult] = await Promise.all([
+        classroomAPI.getClassroomById(classroomId),
+        testAPI.getAllTest(classroomId, studentId)
+      ]);
 
-  useEffect(() => {
-    if (!classroom) return;
-    if (baselineStatus !== "needs-assessment") return;
-    if (secondsLeft !== 0) return;
+      if (!isMounted) return;
 
-    router.replace(
-      `/student/${studentId}/classrooms/${classroomId}/${classroom.baselineTestId}/${classroom.baselineAssessmentId}`
-    );
-  }, [baselineStatus, secondsLeft, router, studentId, classroomId, classroom]);
+      if (!classroomResult.success) {
+        setLoadError(classroomResult.error || "Failed to load classroom");
+      } else {
+        setClassroom(classroomResult.data);
+      }
 
-  if (!classroom) {
+      if (testResult.success && testResult.data) {
+        setAssessments(testResult.data);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [classroomId, studentId]);
+
+  if (isLoading) {
     return (
-      <main className="flex h-full w-full items-center justify-center bg-[#F7F7F7]">
+      <main className="flex min-h-screen w-full items-center justify-center bg-[#F7F7F7]">
         <p className="text-lg font-semibold text-[#9A9A9A]">
-          Classroom not found.
+          Loading classroom...
         </p>
       </main>
     );
   }
 
-  if (baselineStatus === "checking") {
+  if (loadError || !classroom) {
     return (
-      <main className="flex h-full w-full items-center justify-center bg-[#29A177] px-6 text-white">
-        <div className="flex flex-col items-center text-center">
-          <Loader2 className="h-12 w-12 animate-spin" />
-
-          <h1 className="mt-6 text-4xl font-extrabold leading-none">
-            Checking your assessment status
-          </h1>
-
-          <p className="mt-4 text-lg font-medium text-white/80">
-            Please wait while DysCalc prepares your classroom.
+      <main className="flex min-h-screen w-full items-center justify-center bg-[#F7F7F7]">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-[#9A9A9A]">
+            {loadError || "Classroom not found."}
           </p>
-        </div>
-      </main>
-    );
-  }
-
-  if (baselineStatus === "needs-assessment") {
-    return (
-      <main className="flex h-full w-full items-center justify-center overflow-hidden bg-[#29A177] px-6 text-white">
-        <div className="flex max-w-3xl flex-col items-center text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/15">
-            <Loader2 className="h-12 w-12 animate-spin text-white" />
-          </div>
-
-          <p className="mt-10 text-sm font-bold uppercase tracking-[0.3em] text-white/70">
-            Assessment
-          </p>
-
-          <h1 className="mt-5 text-5xl font-extrabold leading-none text-white md:text-6xl">
-            You&apos;re about to be <br />redirected to a test
-          </h1>
-
-          <p className="mt-5 max-w-2xl text-lg font-medium leading-5 text-white/80">
-            The assessment test will help DysCalc understand your starting
-            numeracy level and <br /> prepare your personalized learning path.
-          </p>
-
-          <div className="mt-10 flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl font-extrabold text-[#29A177]">
-            {secondsLeft}
-          </div>
-
-          <p className="mt-4 text-sm font-semibold text-white/70">
-            Redirecting in {secondsLeft}s
-          </p>
+          <Link
+            href={`/student/${studentId}/classrooms`}
+            className="mt-4 inline-flex items-center justify-center rounded-md border border-[#E5E5E5] bg-white px-5 py-2 text-sm font-semibold text-[#7A7A7A] transition hover:border-[#B0B0B0]"
+          >
+            Back to Classrooms
+          </Link>
         </div>
       </main>
     );
@@ -201,151 +127,136 @@ export default function ClassroomLearningPathPage() {
           Back to Classrooms
         </Link>
 
-        <section className="flex w-full flex-1 items-center border-b border-[#E5E5E5] px-6">
-          <div className="flex w-full gap-8 px-10">
-            <div className="flex flex-1 flex-col justify-center gap-4">
-              <h1 className="text-5xl font-bold text-[#9D9D9D]">
-                {classroom.title}
-              </h1>
+        <section className="flex w-full items-center border-b border-[#E5E5E5] px-6 py-12">
+          <div className="flex w-full flex-col gap-4 px-10">
+            <h1 className="text-5xl font-bold text-[#9D9D9D]">
+              {classroom.name}
+            </h1>
 
-              <p className="max-w-3xl text-lg leading-8 text-[#666]">
-                {classroom.description}
-              </p>
+            <p className="max-w-2xl text-base font-medium text-[#8F8F8F]">
+              Your assessments are listed below. Complete them to build your
+              learning path.
+            </p>
 
-              <div className="mt-8 flex items-center gap-2">
-                <p className="text-base font-semibold tracking-wide text-[#9D9D9D]">
-                  Classroom Code:
-                </p>
-
-                <p className="text-base font-medium tracking-wide text-[#BDBDBD]">
-                  {classroom.code}
-                </p>
-
-                <CopyClassroomCodeButton code={classroom.code} />
-              </div>
-            </div>
-
-            <div className="flex flex-1 items-center justify-center">
-              <div className="w-full max-w-lg px-2 py-2">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-[#BDBDBD]">
-                    Reaction Time vs Score
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
-                    <p className="text-2xl font-semibold text-[#8F8F8F]">
-                      Average Score:{" "}
-                      <span className="text-2xl font-extrabold text-[#8F8F8F]">
-                        {classroom.analytics.averageScore}%
-                      </span>
-                    </p>
-
-                    <p className="text-2xl font-semibold text-[#8F8F8F]">
-                      Average Time:{" "}
-                      <span className="text-2xl font-extrabold text-[#8F8F8F]">
-                        {classroom.analytics.averageReactionTime}s
-                      </span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-8">
-                  <div className="relative h-[200px] overflow-hidden rounded-2xl bg-[#F7F7F7] p-4">
-                    <div className="absolute left-4 right-4 top-1/2 h-px bg-[#E5E5E5]" />
-                    <div className="absolute bottom-4 top-4 left-1/2 w-px bg-[#E5E5E5]" />
-
-                    <span className="absolute left-4 top-3 text-[10px] font-bold text-[#BDBDBD]">
-                      High Score
-                    </span>
-
-                    <span className="absolute bottom-3 left-4 text-[10px] font-bold text-[#BDBDBD]">
-                      Fast
-                    </span>
-
-                    <span className="absolute bottom-3 right-4 text-[10px] font-bold text-[#BDBDBD]">
-                      Slow
-                    </span>
-
-                    {classroom.analytics.points.map((point, index) => {
-                      const left = Math.min(
-                        (point.reactionTime / 12) * 100,
-                        92
-                      );
-
-                      const bottom = Math.min(point.score, 90);
-
-                      const pointColor =
-                        classroom.analytics.pointColors[
-                          index % classroom.analytics.pointColors.length
-                        ];
-
-                      return (
-                        <div
-                          key={index}
-                          className="group absolute flex h-4 w-4 items-center justify-center"
-                          style={{
-                            left: `${left}%`,
-                            bottom: `${bottom}%`,
-                          }}
-                        >
-                          <div
-                            className="absolute h-7 w-7 scale-0 rounded-full opacity-20 transition-all duration-300 group-hover:scale-100"
-                            style={{ backgroundColor: pointColor }}
-                          />
-
-                          <div
-                            className="relative z-10 h-3.5 w-3.5 rounded-full ring-2 ring-white transition-all duration-300 group-hover:scale-150"
-                            style={{ backgroundColor: pointColor }}
-                          />
-
-                          <div
-                            className="pointer-events-none absolute left-1/2 top-7 z-20 w-max -translate-x-1/2 scale-95 rounded-sm px-2 py-1 text-[6pt] font-semibold leading-none text-white opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100"
-                            style={{ backgroundColor: pointColor }}
-                          >
-                            {point.reactionTime}s · {point.score}%
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between text-xs font-semibold text-[#B0B0B0]">
-                    <span>Lower reaction time</span>
-                    <span>Higher reaction time</span>
-                  </div>
-
-                  <div className="mt-4 flex items-center gap-2">
-                    {classroom.analytics.pointColors.map((color, index) => (
-                      <div
-                        key={index}
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-
-                    <span className="ml-1 text-xs font-medium text-[#B0B0B0]">
-                      Recent activity points
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-[#BDBDBD]">
+                Classroom Code
+              </span>
+              <span className="text-sm font-semibold text-[#7A7A7A]">
+                {classroom.id}
+              </span>
+              <CopyClassroomCodeButton code={classroom.id} />
             </div>
           </div>
         </section>
 
-        <div className="flex w-full flex-1 flex-col gap-0 bg-white">
-          {classroom.learningPaths.map((path) => (
-            <StudentsClassroomLearningPaths
-              key={path.moduleId}
-              studentId={studentId}
-              classroomId={classroomId}
-              title={path.title}
-              taskGivenDate={path.taskGivenDate}
-              status={path.status}
-              moduleId={path.moduleId}
-            />
-          ))}
-        </div>
+        <section className="w-full border-b border-[#E5E5E5] bg-[#FAFAFA] px-6 py-10">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+            <div className="flex items-center justify-between gap-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#BDBDBD]">
+                  Classroom Tests
+                </p>
+                <h2 className="mt-2 text-3xl font-extrabold text-[#8F8F8F]">
+                  {activeTestId ? "Select a Test Type" : "Available Tests"}
+                </h2>
+                <p className="mt-2 text-sm font-medium text-[#9A9A9A]">
+                  {activeTestId
+                    ? "Pick a test type to begin your assessment."
+                    : "Choose a test to begin. Your progress will be recorded."}
+                </p>
+              </div>
+
+              {activeTestId && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTestId(null)}
+                  className="rounded-full border border-[#E5E5E5] bg-white px-5 py-2 text-sm font-semibold text-[#7A7A7A] transition hover:border-[#B0B0B0] hover:text-[#4F4F4F]"
+                >
+                  Back to Tests
+                </button>
+              )}
+            </div>
+
+            {!activeTestId && (
+              <div className="grid gap-6 md:grid-cols-2">
+                {assessments.map((test) => (
+                  <button
+                    key={test.id}
+                    type="button"
+                    onClick={() => setActiveTestId(test.id)}
+                    className="group flex h-full flex-col justify-between rounded-2xl border border-[#E5E5E5] bg-white px-8 py-7 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#CFCFCF] hover:shadow-lg"
+                  >
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#C5C5C5]">
+                        {test.isInitial ? "Initial Assessment" : "Retest Assessment"}
+                      </p>
+                      <h3 className="mt-3 text-2xl font-extrabold text-[#7A7A7A] transition group-hover:text-[#2F855A]">
+                        {test.title}
+                      </h3>
+                      <p className="mt-3 text-sm font-medium text-[#9A9A9A]">
+                        {test.description}
+                      </p>
+                    </div>
+                    <span className="mt-8 inline-flex h-11 w-fit items-center justify-center rounded-md bg-[#29A177] px-6 text-sm font-semibold text-white transition group-hover:bg-[#DFDC2F]">
+                      View Test Types
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {activeTestId && (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {testTypeCards.map((testType) => {
+                  const activeAssessment = assessments.find((a) => a.id === activeTestId);
+                  const isDone = activeAssessment?.results && activeAssessment.results[testType.id] !== null;
+
+                  return (
+                    <button
+                      key={testType.id}
+                      type="button"
+                      disabled={isDone}
+                      onClick={() =>
+                        !isDone && router.push(`/student/${studentId}/classrooms/${classroomId}/test?testID=${encodeURIComponent(activeTestId)}&testtype=${encodeURIComponent(testType.id)}`)
+                      }
+                      className={`group relative overflow-hidden rounded-2xl border px-6 py-6 text-left shadow-sm transition duration-300 ${isDone ? "cursor-not-allowed border-gray-200 opacity-60" : "border-white/60 hover:-translate-y-1 hover:shadow-lg"}`}
+                      style={{
+                        background: isDone ? "#f0f0f0" : testType.background,
+                        boxShadow: isDone ? "none" : `0 10px 30px ${testType.ring}`,
+                      }}
+                    >
+                      <div className="relative z-10">
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5B5B5B]/70">
+                          Test Type
+                        </p>
+                        <h3 className="mt-3 text-2xl font-extrabold text-[#2F2F2F]">
+                          {testType.title}
+                        </h3>
+                        <p className="mt-3 text-sm font-semibold text-[#4F4F4F]/80">
+                          {isDone ? "Completed" : testType.description}
+                        </p>
+                      </div>
+
+                      <div
+                        className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-40"
+                        style={{ backgroundColor: isDone ? "#ccc" : testType.accent }}
+                      />
+                      <div
+                        className="absolute bottom-5 right-6 rounded-full px-4 py-1 text-xs font-semibold text-white"
+                        style={{ backgroundColor: isDone ? "#999" : testType.accent }}
+                      >
+                        {isDone ? "Done" : "Start"}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <div className="h-10 w-full bg-white" />
       </section>
     </main>
   );

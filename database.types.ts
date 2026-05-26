@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      assessment_questions: {
+        Row: {
+          complex_arithmetic: Json | null
+          created_at: string | null
+          description: string | null
+          dot_matching: Json | null
+          is_generating: boolean | null
+          is_given: boolean
+          metadata: Json | null
+          number_comparison: Json | null
+          number_series: Json | null
+          single_addition: Json | null
+          single_subtraction: Json | null
+          test_result_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          complex_arithmetic?: Json | null
+          created_at?: string | null
+          description?: string | null
+          dot_matching?: Json | null
+          is_generating?: boolean | null
+          is_given?: boolean
+          metadata?: Json | null
+          number_comparison?: Json | null
+          number_series?: Json | null
+          single_addition?: Json | null
+          single_subtraction?: Json | null
+          test_result_id?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          complex_arithmetic?: Json | null
+          created_at?: string | null
+          description?: string | null
+          dot_matching?: Json | null
+          is_generating?: boolean | null
+          is_given?: boolean
+          metadata?: Json | null
+          number_comparison?: Json | null
+          number_series?: Json | null
+          single_addition?: Json | null
+          single_subtraction?: Json | null
+          test_result_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_questions_test_result_id_fkey"
+            columns: ["test_result_id"]
+            isOneToOne: true
+            referencedRelation: "test_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classrooms: {
         Row: {
           created_at: string
@@ -42,7 +101,7 @@ export type Database = {
         Row: {
           doctorate: Json | null
           id: string
-          license_id: number
+          license_id: string
           masters: Json | null
           undergrad: Json
           workplace_address: string
@@ -51,7 +110,7 @@ export type Database = {
         Insert: {
           doctorate?: Json | null
           id?: string
-          license_id: number
+          license_id: string
           masters?: Json | null
           undergrad: Json
           workplace_address: string
@@ -60,7 +119,7 @@ export type Database = {
         Update: {
           doctorate?: Json | null
           id?: string
-          license_id?: number
+          license_id?: string
           masters?: Json | null
           undergrad?: Json
           workplace_address?: string
@@ -74,23 +133,36 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "educator_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "student_details"
+            referencedColumns: ["id"]
+          },
         ]
       }
       learning_modules: {
         Row: {
           created_at: string
+          is_generating: boolean | null
+          modules: Json | null
           paths: Json | null
           prompt: string | null
           result_id: string
         }
         Insert: {
           created_at?: string
+          is_generating?: boolean | null
+          modules?: Json | null
           paths?: Json | null
           prompt?: string | null
           result_id?: string
         }
         Update: {
           created_at?: string
+          is_generating?: boolean | null
+          modules?: Json | null
           paths?: Json | null
           prompt?: string | null
           result_id?: string
@@ -195,49 +267,56 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "students_id_fkey"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "student_details"
+            referencedColumns: ["id"]
+          },
         ]
       }
       test_results: {
         Row: {
           classification: Database["public"]["Enums"]["CLASSIFICATION"] | null
           classroom_id: string | null
-          complex_arithmetic: Json
+          complex_arithmetic: Json | null
           created_at: string
-          dot_matching: Json
+          dot_matching: Json | null
           id: string
           is_approved: boolean
-          number_comparison: Json
-          number_series: Json
-          single_addition: Json
-          single_subtraction: Json
+          number_comparison: Json | null
+          number_series: Json | null
+          single_addition: Json | null
+          single_subtraction: Json | null
           student_id: string | null
         }
         Insert: {
           classification?: Database["public"]["Enums"]["CLASSIFICATION"] | null
           classroom_id?: string | null
-          complex_arithmetic: Json
+          complex_arithmetic?: Json | null
           created_at?: string
-          dot_matching: Json
+          dot_matching?: Json | null
           id?: string
           is_approved?: boolean
-          number_comparison: Json
-          number_series: Json
-          single_addition: Json
-          single_subtraction: Json
+          number_comparison?: Json | null
+          number_series?: Json | null
+          single_addition?: Json | null
+          single_subtraction?: Json | null
           student_id?: string | null
         }
         Update: {
           classification?: Database["public"]["Enums"]["CLASSIFICATION"] | null
           classroom_id?: string | null
-          complex_arithmetic?: Json
+          complex_arithmetic?: Json | null
           created_at?: string
-          dot_matching?: Json
+          dot_matching?: Json | null
           id?: string
           is_approved?: boolean
-          number_comparison?: Json
-          number_series?: Json
-          single_addition?: Json
-          single_subtraction?: Json
+          number_comparison?: Json | null
+          number_series?: Json | null
+          single_addition?: Json | null
+          single_subtraction?: Json | null
           student_id?: string | null
         }
         Relationships: [
@@ -253,6 +332,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "initial_test_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_details"
             referencedColumns: ["id"]
           },
         ]
@@ -276,7 +362,26 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "educator_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "student_details"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      student_details: {
+        Row: {
+          avatar_url: string | null
+          date_of_birth: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          nickname: string | null
+          sex: Database["public"]["Enums"]["SEX"] | null
+        }
+        Relationships: []
       }
     }
     Functions: {

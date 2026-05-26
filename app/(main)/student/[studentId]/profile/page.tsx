@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/auth-provider";
-import { formatProfile } from "@/hooks/use-profile";
+import { formatProfile, getUserProfile, updateUserProfile, deleteUserProfile } from "@/hooks/use-profile";
+import { toast } from "sonner";
+import AlertModal from "@/components/shared/AlertModal";
 
 function getHighQualityGoogleAvatar(url: string | null) {
   if (!url) return null;
@@ -17,14 +20,38 @@ function getHighQualityGoogleAvatar(url: string | null) {
 }
 
 export default function StudentProfilePage() {
-  const params = useParams<{
-    studentId: string;
-  }>();
-
+  const router = useRouter();
+  const params = useParams<{ studentId: string }>();
   const { studentId } = params;
-  const { user, profile, loading } = useAuth();
+  const { user, profile: authProfile, loading, logout } = useAuth();
 
-  if (loading) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const [nickname, setNickname] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [sex, setSex] = useState<"MALE" | "FEMALE">("MALE");
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchProfile() {
+      if (!user) return;
+      const data = await getUserProfile(studentId);
+      if (mounted && data) {
+        setNickname(data.nickname || "");
+        setDateOfBirth(data.date_of_birth ? data.date_of_birth.split('T')[0] : "");
+        setSex((data.sex as "MALE" | "FEMALE") || "MALE");
+      }
+      setIsLoading(false);
+    }
+
+    if (!loading) fetchProfile();
+    return () => { mounted = false; };
+  }, [user, loading, studentId]);
+
+  if (loading || isLoading) {
     return (
       <main className="h-full w-full bg-[#F7F7F7]">
         <section className="flex h-full w-full items-center justify-center bg-[#DED84E]">
@@ -44,84 +71,167 @@ export default function StudentProfilePage() {
     );
   }
 
-  const { name, avatar_url } = formatProfile(user, profile);
+  const { name, avatar_url } = formatProfile(user, authProfile);
+  const highQualityAvatarUrl = getHighQualityGoogleAvatar(avatar_url || null);
 
-  const student = {
-    name: name || "Student Name",
-    avatarUrl: avatar_url || null,
-    age: 7,
-    classification: "C-",
-    setup: "Home School Setup",
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    const result = await updateUserProfile(studentId, {
+      nickname,
+      date_of_birth: dateOfBirth,
+      sex
+    });
+    if (result.success) {
+      toast.success("Profile updated successfully!");
+    } else {
+      toast.error(result.error || "Failed to update profile");
+    }
+    setIsSaving(false);
   };
 
-  const highQualityAvatarUrl = getHighQualityGoogleAvatar(student.avatarUrl);
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const result = await deleteUserProfile(studentId);
+    if (result.success) {
+      toast.success("Account deleted permanently.");
+      logout();
+      router.push("/login");
+    } else {
+      toast.error(result.error || "Failed to delete account");
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
 
-return (
-  <main className="h-full w-full overflow-hidden bg-[#F7F7F7]">
-    <section className="flex h-full w-full flex-col overflow-hidden bg-[#DED84E] px-6 py-10">
-      {/* Back */}
-      <div className="shrink-0">
-        <Link
-          href={`/student/${studentId}/classrooms`}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-[#29A177]"
-        >
-          <ArrowLeft size={18} />
-          Back to Classrooms
-        </Link>
-      </div>
+  return (
+    <main className="h-full w-full overflow-y-auto bg-[#F7F7F7]">
+      <section className="relative flex min-h-[40vh] w-full flex-col overflow-hidden bg-[#DED84E] px-6 py-10">
+        <div className="shrink-0">
+          <Link
+            href={`/student/${studentId}/dashboard`}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-[#29A177]"
+          >
+            <ArrowLeft size={18} />
+            Back to Dashboard
+          </Link>
+        </div>
 
-      {/* Center Content */}
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
-        {/* Profile Avatar */}
-        <div className="relative flex items-center justify-center">
-          <div className="absolute h-[340px] w-[340px] rounded-full border-2 border-dashed border-[#BEB844]/80" />
-
-          <div className="relative flex h-[300px] w-[300px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
+        <div className="mt-8 flex flex-col items-center justify-center z-10">
+          <div className="relative flex h-[200px] w-[200px] items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-xl">
             {highQualityAvatarUrl ? (
               <Image
                 src={highQualityAvatarUrl}
-                alt={student.name}
-                width={512}
-                height={512}
-                quality={100}
-                priority
+                alt={name}
+                width={200}
+                height={200}
                 className="h-full w-full object-cover"
               />
             ) : (
               <Image
                 src="/icons/main-icon.svg"
-                alt="DysCalc Student Avatar"
-                width={220}
-                height={220}
-                priority
-                className="h-auto w-[220px] object-contain"
+                alt="DysCalc Avatar"
+                width={120}
+                height={120}
+                className="h-auto w-[120px] object-contain"
               />
             )}
           </div>
-        </div>
 
-        {/* Student Info */}
-        <div className="mt-12 flex flex-col items-center text-center">
-          <h1 className="max-w-4xl text-5xl font-extrabold leading-none text-white">
-            {student.name}
-          </h1>
-
-          <p className="mt-4 text-3xl font-semibold leading-none text-white">
-            Age: {student.age} Classification: {student.classification}
-          </p>
-
-          <p className="mt-9 text-2xl font-semibold text-white">
-            {student.setup}
-          </p>
-
-          <div className="mt-8 inline-flex rounded-full bg-white/20 px-6 py-2 backdrop-blur-sm">
-            <p className="text-sm font-semibold tracking-wide text-white">
-              Student ID: {studentId}
-            </p>
+          <div className="mt-6 text-center">
+            <h1 className="text-4xl font-extrabold text-white">{name}</h1>
+            <p className="mt-2 text-xl font-semibold text-white/90">Student</p>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
-);
+      </section>
+
+      <section className="mx-auto max-w-3xl px-6 py-12">
+        <div className="rounded-xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <h2 className="text-2xl font-bold text-neutral-800">Profile Information</h2>
+          <p className="mb-6 text-sm text-neutral-500">Update your public profile details.</p>
+
+          <form onSubmit={handleSave} className="space-y-6">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-neutral-700">Nickname</label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                className="w-full rounded-md border border-neutral-300 px-4 py-2 text-neutral-700 outline-none focus:border-[#29A177] focus:ring-1 focus:ring-[#29A177]"
+                placeholder="How should we call you?"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-neutral-700">Date of Birth</label>
+              <input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                required
+                className="w-full rounded-md border border-neutral-300 px-4 py-2 text-neutral-700 outline-none focus:border-[#29A177] focus:ring-1 focus:ring-[#29A177]"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-neutral-700">Sex</label>
+              <select
+                value={sex}
+                onChange={(e) => setSex(e.target.value as any)}
+                required
+                className="w-full rounded-md border border-neutral-300 px-4 py-2 text-neutral-700 outline-none focus:border-[#29A177] focus:ring-1 focus:ring-[#29A177]"
+              >
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div className="flex justify-end pt-4">
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="rounded-md bg-[#29A177] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#238B67] disabled:opacity-50"
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="mt-8 rounded-xl border border-red-200 bg-white p-8 shadow-sm">
+          <h2 className="text-xl font-bold text-red-600">Danger Zone</h2>
+          <p className="mt-2 text-sm text-neutral-500">
+            Permanently delete your account. This action cannot be undone.
+            However, your anonymous test scores will be retained for algorithm improvements.
+          </p>
+          <div className="mt-6">
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="rounded-md border border-red-200 bg-red-50 px-6 py-2.5 font-medium text-red-600 transition-colors hover:bg-red-100"
+            >
+              Delete Account
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {showDeleteModal && (
+        <AlertModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Account"
+          description="Are you absolutely sure you want to permanently delete your account? You will not be able to log back in."
+          primaryAction={{
+            label: isDeleting ? "Deleting..." : "Yes, Delete Account",
+            onClick: handleDelete,
+            variant: "danger",
+            disabled: isDeleting
+          }}
+          secondaryAction={{
+            label: "Cancel",
+            onClick: () => setShowDeleteModal(false),
+            disabled: isDeleting
+          }}
+        />
+      )}
+    </main>
+  );
 }

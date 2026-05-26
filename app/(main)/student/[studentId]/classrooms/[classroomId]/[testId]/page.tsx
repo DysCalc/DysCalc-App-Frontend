@@ -436,11 +436,10 @@ export default function StudentTestPage() {
                   </div>
 
                   <div
-                    className={`rounded-full px-4 py-1 text-sm font-bold ${
-                      selectedAnswer
+                    className={`rounded-full px-4 py-1 text-sm font-bold ${selectedAnswer
                         ? "bg-[#DFF5EC] text-[#29A177]"
                         : "bg-[#F2F2F2] text-[#AAAAAA]"
-                    }`}
+                      }`}
                   >
                     {selectedAnswer ? "Answered" : "Not answered"}
                   </div>
@@ -465,11 +464,10 @@ export default function StudentTestPage() {
                         key={choice}
                         type="button"
                         onClick={() => handleSelectAnswer(choice)}
-                        className={`flex h-20 items-center justify-center rounded-2xl border text-4xl font-bold transition-colors duration-300 ${
-                          isSelected
+                        className={`flex h-20 items-center justify-center rounded-2xl border text-4xl font-bold transition-colors duration-300 ${isSelected
                             ? "border-[#29A177] bg-[#DFF5EC] text-[#29A177]"
                             : "border-[#E5E5E5] bg-white text-[#777] hover:border-[#29A177] hover:bg-[#DFF5EC] hover:text-[#29A177]"
-                        }`}
+                          }`}
                       >
                         {choice}
                       </button>
@@ -505,10 +503,9 @@ export default function StudentTestPage() {
                     className={`
                       relative flex h-4 w-4 items-center justify-center rounded-full
                       transition-all duration-300 ease-out
-                      ${
-                        isCurrent
-                          ? "scale-110 bg-[#29A177] shadow-[0_0_0_4px_rgba(41,161,119,0.16)]"
-                          : isAnswered
+                      ${isCurrent
+                        ? "scale-110 bg-[#29A177] shadow-[0_0_0_4px_rgba(41,161,119,0.16)]"
+                        : isAnswered
                           ? "bg-[#FFCC00] shadow-[0_4px_10px_rgba(255,204,0,0.25)]"
                           : "bg-[#D9D9D9]"
                       }
@@ -520,10 +517,9 @@ export default function StudentTestPage() {
                       strokeWidth={3}
                       className={`
                         text-white transition-all duration-300 ease-out
-                        ${
-                          isAnswered
-                            ? "scale-100 opacity-100"
-                            : "scale-0 opacity-0"
+                        ${isAnswered
+                          ? "scale-100 opacity-100"
+                          : "scale-0 opacity-0"
                         }
                       `}
                     />

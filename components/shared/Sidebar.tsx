@@ -62,6 +62,9 @@ export default function Sidebar() {
 
   if (hiddenPaths.includes(pathname)) return null;
 
+  const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  const validRouteId = routeId && isValidUUID(routeId) ? routeId : user.id;
+
   const getNavigations = () => {
     const isAdminUser = userRole.toLowerCase() === "admin";
 
@@ -80,19 +83,19 @@ export default function Sidebar() {
     switch (currentContext) {
       case "student":
         baseNavigations = getStudentNavigations(
-          currentRoute === "student" && routeId ? routeId : user.id
+          currentRoute === "student" ? validRouteId : user.id
         );
         break;
 
       case "educator":
         baseNavigations = getEducatorNavigations(
-          currentRoute === "educator" && routeId ? routeId : user.id
+          currentRoute === "educator" ? validRouteId : user.id
         );
         break;
 
       case "admin":
         baseNavigations = getAdminNavigations(
-          currentRoute === "admin" && routeId ? routeId : user.id
+          currentRoute === "admin" ? validRouteId : user.id
         );
         break;
 
@@ -120,15 +123,7 @@ export default function Sidebar() {
 
   const navigations = getNavigations();
 
-  const profileContext =
-    currentRoute === "student" ||
-    currentRoute === "educator" ||
-    currentRoute === "admin"
-      ? currentRoute
-      : userRole.toLowerCase();
-
-  const profileId = routeId || user.id;
-  const profileHref = `/${profileContext}/${profileId}/profile`;
+  const profileHref = `/${userRole.toLowerCase()}/${user.id}/profile`;
 
   return (
     <aside
