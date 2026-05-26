@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     icon: { url: "/icons/dyscalc-icon.svg", type: "image/svg+xml" },
     apple: { url: "/icons/dyscalc-icon.svg", type: "image/svg+xml" },
   },
+  verification: {
+    google: "lzHdar0L06QQ_xyFIOgs9lJSqCwUM0g-QwXyrl5TzAM",
+  },
 };
 
 export default function RootLayout({
