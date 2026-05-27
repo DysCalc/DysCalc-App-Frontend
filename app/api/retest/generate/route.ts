@@ -51,11 +51,11 @@ export async function POST(request: Request) {
     // 3. Call Python backend (which handles generation and DB update asynchronously)
     const baseUrl = process.env.BACKEND_URL || "http://127.0.0.1:5000";
     const modelUrl = `${baseUrl}/generate_retest`;
-    
-    const postData = JSON.stringify({ 
+
+    const postData = JSON.stringify({
       student_history,
       test_result_id: testResult.id,
-      missing_tests_fallback 
+      missing_tests_fallback
     });
 
     try {

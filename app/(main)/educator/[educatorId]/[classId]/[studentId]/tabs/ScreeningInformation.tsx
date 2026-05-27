@@ -93,6 +93,7 @@ export default function ScreeningInformation({
   const isGeneratingDb = assessments.some(a => a.isGenerating);
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingRetest, setIsGeneratingRetest] = useState(false);
   const [classificationResult, setClassificationResult] = useState<any>(null); // To store freshly generated class
   const [selectedFieldModal, setSelectedFieldModal] = useState<{
     fieldKey: string,
@@ -136,11 +137,13 @@ export default function ScreeningInformation({
     : !!latestAssessment?.results?.learning_modules?.modules;
 
   const handleGenerateRetest = async (isRegenerating = false) => {
+    setIsGeneratingRetest(true);
     if (isRegenerating && activeAssessment) {
       const retestAPI = createRetestAPI();
       const res = await retestAPI.deleteRetest(activeAssessment.id);
       if (!res.success) {
         toast.error("Failed to clean up old retest: " + res.error);
+        setIsGeneratingRetest(false);
         return;
       }
     }
@@ -197,8 +200,11 @@ export default function ScreeningInformation({
 
     if (!res.success) {
       toast.error("Failed to generate retest: " + res.error);
+      setIsGeneratingRetest(false);
+      window.location.reload();
     } else {
       toast.success("Retest generated successfully!");
+      setIsGeneratingRetest(false);
       window.location.reload();
     }
   };
@@ -269,6 +275,7 @@ export default function ScreeningInformation({
       results.classification = res.data.predicted_class === "1" ? "AT-RISK" : "TYPICAL";
     } else {
       toast.error("Failed to generate classification. " + res.error);
+      window.location.reload();
     }
   };
 
@@ -356,7 +363,7 @@ export default function ScreeningInformation({
                   disabled={isGeneratingDb}
                   className="w-full flex items-center justify-center gap-2 rounded bg-[#29A177] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#20825f] disabled:opacity-75 disabled:cursor-not-allowed"
                 >
-                  {isGeneratingDb ? (
+                  {isGeneratingDb || isGeneratingRetest ? (
                     <>
                       <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

@@ -41,6 +41,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [isGeneratingPath, setIsGeneratingPath] = useState(false);
 
   // Local state for the module to support instant UI updates and editing
   const [localModules, setLocalModules] = useState<Record<string, LearningModuleResponse | null>>({});
@@ -81,18 +82,23 @@ export default function LearningPath({ student, classId, studentId, assessments 
   const handleGenerate = async () => {
     if (!activeAssessment || !activeAssessment.testResultId) return;
 
+    setIsGeneratingPath(true);
     const learningPathAPI = createLearningPathAPI();
 
     const res = await learningPathAPI.generateLearningPath(activeAssessment.testResultId);
 
     if (!res.success) {
       toast.error("Failed to generate learning path. " + res.error);
+      setIsGeneratingPath(false);
+      window.location.reload();
     } else {
       if (res.data) {
         toast.success("Learning Path generated successfully!");
         setLocalModules(prev => ({ ...prev, [activeAssessment.id]: res.data! }));
+        setIsGeneratingPath(false);
       } else {
         toast.success("Learning Path generation started in the background! Please check back later.");
+        setIsGeneratingPath(false);
         window.location.reload();
       }
     }
@@ -224,10 +230,10 @@ export default function LearningPath({ student, classId, studentId, assessments 
                 {hasClassificationData ? (
                   <button
                     onClick={handleGenerate}
-                    disabled={isGeneratingDb}
+                    disabled={isGeneratingDb || isGeneratingPath}
                     className="flex items-center justify-center gap-2 rounded-md bg-[#29A177] px-6 py-3 font-bold text-white transition hover:bg-[#20825f] disabled:opacity-75 disabled:cursor-not-allowed"
                   >
-                    {isGeneratingDb ? (
+                    {isGeneratingDb || isGeneratingPath ? (
                       <>
                         <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
