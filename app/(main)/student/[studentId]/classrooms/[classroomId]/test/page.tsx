@@ -252,8 +252,8 @@ export default function TestPage() {
     return (
         <main className="min-h-screen w-full bg-[#F7F7F7]">
             <section className="flex min-h-screen w-full flex-col">
-                <header className="bg-[#29A177] px-[5vw] py-[5vh] text-white">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
+                <header className="bg-[#29A177] px-[5vw] text-white">
+                    <div className="flex flex-wrap items-center mt-8 justify-between gap-4">
                         <button
                             type="button"
                             onClick={() => router.push(`/student/${studentId}/classrooms/${classroomId}`)}
@@ -267,15 +267,15 @@ export default function TestPage() {
                             {timeLeftSeconds !== null ? formatElapsedTime(timeLeftSeconds) : formatElapsedTime(elapsedSeconds)}
                         </div>
                     </div>
-                    <div className="mt-8">
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+                    <div className="mt-8 mb-15">
+                        <p className="text-sm font-medium uppercase tracking-[0.3em] text-white/70">
                             {activeAssessment.title}
                         </p>
-                        <h1 className="mt-3 text-4xl font-extrabold">
+                        <h1 className="mt-3 text-5xl font-extrabold">
                             {metadata[testTypeParam]?.title ?? "Assessment"}
                         </h1>
-                        <p className="mt-2 max-w-2xl text-sm font-medium text-white/80">
-                            Answer each item carefully.
+                        <p className="mt-2 max-w-2xl text-lg font-medium text-white/80">
+                            Read each question and pick the best answer.
                         </p>
                     </div>
                     {timeLeftSeconds !== null && isWarningActive && (
@@ -283,57 +283,11 @@ export default function TestPage() {
                             Time is almost up.
                         </p>
                     )}
-                    <div className="mt-6 flex flex-wrap items-center gap-2">
-                        {questions.map((question, index) => {
-                            const isCurrent = index === currentIndex;
-                            const isAnswered = !!answers[question.id];
 
-                            return (
-                                <button
-                                    key={question.id}
-                                    type="button"
-                                    onClick={() => setCurrentIndex(index)}
-                                    className={`
-                                        group relative flex h-6 w-6 items-center justify-center rounded-full
-                                        transition-all duration-300 ease-out
-                                        ${
-                                            isCurrent
-                                                ? "scale-110 bg-[#FFCC00] shadow-[0_0_0_4px_rgba(255,204,0,0.3)]"
-                                                : isAnswered
-                                                ? "bg-white text-[#29A177] shadow-sm hover:scale-105"
-                                                : "bg-white/20 text-transparent hover:bg-white/30"
-                                        }
-                                    `}
-                                    aria-label={`Go to question ${index + 1}`}
-                                >
-                                    <Check
-                                        size={14}
-                                        strokeWidth={3}
-                                        className={`
-                                            transition-all duration-300 ease-out
-                                            ${
-                                                isAnswered && !isCurrent
-                                                    ? "scale-100 opacity-100"
-                                                    : "scale-0 opacity-0"
-                                            }
-                                        `}
-                                    />
-                                    {isCurrent && (
-                                        <div className="h-2 w-2 rounded-full bg-[#29A177]" />
-                                    )}
-
-                                    {/* Hover Tooltip */}
-                                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                        Q{index + 1}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
                 </header>
 
                 <section className="flex flex-1 flex-col items-center justify-center px-[5vw] py-[5vh]">
-                    <div className="w-full max-w-none rounded-3xl bg-white p-10 shadow-sm">
+                    <div className="w-full max-w-none p-10">
                         {isSubmitted && result ? (
                             <div className="flex flex-col items-center gap-6 text-center">
                                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#BDBDBD]">
@@ -360,7 +314,7 @@ export default function TestPage() {
                             </div>
                         ) : (
                             <>
-                                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#BDBDBD]">
+                                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#BDBDBD] align-center text-center">
                                     Question {currentIndex + 1} of {questions.length}
                                 </p>
                                 {testTypeParam === "dot_matching" && <DotMatchingTest question={currentQuestion} selectedAnswer={selectedAnswer} onAnswer={handleAnswer} />}

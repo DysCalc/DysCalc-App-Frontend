@@ -1,4 +1,11 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 export default function Footer() {
+  const path = usePathname();
+  if (path.includes("/classrooms")) return null;
+  
   return (
     <footer className="h-12 w-full border-t border-gray-200 bg-gray-100 px-6">
       <div className="flex h-full items-center justify-between gap-4">

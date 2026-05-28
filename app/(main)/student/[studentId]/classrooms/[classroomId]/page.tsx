@@ -150,20 +150,17 @@ export default function ClassroomLearningPathPage() {
           </div>
         </section>
 
-        <section className="w-full border-b border-[#E5E5E5] bg-[#FAFAFA] px-6 py-10">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <section className="w-full bg-[#FAFAFA] px-6 py-12">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
             <div className="flex items-center justify-between gap-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#BDBDBD]">
-                  Classroom Tests
-                </p>
-                <h2 className="mt-2 text-3xl font-extrabold text-[#8F8F8F]">
-                  {activeTestId ? "Select a Test Type" : "Available Tests"}
+                <h2 className="mt-2 text-4xl font-extrabold text-[#8F8F8F]">
+                  {activeTestId ? "Choose an Activity" : "Ready to Learn?"}
                 </h2>
-                <p className="mt-2 text-sm font-medium text-[#9A9A9A]">
+                <p className="mt-2 text-lg font-regular text-[#9A9A9A]">
                   {activeTestId
-                    ? "Pick a test type to begin your assessment."
-                    : "Choose a test to begin. Your progress will be recorded."}
+                    ? "Pick an activity to get started."
+                    : "Choose a test and start your learning adventure!"}
                 </p>
               </div>
 
@@ -185,20 +182,20 @@ export default function ClassroomLearningPathPage() {
                     key={test.id}
                     type="button"
                     onClick={() => setActiveTestId(test.id)}
-                    className="group flex h-full flex-col justify-between rounded-2xl border border-[#E5E5E5] bg-white px-8 py-7 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#CFCFCF] hover:shadow-lg"
+                    className="group flex h-full flex-col justify-between rounded-2xl border border-[#E5E5E5] bg-[#F2F6D6] px-8 py-8 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#CFCFCF] hover:shadow-lg"
                   >
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#C5C5C5]">
+                      <p className="text-sm font-medium uppercase tracking-[0.3em] text-[#C5C5C5]">
                         {test.isInitial ? "Initial Assessment" : "Retest Assessment"}
                       </p>
-                      <h3 className="mt-3 text-2xl font-extrabold text-[#7A7A7A] transition group-hover:text-[#2F855A]">
+                      <h3 className="mt-3 text-4xl font-extrabold text-[#7A7A7A] transition group-hover:text-[#2F855A]">
                         {test.title}
                       </h3>
-                      <p className="mt-3 text-sm font-medium text-[#9A9A9A]">
+                      <p className="mt-3 text-base font-medium text-[#9A9A9A]">
                         {test.description}
                       </p>
                     </div>
-                    <span className="mt-8 inline-flex h-11 w-fit items-center justify-center rounded-md bg-[#29A177] px-6 text-sm font-semibold text-white transition group-hover:bg-[#DFDC2F]">
+                    <span className="mt-8 inline-flex h-11 w-fit items-center justify-center rounded-md bg-[#29A177] px-6 text-base font-semibold text-white transition group-hover:bg-[#DFDC2F]">
                       View Test Types
                     </span>
                   </button>
@@ -220,7 +217,7 @@ export default function ClassroomLearningPathPage() {
                       onClick={() =>
                         !isDone && router.push(`/student/${studentId}/classrooms/${classroomId}/test?testID=${encodeURIComponent(activeTestId)}&testtype=${encodeURIComponent(testType.id)}`)
                       }
-                      className={`group relative overflow-hidden rounded-2xl border px-6 py-6 text-left shadow-sm transition duration-300 ${isDone ? "cursor-not-allowed border-gray-200 opacity-60" : "border-white/60 hover:-translate-y-1 hover:shadow-lg"}`}
+                      className={`group relative overflow-hidden rounded-2xl border px-8 py-8 text-left shadow-sm transition duration-300 ${isDone ? "cursor-not-allowed border-gray-200 opacity-60" : "border-white/60 hover:-translate-y-1 hover:shadow-lg"}`}
                       style={{
                         background: isDone ? "#f0f0f0" : testType.background,
                         boxShadow: isDone ? "none" : `0 10px 30px ${testType.ring}`,
@@ -228,7 +225,7 @@ export default function ClassroomLearningPathPage() {
                     >
                       <div className="relative z-10">
                         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5B5B5B]/70">
-                          Test Type
+                          Activity Type
                         </p>
                         <h3 className="mt-3 text-2xl font-extrabold text-[#2F2F2F]">
                           {testType.title}
@@ -243,7 +240,7 @@ export default function ClassroomLearningPathPage() {
                         style={{ backgroundColor: isDone ? "#ccc" : testType.accent }}
                       />
                       <div
-                        className="absolute bottom-5 right-6 rounded-full px-4 py-1 text-xs font-semibold text-white"
+                        className="absolute bottom-5 right-6 rounded-full px-4 py-1 text-lg font-semibold text-white"
                         style={{ backgroundColor: isDone ? "#999" : testType.accent }}
                       >
                         {isDone ? "Done" : "Start"}
@@ -255,8 +252,6 @@ export default function ClassroomLearningPathPage() {
             )}
           </div>
         </section>
-
-        <div className="h-10 w-full bg-white" />
       </section>
     </main>
   );

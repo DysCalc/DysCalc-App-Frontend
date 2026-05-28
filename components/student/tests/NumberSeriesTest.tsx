@@ -9,12 +9,12 @@ interface Props {
 export function NumberSeriesTest({ question, selectedAnswer, onAnswer }: Props) {
   return (
     <div className="w-full">
-      <h2 className="mt-4 text-3xl font-extrabold text-[#5A5A5A]">
+      <h2 className="mt-4 text-4xl font-extrabold text-[#5A5A5A] align-center text-center">
         {question.prompt}
       </h2>
 
       {question.display && (
-        <div className="mt-6 whitespace-pre-wrap rounded-2xl border border-[#EFEFEF] bg-[#FAFAFA] px-6 py-5 text-center text-2xl font-semibold text-[#666]">
+        <div className="mt-6 whitespace-pre-wrap rounded-2xl border border-[#EFEFEF] bg-[#FAFAFA] px-6 py-5 text-center text-8xl font-semibold text-[#666]">
           {question.display}
         </div>
       )}

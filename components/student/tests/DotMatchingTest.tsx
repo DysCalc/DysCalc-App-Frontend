@@ -10,7 +10,7 @@ interface Props {
 export function DotMatchingTest({ question, selectedAnswer, onAnswer }: Props) {
   return (
     <div className="w-full">
-      <h2 className="mt-4 text-3xl font-extrabold text-[#5A5A5A]">
+      <h2 className="mt-4 text-4xl font-extrabold text-[#5A5A5A] align-center text-center">
         {question.prompt}
       </h2>
 
