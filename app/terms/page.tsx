@@ -3,7 +3,6 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import Sidebar from "@/components/shared/Sidebar";
 
 const termsSections = [
   {
@@ -190,31 +189,29 @@ export default function TermsOfService() {
 
   return (
     <main className="flex h-full w-full overflow-hidden bg-white">
-      <Sidebar />
-
       <section className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-white">
         {/* Header - fixed / non-scrollable */}
-        <section className="w-full shrink-0 border-b border-[#E5E5E5] bg-white px-6 py-10 text-[#5C5E64]">
+        <section className="w-full shrink-0 border-b border-[#4F70B3] bg-[#6084CC] px-6 py-10 text-white">
           <div className="mx-auto flex max-w-6xl flex-col gap-6">
             <Link
               href="/"
-              className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[#9A9A9A] transition hover:text-[#29A177]"
+              className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-white/75 transition hover:text-white"
             >
               <ArrowLeft size={18} />
               Back to Home
             </Link>
 
             <div className="text-center">
-              <p className="text-sm font-bold uppercase tracking-[0.3em] text-[#B8B8B8]">
+              <p className="text-sm font-bold uppercase tracking-[0.3em] text-white/60">
                 DysCalc Legal Notice
               </p>
 
-              <h1 className="mt-2 text-5xl font-extrabold leading-none text-[#29A177]">
+              <h1 className="mt-2 text-5xl font-extrabold leading-none text-white">
                 Terms of Service
               </h1>
             </div>
 
-            <p className="mt-1 text-center text-sm font-medium text-[#9A9A9A]">
+            <p className="mt-1 text-center text-sm font-medium text-white/75">
               Last Updated in May 30, 2026
             </p>
           </div>

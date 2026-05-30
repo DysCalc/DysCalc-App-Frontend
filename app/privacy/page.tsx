@@ -3,7 +3,6 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import Sidebar from "@/components/shared/Sidebar";
 
 const privacySections = [
   {
@@ -178,8 +177,6 @@ export default function PrivacyPolicy() {
 
   return (
     <main className="flex h-full w-full overflow-hidden bg-[#F7F7F7]">
-      <Sidebar />
-
       <section className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
         {/* Header - fixed / non-scrollable */}
         <section className="w-full shrink-0 bg-[#29A177] px-6 py-10 text-white">
