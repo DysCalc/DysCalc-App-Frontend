@@ -16,6 +16,7 @@ import { toProperCase } from "@/hooks/use-text";
 
 const educatorAPI = createEducatorsAPI();
 const classroomAPI = createClassroomAPI();
+const CLASS_VARIANTS = ["green", "blue", "gray", "yellow"] as const;
 
 export default function EducatorClassroom() {
   const params = useParams();
@@ -141,13 +142,13 @@ export default function EducatorClassroom() {
 
       <div className="flex h-full w-full flex-5 gap-3">
         <div className="grid h-full w-full grid-cols-3 grid-rows-2 gap-5 p-15 pb-55">
-          {classrooms.map((cls) => (
+          {classrooms.map((cls, index) => (
             <ClassCard
               key={cls.id}
               id={cls.id}
               name={cls.name}
               student_count={cls.student_count}
-              variant={getClassroomVariant(cls.id)}
+              variant={CLASS_VARIANTS[index % CLASS_VARIANTS.length]}
               onEdit={() => openEditModal(cls)}
               onDelete={() => openDeleteModal(cls)}
               onCardClick={handleClassCardClick}
