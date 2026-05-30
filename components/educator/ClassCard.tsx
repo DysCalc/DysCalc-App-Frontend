@@ -9,14 +9,14 @@ import {
 import { type Classroom } from "@/types";
 
 type ClassCardProps = {
-  id: Classroom['id'];
-  name: Classroom['name'];
+  id: Classroom["id"];
+  name: Classroom["name"];
   student_count: number;
   variant?: "green" | "blue" | "gray" | "yellow" | "empty";
   className?: string;
   onEdit: () => void;
   onDelete: () => void;
-  onCardClick: (classroomId: Classroom['id']) => void;
+  onCardClick: (classroomId: Classroom["id"]) => void;
 };
 
 const variantStyles = {
@@ -82,6 +82,18 @@ const variantStyles = {
   },
 };
 
+function getInitials(name: string) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length === 0) return "DC";
+
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${words[0][0]}${words[1][0]}`.toUpperCase();
+}
+
 export default function ClassCard({
   id,
   name,
@@ -90,11 +102,11 @@ export default function ClassCard({
   className = "",
   onEdit,
   onDelete,
-  onCardClick
+  onCardClick,
 }: ClassCardProps) {
   const styles = variantStyles[variant];
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const initials = getInitials(name || "DysCalc");
 
   return (
     <>
@@ -113,22 +125,50 @@ export default function ClassCard({
           }
         }}
         className={`
-          group relative flex flex-col rounded-xl px-6 py-5 text-left transition-all duration-200
+          group relative flex flex-col overflow-hidden rounded-xl px-6 py-8 text-left transition-all duration-200
           ${styles.bg} ${styles.border} ${styles.hover}
-          ${variant === "empty" ? "items-center justify-center" : "w-full items-start justify-end"}
+          ${
+            variant === "empty"
+              ? "items-center justify-center"
+              : "w-full items-start justify-end"
+          }
           cursor-pointer
           ${className}
         `}
       >
+        {/* Decorative initials and circles */}
+        {variant !== "empty" && (
+          <div className="pointer-events-none absolute inset-0 z-0">
+            <div className="absolute -right-10 -top-10 flex h-32 w-32 items-center justify-center rounded-full border border-white/20 bg-white/10 opacity-[0.15]">
+              <span className="text-5xl font-extrabold leading-none text-white">
+                {initials}
+              </span>
+            </div>
+
+            <div className="absolute -bottom-12 right-12 flex h-28 w-28 items-center justify-center rounded-full border border-white/20 bg-white/10 opacity-[0.1]">
+              <span className="text-4xl font-extrabold leading-none text-white">
+                {initials}
+              </span>
+            </div>
+
+            <div className="absolute left-4 top-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10 opacity-[0.05]">
+              <span className="text-xl font-extrabold leading-none text-white">
+                {initials}
+              </span>
+            </div>
+          </div>
+        )}
+
         {variant !== "empty" && (
           <div
             className={`
               absolute top-3 right-3 z-20 flex items-stretch overflow-hidden rounded-lg
               ${styles.menuBg}
               transition-all duration-200 ease-out
-              ${menuOpen
-                ? "max-w-[360px] opacity-100 translate-x-0"
-                : "max-w-0 opacity-0 translate-x-4 group-hover:max-w-[36px] group-hover:opacity-100 group-hover:translate-x-0"
+              ${
+                menuOpen
+                  ? "max-w-[360px] opacity-100 translate-x-0"
+                  : "max-w-0 opacity-0 translate-x-4 group-hover:max-w-[36px] group-hover:opacity-100 group-hover:translate-x-0"
               }
           `}
             onClick={(e) => e.stopPropagation()}
@@ -189,11 +229,13 @@ export default function ClassCard({
           </span>
         ) : (
           <>
-            <span className={`text-xl font-semibold leading-none ${styles.text}`}>
+            <span
+              className={`relative z-10 text-2xl font-semibold leading-none ${styles.text}`}
+            >
               {name}
             </span>
 
-            <span className={`mt-1 text-sm leading-none ${styles.sub}`}>
+            <span className={`relative z-10 mt-1 text-base leading-none ${styles.sub}`}>
               {student_count} {student_count === 1 ? "student" : "students"}
             </span>
           </>

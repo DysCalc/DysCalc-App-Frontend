@@ -104,7 +104,7 @@ export default function LearningPathCard({
             className={`text-sm font-medium tracking-wide transition-colors duration-500 ${hovered ? "text-white/80" : "text-[#C5C5C5]"
               }`}
           >
-            {code}
+            {code?.slice(-10)}
           </p>
 
           <button

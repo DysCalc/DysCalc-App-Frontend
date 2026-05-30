@@ -29,3 +29,45 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+@keyframes dyscalcPulseFloat {
+  0%,
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.04) translateY(-8px);
+    opacity: 0.92;
+  }
+}
+
+.dyscalc-pulse-float {
+  animation: dyscalcPulseFloat 2.8s ease-in-out infinite;
+}
+
+@keyframes dyscalcLogoMotion {
+  0%,
+  100% {
+    transform: scale(0.98) translateY(0);
+  }
+
+  25% {
+    transform: scale(1.04) translateY(-6px);
+  }
+
+  50% {
+    transform: scale(1.08) translateY(-10px);
+  }
+
+  75% {
+    transform: scale(1.02) translateY(-4px);
+  }
+}
+
+.dyscalc-swell-pulse-shrink-bounce-disappear {
+  animation: dyscalcLogoMotion 5.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  transform-origin: center;
+  will-change: transform;
+}
