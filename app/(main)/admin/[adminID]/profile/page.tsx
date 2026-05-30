@@ -105,7 +105,7 @@ export default function AdminProfilePage() {
 
   return (
     <main className="h-full w-full overflow-y-auto bg-[#F7F7F7]">
-      <section className="relative flex min-h-[40vh] w-full flex-col overflow-hidden bg-neutral-800 px-6 py-10">
+      <section className="flex min-h-[40vh] w-full flex-col overflow-hidden bg-neutral-800 px-6 py-10">
         <div className="shrink-0">
           <Link
             href={`/admin/${adminID}/dashboard`}

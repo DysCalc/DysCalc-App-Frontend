@@ -167,7 +167,7 @@ export default function EducatorProfilePage() {
 
   return (
     <main className="h-full w-full overflow-y-auto bg-[#F7F7F7]">
-      <section className="relative flex min-h-[40vh] w-full flex-col overflow-hidden bg-[#29A177] px-6 py-10">
+      <section className="flex min-h-[40vh] w-full flex-col overflow-hidden bg-[#29A177] px-6 py-10">
         <div className="shrink-0">
           <Link
             href={`/educator/${educatorId}/dashboard`}
