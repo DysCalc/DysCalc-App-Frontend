@@ -17,13 +17,13 @@ export default function Footer() {
 
         {/* Right */}
         <div className="flex items-center gap-4 text-sm text-gray-600">
-          <a href="#" className="transition-colors hover:text-primary">
+          <a href="/privacy" className="transition-colors hover:text-primary">
             Privacy
           </a>
-          <a href="#" className="transition-colors hover:text-primary">
+          <a href="/terms" className="transition-colors hover:text-primary">
             Terms
           </a>
-          <a href="#" className="transition-colors hover:text-primary">
+          <a href="/contacts" className="transition-colors hover:text-primary">
             Contact
           </a>
         </div>

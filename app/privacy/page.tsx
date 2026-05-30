@@ -1,50 +1,276 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
+import Sidebar from "@/components/shared/Sidebar";
+
+const privacySections = [
+  {
+    id: "introduction",
+    title: "Introduction",
+    content: (
+      <>
+        DysCalc is an AI-assisted educational platform designed to support early
+        numeracy screening and teacher-guided learning support. We value the
+        privacy of students, educators, and other users. This Privacy Policy
+        explains what information may be collected, how it is used, and how user
+        data is protected within the DysCalc system.
+      </>
+    ),
+  },
+  {
+    id: "information-we-collect",
+    title: "Information We Collect",
+    content: (
+      <>
+        DysCalc may collect basic account information such as name, email
+        address, user role, classroom membership, and login-related details. For
+        students, the system may store assessment responses, topic progress,
+        learning activity results, and classroom-related records. For educators,
+        the system may store classroom information, generated learning materials,
+        approval actions, and student monitoring records.
+      </>
+    ),
+  },
+  {
+    id: "how-we-use-information",
+    title: "How We Use Information",
+    content: (
+      <>
+        The collected information is used to provide classroom access, administer
+        baseline assessments, generate screening-related information for educator
+        review, support personalized learning path generation, monitor student
+        progress, and improve the functionality and usability of the platform.
+      </>
+    ),
+  },
+  {
+    id: "student-assessment-data",
+    title: "Student Assessment and Screening Data",
+    content: (
+      <>
+        Assessment responses and screening outputs are used only for educational
+        support and teacher-guided review. DysCalc does not provide a clinical
+        diagnosis of dyscalculia. Screening outputs are intended to help
+        educators identify learners who may need additional numeracy support.
+      </>
+    ),
+  },
+  {
+    id: "ai-assisted-features",
+    title: "Use of AI-Assisted Features",
+    content: (
+      <>
+        DysCalc uses machine learning to support screening classification and may
+        use large language model assistance to generate draft learning materials.
+        AI-generated materials are subject to educator review before student use.
+        The system is designed to support educators and does not replace teacher
+        judgment.
+      </>
+    ),
+  },
+  {
+    id: "who-can-access-information",
+    title: "Who Can Access Information",
+    content: (
+      <>
+        Student information and assessment-related outputs are accessible only to
+        authorized educators and system administrators involved in the educational
+        or research process. Students do not directly receive diagnostic
+        classifications from the baseline screening assessment.
+      </>
+    ),
+  },
+  {
+    id: "data-protection",
+    title: "Data Protection",
+    content: (
+      <>
+        DysCalc applies role-based access control and limits access to
+        information based on user role. Data is stored in the system database and
+        is accessed only for platform functionality, validation, research
+        documentation, and authorized educational purposes.
+      </>
+    ),
+  },
+  {
+    id: "data-sharing",
+    title: "Data Sharing",
+    content: (
+      <>
+        DysCalc does not sell user data. Student and educator data are not shared
+        with third-party organizations for marketing purposes. Any use of data
+        for thesis documentation or research reporting will be summarized and
+        anonymized whenever applicable.
+      </>
+    ),
+  },
+  {
+    id: "user-rights",
+    title: "User Rights",
+    content: (
+      <>
+        Users may request correction, review, or removal of their information,
+        subject to institutional and research requirements. Educators or
+        authorized school representatives may contact the researchers or system
+        administrator for data-related concerns.
+      </>
+    ),
+  },
+  {
+    id: "prototype-limitation",
+    title: "Prototype Limitation",
+    content: (
+      <>
+        DysCalc is currently a thesis-level proof-of-concept system. It is not
+        yet intended for full clinical, medical, or institutional deployment.
+        Further review, local validation, and data privacy compliance checks are
+        required before classroom-scale implementation.
+      </>
+    ),
+  },
+  {
+    id: "contact-information",
+    title: "Contact Information",
+    content: (
+      <>
+        For questions about privacy, data use, or system access, users may
+        contact the DysCalc research team.
+
+        <div className="mt-5">
+          <Link
+            href="/contacts"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-[#29A177] px-8 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#17815C] hover:shadow-lg"
+          >
+            Go to Contacts
+          </Link>
+        </div>
+      </>
+    ),
+  },
+];
 
 export default function PrivacyPolicy() {
+  const detailsScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const handleSectionClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    sectionId: string
+  ) => {
+    event.preventDefault();
+
+    const container = detailsScrollRef.current;
+    const target = document.getElementById(sectionId);
+
+    if (!container || !target) return;
+
+    const containerTop = container.getBoundingClientRect().top;
+    const targetTop = target.getBoundingClientRect().top;
+
+    const scrollOffset = targetTop - containerTop + container.scrollTop;
+
+    container.scrollTo({
+      top: scrollOffset,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F7F7] font-sans relative overflow-hidden">
-      {/* Decorative background blur */}
-      <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-[#ECF9F4] blur-[120px] pointer-events-none opacity-60"></div>
-      <div className="absolute bottom-[-10%] right-[-5%] h-[600px] w-[600px] rounded-full bg-blue-50 blur-[120px] pointer-events-none opacity-60"></div>
+    <main className="flex h-full w-full overflow-hidden bg-[#F7F7F7]">
+      <Sidebar />
 
-      <nav className="relative z-10 flex w-full items-center justify-between px-8 py-6 max-w-7xl mx-auto border-b border-zinc-200/50">
-        <Link href="/" className="flex items-center gap-3 transition-transform hover:scale-105">
-          <Image src="/icons/dyscalc-icon.svg" alt="DysCalc Logo" width={36} height={36} />
-          <span className="text-2xl font-extrabold tracking-tight text-zinc-800">DysCalc</span>
-        </Link>
-      </nav>
+      <section className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Header - fixed / non-scrollable */}
+        <section className="w-full shrink-0 bg-[#29A177] px-6 py-10 text-white">
+          <div className="mx-auto flex max-w-6xl flex-col gap-6">
+            <Link
+              href="/"
+              className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-white/75 transition hover:text-white"
+            >
+              <ArrowLeft size={18} />
+              Back to Home
+            </Link>
 
-      <main className="relative z-10 flex-1 max-w-4xl mx-auto w-full px-8 py-12">
-        <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#2B2B2B] mb-8">Privacy Policy</h1>
-          
-          <div className="rounded-2xl border border-zinc-200 bg-white/60 p-8 shadow-xl backdrop-blur-md">
-            <div className="prose prose-zinc max-w-none text-zinc-600 space-y-6">
-              <p className="text-sm font-medium text-[#29A177]">Last updated: {new Date().toLocaleDateString()}</p>
-              
-              <h2 className="text-2xl font-bold text-zinc-800 mt-8 border-b border-zinc-100 pb-2">1. Introduction</h2>
-              <p>Welcome to DysCalc. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data and tell you about your privacy rights and how the law protects you.</p>
+            <div className="text-center">
+              <p className="text-sm font-bold uppercase tracking-[0.3em] text-white/60">
+                DysCalc Privacy Notice
+              </p>
 
-              <h2 className="text-2xl font-bold text-zinc-800 mt-8 border-b border-zinc-100 pb-2">2. Data We Collect</h2>
-              <p>We may collect, use, store and transfer different kinds of personal data about you, including Identity Data, Contact Data, and Technical Data, particularly when you use Google Sign-In to access our platform.</p>
-
-              <h2 className="text-2xl font-bold text-zinc-800 mt-8 border-b border-zinc-100 pb-2">3. How We Use Your Data</h2>
-              <p>We will only use your personal data when the law allows us to. Most commonly, we will use your personal data to provide and improve our services, manage your account, and ensure the security of our platform.</p>
-
-              <h2 className="text-2xl font-bold text-zinc-800 mt-8 border-b border-zinc-100 pb-2">4. Data Security</h2>
-              <p>We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used or accessed in an unauthorised way, altered or disclosed.</p>
-
-              <h2 className="text-2xl font-bold text-zinc-800 mt-8 border-b border-zinc-100 pb-2">5. Contact Us</h2>
-              <p>If you have any questions about this privacy policy or our privacy practices, please contact us.</p>
+              <h1 className="mt-2 text-5xl font-extrabold leading-none">
+                Privacy Policy
+              </h1>
             </div>
-          </div>
-        </div>
-      </main>
 
-      <footer className="relative z-10 w-full py-8 text-center text-sm text-zinc-400">
-        &copy; {new Date().getFullYear()} DysCalc. All rights reserved.
-      </footer>
-    </div>
+            <p className="mt-1 text-center text-sm font-medium text-white">
+              Last Updated in May 30, 2026
+            </p>
+          </div>
+        </section>
+
+        {/* Body */}
+        <section className="mx-auto grid min-h-0 w-full max-w-6xl flex-1 grid-cols-1 gap-3 px-6 pb-10 lg:grid-cols-[1fr_2fr]">
+          {/* Left Navigation - fixed / non-scrollable */}
+          <aside className="h-full overflow-hidden p-6 pt-5">
+            <nav className="mt-5 flex flex-col gap-0">
+              {privacySections.map((section) => (
+                <a
+                  key={section.id}
+                  href={`#${section.id}`}
+                  onClick={(event) => handleSectionClick(event, section.id)}
+                  className="px-2 py-3 text-lg font-medium leading-tight text-[#6C6C6C] transition-all duration-300 ease-out hover:translate-x-1 hover:bg-[#EFEFEF] hover:text-[#29A177]"
+                >
+                  {section.title}
+                </a>
+              ))}
+            </nav>
+          </aside>
+
+          {/* Right Details - only this part scrolls */}
+          <div
+            ref={detailsScrollRef}
+            className="min-h-0 overflow-y-auto border-l border-[#E5E5E5] px-8 py-10"
+          >
+            <div className="space-y-10 text-[#5C5E64]">
+              {privacySections.map((section) => (
+                <PrivacySection
+                  key={section.id}
+                  id={section.id}
+                  title={section.title}
+                >
+                  {section.content}
+                </PrivacySection>
+              ))}
+            </div>
+
+            <footer className="relative z-10 w-full py-8 text-sm text-zinc-400">
+              &copy; {new Date().getFullYear()} DysCalc. All rights reserved.
+            </footer>
+          </div>
+        </section>
+      </section>
+    </main>
+  );
+}
+
+function PrivacySection({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id}>
+      <h2 className="text-2xl font-extrabold leading-tight text-[#29A177]">
+        {title}
+      </h2>
+
+      <div className="mt-3 text-lg font-normal leading-5 text-[#5C5E64]">
+        {children}
+      </div>
+    </section>
   );
 }
