@@ -11,19 +11,20 @@ export default function EducatorDashboard() {
 
         {/* LEFT */}
         <div className="flex w-1/2 items-center justify-end">
-          <div className="ml-30">
+          <div className="flex flex-1 items-center justify-end -mr-20">
             <Image
               src="/icons/main-icon.svg"
-              alt="DysCalc Icon"
-              width={600}
-              height={600}
-              className="mr-50 shrink-0 object-contain"
+              alt="DysCalc Logo"
+              width={650}
+              height={650}
+              className="dyscalc-swell-pulse-shrink-bounce-disappear object-contain"
+              priority
             />
           </div>
         </div>
 
         {/* RIGHT */}
-        <div className="flex w-1/2 items-center justify-center">
+        <div className="flex w-1/2 items-center justify-center -ml-10">
           <div className="flex flex-col items-center text-center space-y-1 pr-40">
 
             <h1 className="text-4xl font-bold text-zinc-600">

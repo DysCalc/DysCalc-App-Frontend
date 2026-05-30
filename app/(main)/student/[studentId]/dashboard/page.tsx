@@ -9,30 +9,31 @@ export default function UserDashboard() {
 
         {/* LEFT */}
         <div className="flex w-1/2 items-center justify-end">
-          <div className="ml-30">
+          <div className="flex flex-1 items-center justify-end -mr-20">
             <Image
               src="/icons/main-icon.svg"
-              alt="DysCalc Icon"
-              width={600}
-              height={600}
-              className="shrink-0 mr-50 object-contain"
+              alt="DysCalc Logo"
+              width={650}
+              height={650}
+              className="dyscalc-swell-pulse-shrink-bounce-disappear object-contain"
+              priority
             />
           </div>
         </div>
 
         {/* RIGHT */}
-        <div className="flex w-1/2 items-center justify-center">
+        <div className="flex w-1/2 items-center justify-center -ml-10">
           <div className="flex flex-col pr-10 text-white items-center text-center space-y-1">
 
-            <h1 className="text-4xl font-bold">
+            <h1 className="text-4xl font-bold text-shadow:0_2px_12px_rgba(0,0,0,0.45)">
               Let's get started with DysCalc!
             </h1>
 
-            <div className="text-6xl font-bold">
+            <div className="text-6xl font-bold text-shadow:0_2px_12px_rgba(0,0,0,0.45)">
               Lets start your journey!
             </div>
 
-            <div className="text-2xl text-zinc-600 leading-10">
+            <div className="text-2xl text-zinc-600 leading-10 text-shadow:0_2px_12px_rgba(0,0,0,0.45)">
               I am created to teach you learn numbers and math.
             </div>
 

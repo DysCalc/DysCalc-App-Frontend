@@ -8,16 +8,16 @@ export default function AdminDashboard() {
 
         {/* HERO SECTION (fixed height) */}
         <div className="flex h-full w-full bg-[radial-gradient(ellipse_200.56%_459.76%_at_23.54%_96.38%,_#78DAB8_0%,_#29A177_34%,_#076242_100%)]">
-
           {/* LEFT */}
-          <div className="w-1/2 h-full flex items-center justify-end">
-            <div className="ml-30">
+          <div className="flex w-1/2 items-center justify-end">
+            <div className="flex flex-1 items-center justify-end -mr-20">
               <Image
                 src="/icons/main-icon.svg"
-                alt="DysCalc Icon"
-                width={600}
-                height={600}
-                className="shrink-0 mr-50 object-contain"
+                alt="DysCalc Logo"
+                width={650}
+                height={650}
+                className="dyscalc-swell-pulse-shrink-bounce-disappear object-contain"
+                priority
               />
             </div>
           </div>
