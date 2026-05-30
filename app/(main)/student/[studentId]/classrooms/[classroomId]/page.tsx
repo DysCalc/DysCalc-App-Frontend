@@ -143,7 +143,7 @@ export default function ClassroomLearningPathPage() {
                 Classroom Code
               </span>
               <span className="text-sm font-semibold text-[#7A7A7A]">
-                {classroom.id}
+                {classroom.id.slice(-10)}
               </span>
               <CopyClassroomCodeButton code={classroom.id} />
             </div>
