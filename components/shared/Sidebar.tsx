@@ -20,8 +20,19 @@ import {
 import type { NavGroup } from "@/types/navigation";
 import LogoutModal from "./LogoutModal";
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "dyscalc-sidebar-collapsed";
+
 export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
   const [userName, setUserName] = useState("");
   const [userNickname, setUserNickname] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -34,6 +45,17 @@ export default function Sidebar() {
   const pathSegments = pathname.split("/").filter(Boolean);
   const currentRoute = pathSegments[0] ?? "";
   const routeId = pathSegments[1] ?? "";
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        SIDEBAR_COLLAPSED_STORAGE_KEY,
+        String(collapsed)
+      );
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [collapsed]);
 
   useEffect(() => {
     if (!user) return;
