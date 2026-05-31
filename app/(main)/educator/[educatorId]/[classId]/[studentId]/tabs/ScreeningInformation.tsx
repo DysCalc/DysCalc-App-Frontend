@@ -355,7 +355,7 @@ export default function ScreeningInformation({
         {/* COLUMN 1: All Assessments */}
         <div className="flex w-1/4 min-w-[250px] flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
           <div className="bg-[#ECECEC] px-6 py-4 flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Assessments</h2>
+            <h2 className="text-base font-bold uppercase tracking-wide text-zinc-600">Assessments</h2>
             {hasLearningPath && (
               !hasUnapprovedRetest ? (
                 <button
@@ -409,7 +409,7 @@ export default function ScreeningInformation({
                       }`}
                   >
                     <div className="flex w-full items-center justify-between gap-2">
-                      <span className={`text-sm font-bold truncate ${isActive ? "text-[#29A177]" : "text-zinc-700"}`}>
+                      <span className={`text-lg font-bold truncate ${isActive ? "text-[#29A177]" : "text-zinc-700"}`}>
                         {assessment.title}
                       </span>
                       {(() => {
@@ -421,7 +421,7 @@ export default function ScreeningInformation({
                         return <span className="shrink-0 inline-flex items-center rounded-full bg-[#ECF9F4] px-1.5 py-0.5 text-[10px] font-bold text-[#29A177] border border-[#29A177]/20">Ready</span>;
                       })()}
                     </div>
-                    <span className="text-xs font-medium text-zinc-500 mt-1">
+                    <span className="text-sm font-medium text-zinc-500">
                       {assessment.isInitial ? "Initial Assessment" : "Custom Test"}
                     </span>
                   </button>
@@ -444,9 +444,9 @@ export default function ScreeningInformation({
             {/* COLUMN 2: Selected Test Performance */}
             <div className="flex w-1/3 min-w-[300px] flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
               <div className="bg-[#ECECEC] px-6 py-4">
-                <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Test Performance</h2>
+                <h2 className="text-base font-bold uppercase tracking-wide text-zinc-600">Test Performance</h2>
               </div>
-              <div className="flex flex-col p-6 gap-4">
+              <div className="flex flex-col p-6 gap-2">
                 {activeAssessment ? (
                   <>
                     {!isEditingMetadata ? (
@@ -454,13 +454,13 @@ export default function ScreeningInformation({
                         <div>
                           <p className="text-xl font-extrabold text-[#5C5E64]">{activeAssessment.title}</p>
                           {activeAssessment.description && (
-                            <p className="text-sm text-zinc-500 mt-1">{activeAssessment.description}</p>
+                            <p className="text-base text-zinc-500 mt-1">{activeAssessment.description}</p>
                           )}
                         </div>
                         {!activeAssessment.isInitial && (
                           <button
                             onClick={startEditingMetadata}
-                            className="text-xs font-semibold text-[#29A177] hover:text-[#20825f] underline underline-offset-2"
+                            className="text-sm font-semibold text-[#29A177] hover:text-[#20825f] underline underline-offset-2"
                           >
                             Edit Details
                           </button>
@@ -469,7 +469,7 @@ export default function ScreeningInformation({
                     ) : (
                       <div className="flex flex-col gap-3 rounded-lg border border-[#29A177] p-4 bg-white shadow-sm">
                         <div>
-                          <label className="text-xs font-bold text-zinc-600 uppercase tracking-wide">Retest Title</label>
+                          <label className="text-sm font-bold text-zinc-600 uppercase tracking-wide">Retest Title</label>
                           <input
                             type="text"
                             value={editedTitle}
@@ -478,7 +478,7 @@ export default function ScreeningInformation({
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-zinc-600 uppercase tracking-wide">Description</label>
+                          <label className="text-sm font-bold text-zinc-600 uppercase tracking-wide">Description</label>
                           <textarea
                             value={editedDescription}
                             onChange={(e) => setEditedDescription(e.target.value)}
@@ -497,7 +497,7 @@ export default function ScreeningInformation({
                           <button
                             onClick={() => setShowSaveMetadataConfirm(true)}
                             disabled={isSavingMetadata}
-                            className="rounded bg-[#29A177] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#20825f] disabled:opacity-50 transition flex items-center gap-2"
+                            className="rounded bg-[#29A177] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#20825f] disabled:opacity-50 transition flex items-center gap-2"
                           >
                             {isSavingMetadata ? "Saving..." : "Save Changes"}
                           </button>
@@ -523,8 +523,8 @@ export default function ScreeningInformation({
                             }}
                             className="flex flex-col rounded-md border border-[#ECECEC] bg-white px-4 py-3 shadow-sm cursor-pointer hover:border-[#29A177]/50 hover:shadow-md transition-all"
                           >
-                            <span className="text-sm font-semibold text-[#5C5E64] mb-1">{field.label}</span>
-                            <div className="flex justify-between items-center text-sm">
+                            <span className="text-base font-semibold text-[#5C5E64]">{field.label}</span>
+                            <div className="flex justify-between items-center text-base">
                               <span className="text-zinc-500">Score / Correct:</span>
                               <span className="font-bold text-[#29A177]">{data.display}</span>
                             </div>
@@ -548,7 +548,7 @@ export default function ScreeningInformation({
             {/* COLUMN 3: Classification Info */}
             <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
               <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
-                <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Classification Report</h2>
+                <h2 className="text-base font-bold uppercase tracking-wide text-zinc-600">Classification Report</h2>
                 {hasClassification && (
                   <button
                     onClick={handleDownloadPDF}
@@ -565,13 +565,13 @@ export default function ScreeningInformation({
                   <div className="flex h-full flex-col items-center justify-center text-center">
                     <SparklesIcon className="h-16 w-16 text-[#D4D4D4] mb-4" />
                     <h3 className="text-xl font-bold text-[#5C5E64]">No Classification Yet</h3>
-                    <p className="mt-2 max-w-sm text-sm text-zinc-500">
+                    <p className="mt-2 max-w-sm text-base text-zinc-500">
                       Generate a diagnostic classification based on the student's performance metrics for this test.
                     </p>
                     <button
                       onClick={handleGenerateClassification}
                       disabled={isGenerating || !activeAssessment || !isAllTestsCompleted}
-                      className="mt-6 flex h-12 items-center justify-center gap-2 rounded-lg bg-[#29A177] px-6 text-sm font-bold text-white transition hover:bg-[#17815C] disabled:cursor-not-allowed disabled:opacity-75"
+                      className="mt-6 flex h-12 items-center justify-center gap-2 rounded-lg bg-[#29A177] px-6 text-base font-bold text-white transition hover:bg-[#17815C] disabled:cursor-not-allowed disabled:opacity-75"
                       title={!isAllTestsCompleted ? "All test types must be completed before generating a classification" : undefined}
                     >
                       {isGenerating ? (
@@ -592,7 +592,7 @@ export default function ScreeningInformation({
                       </p>
                     )}
                     {!isAllTestsCompleted && (
-                      <p className="mt-4 text-xs font-semibold text-red-500">
+                      <p className="mt-4 text-base font-semibold text-red-500">
                         Cannot generate classification: Not all tests are completed.
                       </p>
                     )}

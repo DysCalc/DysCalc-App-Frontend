@@ -151,7 +151,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
         {/* COLUMN 1: All Assessments */}
         <div className="flex w-1/4 min-w-[250px] flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
           <div className="bg-[#ECECEC] px-6 py-4 flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Assessments</h2>
+            <h2 className="text-base font-bold uppercase tracking-wide text-zinc-600">Assessments</h2>
           </div>
           <div className="flex flex-col gap-2 p-4">
             {assessments.length === 0 ? (
@@ -172,10 +172,10 @@ export default function LearningPath({ student, classId, studentId, assessments 
                       : "border-[#ECECEC] bg-white hover:border-[#29A177]/50"
                       }`}
                   >
-                    <span className={`text-sm font-bold ${isActive ? "text-[#29A177]" : "text-zinc-700"}`}>
+                    <span className={`text-lg font-bold ${isActive ? "text-[#29A177]" : "text-zinc-700"}`}>
                       {assessment.title}
                     </span>
-                    <span className="text-xs font-medium text-zinc-500 mt-1">
+                    <span className="text-sm font-medium text-zinc-500">
                       {assessment.isInitial ? "Initial Assessment" : "Custom Test"}
                     </span>
                   </button>
@@ -188,7 +188,7 @@ export default function LearningPath({ student, classId, studentId, assessments 
         {/* COLUMN 2: Module Content */}
         <div className="flex flex-1 flex-col border border-[#EDEDED] bg-[#F9F9F9] overflow-y-auto">
           <div className="bg-[#ECECEC] px-6 py-4 flex justify-between items-center">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-600">Generated Module</h2>
+            <h2 className="text-base font-bold uppercase tracking-wide text-zinc-600">Generated Module</h2>
             {currentModule && !isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
