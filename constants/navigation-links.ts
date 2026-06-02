@@ -60,17 +60,6 @@ export const getEducatorNavigations = (userId: string): NavGroup[] => [
             }
         ],
     },
-    {
-        title: "Settings",
-        links: [
-            {
-                label: "Settings",
-                href: `/educator/${userId}/settings`,
-                icon: Cog8ToothIcon,
-            },
-            ...SHARED_NAVIGATIONS,
-        ],
-    },
 ];
 
 export const getAdminNavigations = (userId: string): NavGroup[] => [
@@ -92,17 +81,6 @@ export const getAdminNavigations = (userId: string): NavGroup[] => [
                 href: `/admin/${userId}/students`,
                 icon: UserGroupIcon,
             },
-        ],
-    },
-    {
-        title: "Settings",
-        links: [
-            {
-                label: "Settings",
-                href: `/admin/${userId}/settings`,
-                icon: Cog8ToothIcon,
-            },
-            ...SHARED_NAVIGATIONS,
         ],
     },
 ];
